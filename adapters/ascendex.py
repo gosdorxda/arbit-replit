@@ -72,7 +72,7 @@ class AscendEXAdapter(BaseAdapter):
     def fetch_orderbook(self, symbol: str, limit: int = 20) -> NormalizedOrderbook:
         try:
             response = requests.get(
-                f"{self.BASE_URL}/api/pro/v2/depth",
+                f"{self.BASE_URL}/api/pro/v1/depth",
                 params={"symbol": symbol},
                 timeout=30
             )
