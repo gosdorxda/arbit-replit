@@ -19,6 +19,7 @@
     --bitrue-color: #00c853;
     --ascendex-color: #ff6b35;
     --bitmart-color: #00b8d4;
+    --dextrade-color: #9b59b6;
 }
 
 [data-theme="light"] {
@@ -40,6 +41,7 @@
     --mexc-color: #1873e8;
     --bitrue-color: #00a846;
     --ascendex-color: #e85d2d;
+    --dextrade-color: #8e44ad;
 }
 
 * {
@@ -304,6 +306,17 @@ body {
     box-shadow: 0 4px 12px rgba(0, 184, 212, 0.3);
 }
 
+.dextrade-btn {
+    background-color: var(--dextrade-color);
+    color: white;
+}
+
+.dextrade-btn:hover:not(:disabled) {
+    background-color: #7b3a9e;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(155, 89, 182, 0.3);
+}
+
 .status-row {
     display: flex;
     flex-direction: column;
@@ -516,6 +529,11 @@ tbody tr:last-child td {
 .exchange-badge.bitmart {
     background-color: rgba(0, 184, 212, 0.2);
     color: var(--bitmart-color);
+}
+
+.exchange-badge.dextrade {
+    background-color: rgba(155, 89, 182, 0.2);
+    color: var(--dextrade-color);
 }
 
 .td-symbol {

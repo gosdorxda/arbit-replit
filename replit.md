@@ -1,7 +1,7 @@
 # Crypto Exchange Data Aggregator
 
 ## Overview
-A Flask-based web application that fetches, normalizes, and displays SPOT/USDT market data from multiple cryptocurrency exchanges. Currently supports LBANK, HashKey, Biconomy, MEXC, Bitrue, and AscendEX exchanges.
+A Flask-based web application that fetches, normalizes, and displays SPOT/USDT market data from multiple cryptocurrency exchanges. Currently supports LBANK, HashKey, Biconomy, MEXC, Bitrue, AscendEX, BitMart, and Dex-Trade exchanges.
 
 ## Key Features
 - **Manual Data Fetching**: Button-triggered fetching from each exchange
@@ -27,7 +27,9 @@ adapters/
   ├── biconomy.py   - Biconomy exchange adapter
   ├── mexc.py       - MEXC exchange adapter
   ├── bitrue.py     - Bitrue exchange adapter
-  └── ascendex.py   - AscendEX exchange adapter
+  ├── ascendex.py   - AscendEX exchange adapter
+  ├── bitmart.py    - BitMart exchange adapter
+  └── dextrade.py   - Dex-Trade exchange adapter
 ```
 
 ### Frontend
@@ -50,6 +52,8 @@ static/
 | `/api/fetch/mexc` | POST | Trigger MEXC data fetch |
 | `/api/fetch/bitrue` | POST | Trigger Bitrue data fetch |
 | `/api/fetch/ascendex` | POST | Trigger AscendEX data fetch |
+| `/api/fetch/bitmart` | POST | Trigger BitMart data fetch |
+| `/api/fetch/dextrade` | POST | Trigger Dex-Trade data fetch |
 | `/api/tickers` | GET | Get all stored ticker data |
 | `/api/status` | GET | Get fetch status for each exchange |
 | `/api/logs` | GET | Get recent fetch logs |
@@ -88,6 +92,9 @@ To add a new exchange:
 - `SESSION_SECRET` - Flask session secret key
 
 ## Recent Changes
+- Added Dex-Trade exchange adapter (fetches symbols then individual tickers)
+- Added BitMart exchange adapter
+- Added clickable trading pair links (Symbol column and Compare column) opening exchange trading pages
 - Added Bitrue exchange adapter
 - Added AscendEX exchange adapter
 - Added MEXC exchange adapter (2000+ USDT pairs)

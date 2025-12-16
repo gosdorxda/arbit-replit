@@ -6,5 +6,6 @@ from .mexc import MEXCAdapter
 from .bitrue import BitrueAdapter
 from .ascendex import AscendEXAdapter
 from .bitmart import BitMartAdapter
+from .dextrade import DexTradeAdapter
 
-__all__ = ['BaseAdapter', 'LBankAdapter', 'HashKeyAdapter', 'BiconomyAdapter', 'MEXCAdapter', 'BitrueAdapter', 'AscendEXAdapter', 'BitMartAdapter']
+__all__ = ['BaseAdapter', 'LBankAdapter', 'HashKeyAdapter', 'BiconomyAdapter', 'MEXCAdapter', 'BitrueAdapter', 'AscendEXAdapter', 'BitMartAdapter', 'DexTradeAdapter']

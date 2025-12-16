@@ -20,6 +20,8 @@ function getExchangeUrl(exchange, symbol) {
             return `https://ascendex.com/en/cashtrade-spottrading/usdt/${base.toLowerCase()}`;
         case 'BITMART':
             return `https://www.bitmart.com/trade/en-US?symbol=${pairUpper}`;
+        case 'DEXTRADE':
+            return `https://dex-trade.com/spot/trading/${pairUpper}`;
         default:
             return '#';
     }
