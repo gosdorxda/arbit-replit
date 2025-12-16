@@ -1036,7 +1036,7 @@ a.peer-exchange:hover {
 
 .orderbook-side.asks .orderbook-list {
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
 }
 
 .orderbook-row {
