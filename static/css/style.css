@@ -633,6 +633,12 @@ tbody tr:last-child td {
     color: var(--text-muted);
 }
 
+.peer-volume {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.5625rem;
+    color: var(--text-muted);
+}
+
 .orderbook-btn-sm {
     display: inline-flex;
     align-items: center;
