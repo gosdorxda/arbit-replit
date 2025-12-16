@@ -12,6 +12,7 @@
     --accent-yellow: #d29922;
     --lbank-color: #2962ff;
     --hashkey-color: #7c3aed;
+    --biconomy-color: #00b894;
 }
 
 * {
@@ -154,6 +155,17 @@ body {
     background-color: #6d28d9;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.biconomy-btn {
+    background-color: var(--biconomy-color);
+    color: white;
+}
+
+.biconomy-btn:hover:not(:disabled) {
+    background-color: #00a187;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 184, 148, 0.3);
 }
 
 .status-row {
@@ -342,6 +354,11 @@ tbody tr:last-child td {
     color: var(--hashkey-color);
 }
 
+.exchange-badge.biconomy {
+    background-color: rgba(0, 184, 148, 0.2);
+    color: var(--biconomy-color);
+}
+
 .td-symbol {
     font-weight: 600;
     color: var(--text-primary);
@@ -528,6 +545,11 @@ tbody tr:last-child td {
 .peer-exchange.hashkey {
     background-color: rgba(124, 58, 237, 0.2);
     color: var(--hashkey-color);
+}
+
+.peer-exchange.biconomy {
+    background-color: rgba(0, 184, 148, 0.2);
+    color: var(--biconomy-color);
 }
 
 .peer-price {

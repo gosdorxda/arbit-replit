@@ -34,6 +34,14 @@
                     <span class="btn-text">Fetch HashKey</span>
                     <span class="spinner"></span>
                 </button>
+                <button id="btn-biconomy" class="fetch-btn biconomy-btn" onclick="fetchData('biconomy')">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        <path d="M9 12l2 2 4-4"/>
+                    </svg>
+                    <span class="btn-text">Fetch Biconomy</span>
+                    <span class="spinner"></span>
+                </button>
             </div>
             
             <div class="status-row">
@@ -44,6 +52,11 @@
                 </div>
                 <div class="status-item" id="status-hashkey">
                     <span class="status-label">HASHKEY:</span>
+                    <span class="status-badge never">Never fetched</span>
+                    <span class="status-count">0 pairs</span>
+                </div>
+                <div class="status-item" id="status-biconomy">
+                    <span class="status-label">BICONOMY:</span>
                     <span class="status-badge never">Never fetched</span>
                     <span class="status-count">0 pairs</span>
                 </div>
@@ -58,6 +71,7 @@
                         <option value="all">All Exchanges</option>
                         <option value="LBANK">LBANK</option>
                         <option value="HASHKEY">HASHKEY</option>
+                        <option value="BICONOMY">BICONOMY</option>
                     </select>
                 </div>
                 <div class="filter-item">
