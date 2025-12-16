@@ -1,12 +1,138 @@
-let allTickers = [];
-let symbolMap = {};
-let currentSort = { column: 'symbol', direction: 'asc' };
+let dataTable = null;
 
-document.addEventListener('DOMContentLoaded', function() {
-    loadTickers();
+$(document).ready(function() {
+    initDataTable();
     loadStatus();
-    setupHeaderSorting();
+    
+    $('#exchange-filter').on('change', function() {
+        dataTable.ajax.reload();
+    });
+    
+    $('#multi-exchange-filter').on('change', function() {
+        dataTable.ajax.reload();
+    });
 });
+
+function initDataTable() {
+    dataTable = $('#ticker-table').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: '/api/tickers',
+            data: function(d) {
+                d.exchange = $('#exchange-filter').val();
+                d.multi_exchange = $('#multi-exchange-filter').is(':checked');
+            }
+        },
+        columns: [
+            { 
+                data: 'exchange',
+                render: function(data) {
+                    const exchangeClass = data.toLowerCase();
+                    return `<span class="exchange-badge ${exchangeClass}">${data}</span>`;
+                },
+                orderable: true
+            },
+            { 
+                data: 'symbol',
+                orderable: true
+            },
+            { 
+                data: 'price',
+                render: function(data) {
+                    return formatPrice(data);
+                },
+                orderable: true
+            },
+            { 
+                data: null,
+                render: function(data) {
+                    const turnover = data.turnover_24h;
+                    const exchangeCount = data.exchange_count || 1;
+                    
+                    if (exchangeCount > 1) {
+                        let totalVolume = turnover || 0;
+                        if (data.peers) {
+                            data.peers.forEach(p => {
+                                totalVolume += (p.turnover_24h || 0);
+                            });
+                        }
+                        return `<div class="volume-info"><span class="volume-own">${formatVolume(turnover)}</span><span class="volume-total" title="Total across ${exchangeCount} exchanges">Σ ${formatVolume(totalVolume)}</span></div>`;
+                    }
+                    return formatVolume(turnover);
+                },
+                orderable: true
+            },
+            { 
+                data: 'change_24h',
+                render: function(data) {
+                    const changeClass = data > 0 ? 'positive' : data < 0 ? 'negative' : 'neutral';
+                    const changeArrow = data > 0 ? '↑' : data < 0 ? '↓' : '−';
+                    return `<span class="${changeClass}"><span class="change-arrow">${changeArrow}</span>${formatChange(data)}%</span>`;
+                },
+                orderable: true
+            },
+            {
+                data: null,
+                render: function(data) {
+                    return `<button class="orderbook-btn" onclick="showOrderbook('${data.exchange}', '${data.symbol}')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                        View
+                    </button>`;
+                },
+                orderable: false
+            },
+            {
+                data: 'peers',
+                render: function(peers, type, row) {
+                    if (!peers || peers.length === 0) {
+                        return '<span class="no-peer">−</span>';
+                    }
+                    
+                    let html = '<div class="peer-list">';
+                    peers.forEach(peer => {
+                        if (!peer.price) return;
+                        const peerExchangeClass = peer.exchange.toLowerCase();
+                        const priceDiff = ((peer.price - row.price) / row.price * 100);
+                        const diffClass = priceDiff > 0.01 ? 'positive' : priceDiff < -0.01 ? 'negative' : 'neutral';
+                        const diffSign = priceDiff > 0 ? '+' : '';
+                        const peerVolume = peer.turnover_24h ? formatVolume(peer.turnover_24h) : '−';
+                        
+                        html += `
+                            <div class="peer-data">
+                                <span class="peer-exchange ${peerExchangeClass}">${peer.exchange}</span>
+                                <span class="peer-price">${formatPrice(peer.price)}</span>
+                                <span class="peer-diff ${diffClass}">(${diffSign}${priceDiff.toFixed(2)}%)</span>
+                                <span class="peer-volume">Vol: ${peerVolume}</span>
+                                <button class="orderbook-btn-sm" onclick="showOrderbook('${peer.exchange}', '${peer.symbol}')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M4 6h16M4 12h16M4 18h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    return html;
+                },
+                orderable: false
+            }
+        ],
+        order: [[1, 'asc']],
+        pageLength: 50,
+        lengthMenu: [[25, 50, 100, 200], [25, 50, 100, 200]],
+        language: {
+            processing: '<div class="dt-loading">Loading...</div>',
+            emptyTable: 'No data yet. Click a fetch button to load exchange data.',
+            zeroRecords: 'No matching records found'
+        },
+        dom: '<"dt-top"lf>rt<"dt-bottom"ip>',
+        drawCallback: function() {
+        }
+    });
+}
 
 async function fetchData(exchange) {
     const btn = document.getElementById(`btn-${exchange}`);
@@ -21,7 +147,7 @@ async function fetchData(exchange) {
         
         if (data.status === 'success') {
             showToast(`${data.message}`, 'success');
-            await loadTickers();
+            dataTable.ajax.reload();
             await loadStatus();
         } else {
             showToast(`Error: ${data.message}`, 'error');
@@ -32,64 +158,6 @@ async function fetchData(exchange) {
         btn.classList.remove('loading');
         btn.disabled = false;
     }
-}
-
-async function loadTickers() {
-    try {
-        const response = await fetch('/api/tickers');
-        const data = await response.json();
-        
-        if (data.status === 'success') {
-            allTickers = data.data;
-            buildSymbolMap();
-            filterTable();
-        }
-    } catch (error) {
-        console.error('Failed to load tickers:', error);
-    }
-}
-
-function buildSymbolMap() {
-    symbolMap = {};
-    allTickers.forEach(t => {
-        if (!symbolMap[t.symbol]) {
-            symbolMap[t.symbol] = {};
-        }
-        symbolMap[t.symbol][t.exchange] = t;
-    });
-}
-
-function getAllPeerExchangeData(ticker) {
-    const symbolData = symbolMap[ticker.symbol];
-    if (!symbolData) return [];
-    
-    const peers = [];
-    for (const exchange in symbolData) {
-        if (exchange !== ticker.exchange) {
-            peers.push(symbolData[exchange]);
-        }
-    }
-    return peers;
-}
-
-function getTotalVolumeForSymbol(symbol) {
-    const symbolData = symbolMap[symbol];
-    if (!symbolData) return 0;
-    
-    let total = 0;
-    for (const exchange in symbolData) {
-        const ticker = symbolData[exchange];
-        if (ticker.turnover_24h) {
-            total += ticker.turnover_24h;
-        }
-    }
-    return total;
-}
-
-function getExchangeCountForSymbol(symbol) {
-    const symbolData = symbolMap[symbol];
-    if (!symbolData) return 0;
-    return Object.keys(symbolData).length;
 }
 
 async function loadStatus() {
@@ -140,121 +208,6 @@ function formatRelativeTime(date) {
     return `${Math.floor(diff / 86400)}d ago`;
 }
 
-function setupHeaderSorting() {
-    const headers = document.querySelectorAll('th[data-sort]');
-    headers.forEach(th => {
-        th.addEventListener('click', () => {
-            const column = th.dataset.sort;
-            if (currentSort.column === column) {
-                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-            } else {
-                currentSort.column = column;
-                currentSort.direction = 'asc';
-            }
-            updateSortIndicators();
-            filterTable();
-        });
-    });
-}
-
-function updateSortIndicators() {
-    const headers = document.querySelectorAll('th[data-sort]');
-    headers.forEach(th => {
-        th.classList.remove('sort-asc', 'sort-desc');
-        if (th.dataset.sort === currentSort.column) {
-            th.classList.add(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
-        }
-    });
-}
-
-function renderTable(tickers) {
-    const tbody = document.getElementById('ticker-body');
-    const countEl = document.getElementById('ticker-count');
-    
-    if (tickers.length === 0) {
-        tbody.innerHTML = `
-            <tr class="empty-row">
-                <td colspan="7">
-                    <div class="empty-state">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                            <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                        </svg>
-                        <p>No data yet. Click a fetch button to load exchange data.</p>
-                    </div>
-                </td>
-            </tr>
-        `;
-        countEl.textContent = '0 pairs displayed';
-        return;
-    }
-    
-    tbody.innerHTML = tickers.map(t => {
-        const exchangeClass = t.exchange.toLowerCase();
-        const changeClass = t.change_24h > 0 ? 'positive' : t.change_24h < 0 ? 'negative' : 'neutral';
-        const changeArrow = t.change_24h > 0 ? '↑' : t.change_24h < 0 ? '↓' : '−';
-        
-        const peers = getAllPeerExchangeData(t);
-        const totalVolume = getTotalVolumeForSymbol(t.symbol);
-        const exchangeCount = getExchangeCountForSymbol(t.symbol);
-        
-        let peerDataHtml = '<span class="no-peer">−</span>';
-        
-        if (peers.length > 0 && t.price) {
-            peerDataHtml = '<div class="peer-list">' + peers.map(peer => {
-                if (!peer.price) return '';
-                const peerExchangeClass = peer.exchange.toLowerCase();
-                const priceDiff = ((peer.price - t.price) / t.price * 100);
-                const diffClass = priceDiff > 0.01 ? 'positive' : priceDiff < -0.01 ? 'negative' : 'neutral';
-                const diffSign = priceDiff > 0 ? '+' : '';
-                const peerVolume = peer.turnover_24h ? formatVolume(peer.turnover_24h) : '−';
-                
-                return `
-                    <div class="peer-data">
-                        <span class="peer-exchange ${peerExchangeClass}">${peer.exchange}</span>
-                        <span class="peer-price">${formatPrice(peer.price)}</span>
-                        <span class="peer-diff ${diffClass}">(${diffSign}${priceDiff.toFixed(2)}%)</span>
-                        <span class="peer-volume">Vol: ${peerVolume}</span>
-                        <button class="orderbook-btn-sm" onclick="showOrderbook('${peer.exchange}', '${peer.symbol}')">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M4 6h16M4 12h16M4 18h16"/>
-                            </svg>
-                        </button>
-                    </div>
-                `;
-            }).filter(Boolean).join('') + '</div>';
-        }
-        
-        const volumeHtml = exchangeCount > 1 
-            ? `<div class="volume-info"><span class="volume-own">${formatVolume(t.turnover_24h)}</span><span class="volume-total" title="Total across ${exchangeCount} exchanges">Σ ${formatVolume(totalVolume)}</span></div>`
-            : formatVolume(t.turnover_24h);
-        
-        return `
-            <tr>
-                <td class="td-exchange">
-                    <span class="exchange-badge ${exchangeClass}">${t.exchange}</span>
-                </td>
-                <td class="td-symbol">${t.symbol}</td>
-                <td class="td-price">${formatPrice(t.price)}</td>
-                <td class="td-volume">${volumeHtml}</td>
-                <td class="td-change ${changeClass}">
-                    <span class="change-arrow">${changeArrow}</span>${formatChange(t.change_24h)}%
-                </td>
-                <td class="td-action">
-                    <button class="orderbook-btn" onclick="showOrderbook('${t.exchange}', '${t.symbol}')">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 6h16M4 12h16M4 18h16"/>
-                        </svg>
-                        View
-                    </button>
-                </td>
-                <td class="td-peer">${peerDataHtml}</td>
-            </tr>
-        `;
-    }).join('');
-    
-    countEl.textContent = `${tickers.length} pairs displayed`;
-}
-
 function formatPrice(price) {
     if (price === null || price === undefined) return '−';
     if (price === 0) return '0.00';
@@ -299,125 +252,54 @@ function formatChange(change) {
     return Math.abs(change).toFixed(2);
 }
 
-function filterTable() {
-    const exchangeFilter = document.getElementById('exchange-filter').value;
-    const searchValue = document.getElementById('search-input').value.toLowerCase();
-    const multiExchangeOnly = document.getElementById('multi-exchange-filter')?.checked || false;
-    
-    let filtered = allTickers;
-    
-    if (exchangeFilter !== 'all') {
-        filtered = filtered.filter(t => t.exchange === exchangeFilter);
-    }
-    
-    if (searchValue) {
-        filtered = filtered.filter(t => 
-            t.symbol.toLowerCase().includes(searchValue) ||
-            t.base_currency.toLowerCase().includes(searchValue)
-        );
-    }
-    
-    if (multiExchangeOnly) {
-        filtered = filtered.filter(t => getExchangeCountForSymbol(t.symbol) > 1);
-    }
-    
-    filtered = sortTickersByColumn(filtered);
-    renderTable(filtered);
-}
-
-function sortTickersByColumn(tickers) {
-    const sorted = [...tickers];
-    const { column, direction } = currentSort;
-    const mult = direction === 'asc' ? 1 : -1;
-    
-    switch (column) {
-        case 'symbol':
-            sorted.sort((a, b) => mult * a.symbol.localeCompare(b.symbol));
-            break;
-        case 'price':
-            sorted.sort((a, b) => mult * ((a.price || 0) - (b.price || 0)));
-            break;
-        case 'volume':
-            sorted.sort((a, b) => mult * ((a.turnover_24h || 0) - (b.turnover_24h || 0)));
-            break;
-        case 'change':
-            sorted.sort((a, b) => mult * ((a.change_24h || 0) - (b.change_24h || 0)));
-            break;
-    }
-    
-    return sorted;
-}
-
-function showToast(message, type) {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.className = `toast ${type} show`;
-    
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 4000);
-}
-
 async function showOrderbook(exchange, symbol) {
     const modal = document.getElementById('orderbook-modal');
-    const title = document.getElementById('modal-title');
+    const modalTitle = document.getElementById('modal-title');
     const asksList = document.getElementById('asks-list');
     const bidsList = document.getElementById('bids-list');
-    const spreadDiv = document.getElementById('spread-divider');
+    const spreadDivider = document.getElementById('spread-divider');
     
-    title.textContent = `${symbol}`;
-    asksList.innerHTML = '<div class="loading-spinner">Loading...</div>';
+    modalTitle.textContent = `${symbol} Orderbook (${exchange})`;
+    asksList.innerHTML = '<div class="orderbook-loading">Loading...</div>';
     bidsList.innerHTML = '';
-    spreadDiv.textContent = '−';
+    spreadDivider.textContent = '−';
+    
     modal.classList.add('show');
     
     try {
-        const response = await fetch(`/api/orderbook/${exchange}/${symbol}?limit=10`);
+        const response = await fetch(`/api/orderbook/${exchange}/${symbol}`);
         const data = await response.json();
         
         if (data.status === 'success') {
             const orderbook = data.data;
-            const asks = orderbook.asks.slice(0, 10);
-            const bids = orderbook.bids.slice(0, 10);
             
-            const maxAskQty = Math.max(...asks.map(a => a[1]), 1);
-            const maxBidQty = Math.max(...bids.map(b => b[1]), 1);
-            const maxQty = Math.max(maxAskQty, maxBidQty);
+            const asks = orderbook.asks.slice(0, 15).reverse();
+            asksList.innerHTML = asks.map(([price, qty]) => `
+                <div class="orderbook-row ask">
+                    <span class="ob-price">${formatPrice(price)}</span>
+                    <span class="ob-qty">${formatVolume(qty)}</span>
+                </div>
+            `).join('');
             
-            asksList.innerHTML = asks.map(([price, qty]) => {
-                const depth = (qty / maxQty * 100).toFixed(0);
-                return `
-                    <div class="orderbook-row ask" style="--depth: ${depth}%">
-                        <span class="ob-price">${formatPrice(price)}</span>
-                        <span class="ob-qty">${formatQuantity(qty)}</span>
-                    </div>
-                `;
-            }).join('') || '<div class="no-data">No asks</div>';
-            
-            bidsList.innerHTML = bids.map(([price, qty]) => {
-                const depth = (qty / maxQty * 100).toFixed(0);
-                return `
-                    <div class="orderbook-row bid" style="--depth: ${depth}%">
-                        <span class="ob-price">${formatPrice(price)}</span>
-                        <span class="ob-qty">${formatQuantity(qty)}</span>
-                    </div>
-                `;
-            }).join('') || '<div class="no-data">No bids</div>';
+            const bids = orderbook.bids.slice(0, 15);
+            bidsList.innerHTML = bids.map(([price, qty]) => `
+                <div class="orderbook-row bid">
+                    <span class="ob-price">${formatPrice(price)}</span>
+                    <span class="ob-qty">${formatVolume(qty)}</span>
+                </div>
+            `).join('');
             
             if (asks.length > 0 && bids.length > 0) {
-                const lowestAsk = asks[0][0];
-                const highestBid = bids[0][0];
-                const spread = lowestAsk - highestBid;
-                const spreadPct = ((spread / lowestAsk) * 100).toFixed(3);
-                spreadDiv.innerHTML = `<span style="color: var(--accent-green)">${formatPrice(highestBid)}</span> / <span style="color: var(--accent-red)">${formatPrice(lowestAsk)}</span> <span style="color: var(--text-muted); font-size: 0.625rem">(${spreadPct}%)</span>`;
+                const lowestAsk = orderbook.asks[0][0];
+                const highestBid = orderbook.bids[0][0];
+                const spread = ((lowestAsk - highestBid) / lowestAsk * 100).toFixed(4);
+                spreadDivider.textContent = `Spread: ${spread}%`;
             }
         } else {
-            asksList.innerHTML = `<div class="error-msg">${data.message}</div>`;
-            bidsList.innerHTML = '';
+            asksList.innerHTML = `<div class="orderbook-error">${data.message}</div>`;
         }
     } catch (error) {
-        asksList.innerHTML = `<div class="error-msg">Failed to load</div>`;
-        bidsList.innerHTML = '';
+        asksList.innerHTML = `<div class="orderbook-error">Failed to load orderbook</div>`;
     }
 }
 
@@ -426,22 +308,18 @@ function closeOrderbookModal() {
     modal.classList.remove('show');
 }
 
-function formatQuantity(qty) {
-    if (qty === null || qty === undefined) return '−';
-    if (qty >= 1e6) return (qty / 1e6).toFixed(2) + 'M';
-    if (qty >= 1e3) return (qty / 1e3).toFixed(2) + 'K';
-    if (qty >= 1) return qty.toFixed(4);
-    return qty.toFixed(6);
-}
-
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeOrderbookModal();
     }
 });
 
-document.getElementById('orderbook-modal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeOrderbookModal();
-    }
-});
+function showToast(message, type = 'info') {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = `toast ${type} show`;
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}

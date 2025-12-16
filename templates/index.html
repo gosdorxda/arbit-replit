@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crypto Exchange Data Aggregator</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -106,8 +107,8 @@
             <div class="filter-group">
                 <div class="filter-item">
                     <label for="exchange-filter">Exchange:</label>
-                    <select id="exchange-filter" onchange="filterTable()">
-                        <option value="all">All Exchanges</option>
+                    <select id="exchange-filter">
+                        <option value="">All Exchanges</option>
                         <option value="LBANK">LBANK</option>
                         <option value="HASHKEY">HASHKEY</option>
                         <option value="BICONOMY">BICONOMY</option>
@@ -116,50 +117,31 @@
                         <option value="ASCENDEX">ASCENDEX</option>
                     </select>
                 </div>
-                <div class="filter-item">
-                    <label for="search-input">Search:</label>
-                    <input type="text" id="search-input" placeholder="Search symbol..." oninput="filterTable()">
-                </div>
                 <div class="filter-item filter-checkbox">
                     <label class="checkbox-label">
-                        <input type="checkbox" id="multi-exchange-filter" onchange="filterTable()">
+                        <input type="checkbox" id="multi-exchange-filter">
                         <span>Multi-exchange pairs only</span>
                     </label>
                 </div>
             </div>
-            <p class="sort-hint">Click on column headers to sort</p>
         </section>
 
         <section class="table-section">
             <div class="table-wrapper">
-                <table id="ticker-table">
+                <table id="ticker-table" class="display" style="width:100%">
                     <thead>
                         <tr>
-                            <th class="th-exchange">Exchange</th>
-                            <th class="th-symbol sortable" data-sort="symbol">Symbol <span class="sort-icon"></span></th>
-                            <th class="th-price sortable" data-sort="price">Price <span class="sort-icon"></span></th>
-                            <th class="th-volume sortable" data-sort="volume">24h Vol (USD) <span class="sort-icon"></span></th>
-                            <th class="th-change sortable" data-sort="change">24h Change <span class="sort-icon"></span></th>
-                            <th class="th-action">Orderbook</th>
-                            <th class="th-peer">Compare (Other Exchange)</th>
+                            <th>Exchange</th>
+                            <th>Symbol</th>
+                            <th>Price</th>
+                            <th>24h Vol (USD)</th>
+                            <th>24h Change</th>
+                            <th>Orderbook</th>
+                            <th>Compare (Other Exchange)</th>
                         </tr>
                     </thead>
-                    <tbody id="ticker-body">
-                        <tr class="empty-row">
-                            <td colspan="7">
-                                <div class="empty-state">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                        <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                                    </svg>
-                                    <p>No data yet. Click a fetch button to load exchange data.</p>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
+                    <tbody></tbody>
                 </table>
-            </div>
-            <div class="table-footer">
-                <span id="ticker-count">0 pairs displayed</span>
             </div>
         </section>
 
@@ -190,6 +172,8 @@
         </div>
     </div>
     
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

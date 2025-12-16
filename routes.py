@@ -184,11 +184,80 @@ def fetch_ascendex():
 
 @app.route('/api/tickers')
 def get_tickers():
-    tickers = SpotTicker.query.order_by(SpotTicker.exchange, SpotTicker.symbol).all()
+    draw = request.args.get('draw', 1, type=int)
+    start = request.args.get('start', 0, type=int)
+    length = request.args.get('length', 50, type=int)
+    search_value = request.args.get('search[value]', '', type=str)
+    exchange_filter = request.args.get('exchange', '', type=str)
+    multi_exchange = request.args.get('multi_exchange', 'false', type=str) == 'true'
+    order_column = request.args.get('order[0][column]', '1', type=str)
+    order_dir = request.args.get('order[0][dir]', 'asc', type=str)
+    
+    column_map = {
+        '0': SpotTicker.exchange,
+        '1': SpotTicker.symbol,
+        '2': SpotTicker.price,
+        '3': SpotTicker.turnover_24h,
+        '4': SpotTicker.change_24h
+    }
+    
+    query = SpotTicker.query
+    
+    if exchange_filter:
+        query = query.filter(SpotTicker.exchange == exchange_filter)
+    
+    if search_value:
+        query = query.filter(
+            db.or_(
+                SpotTicker.symbol.ilike(f'%{search_value}%'),
+                SpotTicker.base_currency.ilike(f'%{search_value}%')
+            )
+        )
+    
+    if multi_exchange:
+        from sqlalchemy import func
+        symbol_counts = db.session.query(
+            SpotTicker.symbol,
+            func.count(SpotTicker.exchange).label('exchange_count')
+        ).group_by(SpotTicker.symbol).having(func.count(SpotTicker.exchange) > 1).subquery()
+        
+        query = query.join(symbol_counts, SpotTicker.symbol == symbol_counts.c.symbol)
+    
+    total_records = SpotTicker.query.count()
+    filtered_records = query.count()
+    
+    order_col = column_map.get(order_column, SpotTicker.symbol)
+    if order_dir == 'desc':
+        query = query.order_by(order_col.desc())
+    else:
+        query = query.order_by(order_col.asc())
+    
+    tickers = query.offset(start).limit(length).all()
+    
+    all_tickers = SpotTicker.query.all()
+    symbol_map = {}
+    for t in all_tickers:
+        if t.symbol not in symbol_map:
+            symbol_map[t.symbol] = {}
+        symbol_map[t.symbol][t.exchange] = t.to_dict()
+    
+    data = []
+    for t in tickers:
+        ticker_dict = t.to_dict()
+        peers = []
+        if t.symbol in symbol_map:
+            for ex, peer_data in symbol_map[t.symbol].items():
+                if ex != t.exchange:
+                    peers.append(peer_data)
+        ticker_dict['peers'] = peers
+        ticker_dict['exchange_count'] = len(symbol_map.get(t.symbol, {}))
+        data.append(ticker_dict)
+    
     return jsonify({
-        'status': 'success',
-        'count': len(tickers),
-        'data': [t.to_dict() for t in tickers]
+        'draw': draw,
+        'recordsTotal': total_records,
+        'recordsFiltered': filtered_records,
+        'data': data
     })
 
 
