@@ -328,6 +328,9 @@ async function showOrderbook(exchange, symbol) {
                 </div>
             `).join('');
             
+            // Auto-scroll asks to bottom so lowest price (near spread) is visible
+            asksList.scrollTop = asksList.scrollHeight;
+            
             // Parse all, sort descending to get highest bids first, take 15 closest to spread
             const allBids = orderbook.bids.map(parseEntry).sort((a, b) => b.price - a.price);
             const bidsToShow = allBids.slice(0, 15); // highest at top (near spread), lowest at bottom
