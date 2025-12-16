@@ -84,6 +84,41 @@ function initDataTable() {
                     return `<span class="price-value">${formatPrice(data)}</span>`;
                 },
                 orderable: true
+            },
+            {
+                data: 'peers',
+                render: function(peers, type, row) {
+                    if (!peers || peers.length === 0) {
+                        return '<span class="no-peer">−</span>';
+                    }
+                    
+                    let html = '<div class="peer-list">';
+                    peers.forEach(peer => {
+                        if (!peer.price) return;
+                        const peerExchangeClass = peer.exchange.toLowerCase();
+                        const priceDiff = ((peer.price - row.price) / row.price * 100);
+                        const diffClass = priceDiff > 0.01 ? 'change-positive' : priceDiff < -0.01 ? 'change-negative' : 'change-neutral';
+                        const diffSign = priceDiff > 0 ? '+' : '';
+                        const peerVolume = peer.turnover_24h ? formatVolume(peer.turnover_24h) : '−';
+                        
+                        html += `
+                            <div class="peer-data">
+                                <span class="peer-exchange ${peerExchangeClass}">${peer.exchange}</span>
+                                <span class="peer-price">${formatPrice(peer.price)}</span>
+                                <span class="peer-diff ${diffClass}">(${diffSign}${priceDiff.toFixed(2)}%)</span>
+                                <span class="peer-volume">Vol: ${peerVolume}</span>
+                                <button class="orderbook-btn-sm" onclick="showOrderbook('${peer.exchange}', '${peer.symbol}')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M4 6h16M4 12h16M4 18h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    return html;
+                },
+                orderable: false
             }
         ],
         order: [[1, 'asc']],
