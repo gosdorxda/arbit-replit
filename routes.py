@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import render_template, jsonify, request
 from app import app, db
 from models import SpotTicker, FetchLog
-from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter
+from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter
 
 
 def save_tickers(tickers, exchange_name):
@@ -136,6 +136,52 @@ def fetch_mexc():
         }), 500
 
 
+@app.route('/api/fetch/bitrue', methods=['POST'])
+def fetch_bitrue():
+    try:
+        adapter = BitrueAdapter()
+        tickers = adapter.fetch_usdt_tickers()
+        save_tickers(tickers, adapter.exchange_name)
+        log_fetch(adapter.exchange_name, 'success', len(tickers))
+        
+        return jsonify({
+            'status': 'success',
+            'exchange': adapter.exchange_name,
+            'pairs_count': len(tickers),
+            'message': f'Successfully fetched {len(tickers)} USDT pairs from Bitrue'
+        })
+    except Exception as e:
+        log_fetch('BITRUE', 'error', error_message=str(e))
+        return jsonify({
+            'status': 'error',
+            'exchange': 'BITRUE',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/fetch/ascendex', methods=['POST'])
+def fetch_ascendex():
+    try:
+        adapter = AscendEXAdapter()
+        tickers = adapter.fetch_usdt_tickers()
+        save_tickers(tickers, adapter.exchange_name)
+        log_fetch(adapter.exchange_name, 'success', len(tickers))
+        
+        return jsonify({
+            'status': 'success',
+            'exchange': adapter.exchange_name,
+            'pairs_count': len(tickers),
+            'message': f'Successfully fetched {len(tickers)} USDT pairs from AscendEX'
+        })
+    except Exception as e:
+        log_fetch('ASCENDEX', 'error', error_message=str(e))
+        return jsonify({
+            'status': 'error',
+            'exchange': 'ASCENDEX',
+            'message': str(e)
+        }), 500
+
+
 @app.route('/api/tickers')
 def get_tickers():
     tickers = SpotTicker.query.order_by(SpotTicker.exchange, SpotTicker.symbol).all()
@@ -161,11 +207,15 @@ def get_status():
     hashkey_log = FetchLog.query.filter_by(exchange='HASHKEY').order_by(FetchLog.fetched_at.desc()).first()
     biconomy_log = FetchLog.query.filter_by(exchange='BICONOMY').order_by(FetchLog.fetched_at.desc()).first()
     mexc_log = FetchLog.query.filter_by(exchange='MEXC').order_by(FetchLog.fetched_at.desc()).first()
+    bitrue_log = FetchLog.query.filter_by(exchange='BITRUE').order_by(FetchLog.fetched_at.desc()).first()
+    ascendex_log = FetchLog.query.filter_by(exchange='ASCENDEX').order_by(FetchLog.fetched_at.desc()).first()
     
     lbank_count = SpotTicker.query.filter_by(exchange='LBANK').count()
     hashkey_count = SpotTicker.query.filter_by(exchange='HASHKEY').count()
     biconomy_count = SpotTicker.query.filter_by(exchange='BICONOMY').count()
     mexc_count = SpotTicker.query.filter_by(exchange='MEXC').count()
+    bitrue_count = SpotTicker.query.filter_by(exchange='BITRUE').count()
+    ascendex_count = SpotTicker.query.filter_by(exchange='ASCENDEX').count()
     
     return jsonify({
         'lbank': {
@@ -187,6 +237,16 @@ def get_status():
             'last_fetch': mexc_log.fetched_at.isoformat() if mexc_log else None,
             'status': mexc_log.status if mexc_log else 'never',
             'pairs_count': mexc_count
+        },
+        'bitrue': {
+            'last_fetch': bitrue_log.fetched_at.isoformat() if bitrue_log else None,
+            'status': bitrue_log.status if bitrue_log else 'never',
+            'pairs_count': bitrue_count
+        },
+        'ascendex': {
+            'last_fetch': ascendex_log.fetched_at.isoformat() if ascendex_log else None,
+            'status': ascendex_log.status if ascendex_log else 'never',
+            'pairs_count': ascendex_count
         }
     })
 
@@ -204,6 +264,10 @@ def get_orderbook(exchange, symbol):
             adapter = BiconomyAdapter()
         elif exchange.upper() == 'MEXC':
             adapter = MEXCAdapter()
+        elif exchange.upper() == 'BITRUE':
+            adapter = BitrueAdapter()
+        elif exchange.upper() == 'ASCENDEX':
+            adapter = AscendEXAdapter()
         else:
             return jsonify({
                 'status': 'error',

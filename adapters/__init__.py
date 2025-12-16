@@ -3,5 +3,7 @@ from .lbank import LBankAdapter
 from .hashkey import HashKeyAdapter
 from .biconomy import BiconomyAdapter
 from .mexc import MEXCAdapter
+from .bitrue import BitrueAdapter
+from .ascendex import AscendEXAdapter
 
-__all__ = ['BaseAdapter', 'LBankAdapter', 'HashKeyAdapter', 'BiconomyAdapter', 'MEXCAdapter']
+__all__ = ['BaseAdapter', 'LBankAdapter', 'HashKeyAdapter', 'BiconomyAdapter', 'MEXCAdapter', 'BitrueAdapter', 'AscendEXAdapter']

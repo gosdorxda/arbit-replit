@@ -1,7 +1,7 @@
 # Crypto Exchange Data Aggregator
 
 ## Overview
-A Flask-based web application that fetches, normalizes, and displays SPOT/USDT market data from multiple cryptocurrency exchanges. Currently supports LBANK, HashKey, Biconomy, and MEXC exchanges.
+A Flask-based web application that fetches, normalizes, and displays SPOT/USDT market data from multiple cryptocurrency exchanges. Currently supports LBANK, HashKey, Biconomy, MEXC, Bitrue, and AscendEX exchanges.
 
 ## Key Features
 - **Manual Data Fetching**: Button-triggered fetching from each exchange
@@ -25,7 +25,9 @@ adapters/
   ├── lbank.py      - LBANK exchange adapter
   ├── hashkey.py    - HashKey exchange adapter
   ├── biconomy.py   - Biconomy exchange adapter
-  └── mexc.py       - MEXC exchange adapter
+  ├── mexc.py       - MEXC exchange adapter
+  ├── bitrue.py     - Bitrue exchange adapter
+  └── ascendex.py   - AscendEX exchange adapter
 ```
 
 ### Frontend
@@ -46,6 +48,8 @@ static/
 | `/api/fetch/hashkey` | POST | Trigger HashKey data fetch |
 | `/api/fetch/biconomy` | POST | Trigger Biconomy data fetch |
 | `/api/fetch/mexc` | POST | Trigger MEXC data fetch |
+| `/api/fetch/bitrue` | POST | Trigger Bitrue data fetch |
+| `/api/fetch/ascendex` | POST | Trigger AscendEX data fetch |
 | `/api/tickers` | GET | Get all stored ticker data |
 | `/api/status` | GET | Get fetch status for each exchange |
 | `/api/logs` | GET | Get recent fetch logs |
@@ -84,6 +88,8 @@ To add a new exchange:
 - `SESSION_SECRET` - Flask session secret key
 
 ## Recent Changes
+- Added Bitrue exchange adapter
+- Added AscendEX exchange adapter
 - Added MEXC exchange adapter (2000+ USDT pairs)
 - Volume display now uses turnover (USD value) instead of raw volume
 - Removed 24H High/Low columns (unused)

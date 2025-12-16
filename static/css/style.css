@@ -14,6 +14,8 @@
     --hashkey-color: #7c3aed;
     --biconomy-color: #00b894;
     --mexc-color: #1873e8;
+    --bitrue-color: #00c853;
+    --ascendex-color: #ff6b35;
 }
 
 * {
@@ -178,6 +180,28 @@ body {
     background-color: #1563c7;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(24, 115, 232, 0.3);
+}
+
+.bitrue-btn {
+    background-color: var(--bitrue-color);
+    color: white;
+}
+
+.bitrue-btn:hover:not(:disabled) {
+    background-color: #00a844;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 200, 83, 0.3);
+}
+
+.ascendex-btn {
+    background-color: var(--ascendex-color);
+    color: white;
+}
+
+.ascendex-btn:hover:not(:disabled) {
+    background-color: #e55a2b;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
 }
 
 .status-row {
@@ -377,6 +401,16 @@ tbody tr:last-child td {
 .exchange-badge.mexc {
     background-color: rgba(24, 115, 232, 0.2);
     color: var(--mexc-color);
+}
+
+.exchange-badge.bitrue {
+    background-color: rgba(0, 200, 83, 0.2);
+    color: var(--bitrue-color);
+}
+
+.exchange-badge.ascendex {
+    background-color: rgba(255, 107, 53, 0.2);
+    color: var(--ascendex-color);
 }
 
 .td-symbol {
@@ -632,6 +666,16 @@ tbody tr:last-child td {
 .peer-exchange.mexc {
     background-color: rgba(24, 115, 232, 0.2);
     color: var(--mexc-color);
+}
+
+.peer-exchange.bitrue {
+    background-color: rgba(0, 200, 83, 0.2);
+    color: var(--bitrue-color);
+}
+
+.peer-exchange.ascendex {
+    background-color: rgba(255, 107, 53, 0.2);
+    color: var(--ascendex-color);
 }
 
 .peer-price {

@@ -101,6 +101,8 @@ async function loadStatus() {
         updateStatusDisplay('hashkey', data.hashkey);
         updateStatusDisplay('biconomy', data.biconomy);
         updateStatusDisplay('mexc', data.mexc);
+        updateStatusDisplay('bitrue', data.bitrue);
+        updateStatusDisplay('ascendex', data.ascendex);
     } catch (error) {
         console.error('Failed to load status:', error);
     }
