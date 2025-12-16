@@ -29,99 +29,75 @@
         <section class="control-panel">
             <div class="button-group">
                 <button id="btn-lbank" class="fetch-btn lbank-btn" onclick="fetchData('lbank')">
-                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        <path d="M9 12l2 2 4-4"/>
-                    </svg>
-                    <span class="btn-text">Fetch LBANK</span>
-                    <span class="spinner"></span>
+                    <div class="btn-main">
+                        <span class="btn-name">LBANK</span>
+                        <span class="spinner"></span>
+                    </div>
+                    <div class="btn-status">
+                        <span class="btn-time">Never fetched</span>
+                        <span class="btn-pairs">0 pairs</span>
+                    </div>
                 </button>
                 <button id="btn-hashkey" class="fetch-btn hashkey-btn" onclick="fetchData('hashkey')">
-                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        <path d="M9 12l2 2 4-4"/>
-                    </svg>
-                    <span class="btn-text">Fetch HashKey</span>
-                    <span class="spinner"></span>
+                    <div class="btn-main">
+                        <span class="btn-name">HashKey</span>
+                        <span class="spinner"></span>
+                    </div>
+                    <div class="btn-status">
+                        <span class="btn-time">Never fetched</span>
+                        <span class="btn-pairs">0 pairs</span>
+                    </div>
                 </button>
                 <button id="btn-biconomy" class="fetch-btn biconomy-btn" onclick="fetchData('biconomy')">
-                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        <path d="M9 12l2 2 4-4"/>
-                    </svg>
-                    <span class="btn-text">Fetch Biconomy</span>
-                    <span class="spinner"></span>
+                    <div class="btn-main">
+                        <span class="btn-name">Biconomy</span>
+                        <span class="spinner"></span>
+                    </div>
+                    <div class="btn-status">
+                        <span class="btn-time">Never fetched</span>
+                        <span class="btn-pairs">0 pairs</span>
+                    </div>
                 </button>
                 <button id="btn-mexc" class="fetch-btn mexc-btn" onclick="fetchData('mexc')">
-                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        <path d="M9 12l2 2 4-4"/>
-                    </svg>
-                    <span class="btn-text">Fetch MEXC</span>
-                    <span class="spinner"></span>
+                    <div class="btn-main">
+                        <span class="btn-name">MEXC</span>
+                        <span class="spinner"></span>
+                    </div>
+                    <div class="btn-status">
+                        <span class="btn-time">Never fetched</span>
+                        <span class="btn-pairs">0 pairs</span>
+                    </div>
                 </button>
                 <button id="btn-bitrue" class="fetch-btn bitrue-btn" onclick="fetchData('bitrue')">
-                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        <path d="M9 12l2 2 4-4"/>
-                    </svg>
-                    <span class="btn-text">Fetch Bitrue</span>
-                    <span class="spinner"></span>
+                    <div class="btn-main">
+                        <span class="btn-name">Bitrue</span>
+                        <span class="spinner"></span>
+                    </div>
+                    <div class="btn-status">
+                        <span class="btn-time">Never fetched</span>
+                        <span class="btn-pairs">0 pairs</span>
+                    </div>
                 </button>
                 <button id="btn-ascendex" class="fetch-btn ascendex-btn" onclick="fetchData('ascendex')">
-                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        <path d="M9 12l2 2 4-4"/>
-                    </svg>
-                    <span class="btn-text">Fetch AscendEX</span>
-                    <span class="spinner"></span>
+                    <div class="btn-main">
+                        <span class="btn-name">AscendEX</span>
+                        <span class="spinner"></span>
+                    </div>
+                    <div class="btn-status">
+                        <span class="btn-time">Never fetched</span>
+                        <span class="btn-pairs">0 pairs</span>
+                    </div>
                 </button>
                 <button id="btn-bitmart" class="fetch-btn bitmart-btn" onclick="fetchData('bitmart')">
-                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        <path d="M9 12l2 2 4-4"/>
-                    </svg>
-                    <span class="btn-text">Fetch BitMart</span>
-                    <span class="spinner"></span>
+                    <div class="btn-main">
+                        <span class="btn-name">BitMart</span>
+                        <span class="spinner"></span>
+                    </div>
+                    <div class="btn-status">
+                        <span class="btn-time">Never fetched</span>
+                        <span class="btn-pairs">0 pairs</span>
+                    </div>
                 </button>
-            </div>
-            
-            <div class="status-row">
-                <div class="status-item" id="status-lbank">
-                    <span class="status-label">LBANK:</span>
-                    <span class="status-badge never">Never fetched</span>
-                    <span class="status-count">0 pairs</span>
-                </div>
-                <div class="status-item" id="status-hashkey">
-                    <span class="status-label">HASHKEY:</span>
-                    <span class="status-badge never">Never fetched</span>
-                    <span class="status-count">0 pairs</span>
-                </div>
-                <div class="status-item" id="status-biconomy">
-                    <span class="status-label">BICONOMY:</span>
-                    <span class="status-badge never">Never fetched</span>
-                    <span class="status-count">0 pairs</span>
-                </div>
-                <div class="status-item" id="status-mexc">
-                    <span class="status-label">MEXC:</span>
-                    <span class="status-badge never">Never fetched</span>
-                    <span class="status-count">0 pairs</span>
-                </div>
-                <div class="status-item" id="status-bitrue">
-                    <span class="status-label">BITRUE:</span>
-                    <span class="status-badge never">Never fetched</span>
-                    <span class="status-count">0 pairs</span>
-                </div>
-                <div class="status-item" id="status-ascendex">
-                    <span class="status-label">ASCENDEX:</span>
-                    <span class="status-badge never">Never fetched</span>
-                    <span class="status-count">0 pairs</span>
-                </div>
-                <div class="status-item" id="status-bitmart">
-                    <span class="status-label">BITMART:</span>
-                    <span class="status-badge never">Never fetched</span>
-                    <span class="status-count">0 pairs</span>
-                </div>
             </div>
         </section>
 

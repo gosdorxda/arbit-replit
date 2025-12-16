@@ -179,25 +179,25 @@ async function loadStatus() {
 }
 
 function updateStatusDisplay(exchange, status) {
-    const statusItem = document.getElementById(`status-${exchange}`);
-    if (!statusItem) return;
+    const btn = document.getElementById(`btn-${exchange}`);
+    if (!btn) return;
     
-    const badge = statusItem.querySelector('.status-badge');
-    const count = statusItem.querySelector('.status-count');
+    const timeEl = btn.querySelector('.btn-time');
+    const pairsEl = btn.querySelector('.btn-pairs');
     
     if (status.status === 'never' || !status.last_fetch) {
-        badge.className = 'status-badge never';
-        badge.textContent = 'Never fetched';
+        timeEl.textContent = 'Never fetched';
+        timeEl.className = 'btn-time never';
     } else if (status.status === 'success') {
-        badge.className = 'status-badge success';
         const time = formatRelativeTime(new Date(status.last_fetch));
-        badge.textContent = time;
+        timeEl.textContent = time;
+        timeEl.className = 'btn-time success';
     } else {
-        badge.className = 'status-badge error';
-        badge.textContent = 'Error';
+        timeEl.textContent = 'Error';
+        timeEl.className = 'btn-time error';
     }
     
-    count.textContent = `${status.pairs_count} pairs`;
+    pairsEl.textContent = `${status.pairs_count} pairs`;
 }
 
 function formatRelativeTime(date) {
