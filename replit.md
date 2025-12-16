@@ -9,6 +9,7 @@ A Flask-based web application that fetches, normalizes, and displays SPOT/USDT m
 - **Persistent Storage**: PostgreSQL database for storing normalized ticker data
 - **Interactive Table**: Filtering, sorting, and searching capabilities
 - **Status Tracking**: Fetch logs and status indicators for each exchange
+- **Orderbook Viewing**: Modal popup showing real-time bid/ask depth for any trading pair
 
 ## Project Architecture
 
@@ -44,6 +45,7 @@ static/
 | `/api/tickers` | GET | Get all stored ticker data |
 | `/api/status` | GET | Get fetch status for each exchange |
 | `/api/logs` | GET | Get recent fetch logs |
+| `/api/orderbook/<exchange>/<symbol>` | GET | Get orderbook depth data (asks/bids) |
 
 ## Data Normalization
 
@@ -78,6 +80,7 @@ To add a new exchange:
 - `SESSION_SECRET` - Flask session secret key
 
 ## Recent Changes
+- Added orderbook viewing feature with modal popup for each trading pair
 - Initial implementation with LBANK and HashKey adapters
 - PostgreSQL database integration
 - Interactive table with filtering and sorting
