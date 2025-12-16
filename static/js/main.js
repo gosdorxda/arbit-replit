@@ -223,8 +223,8 @@ function updateStatusDisplay(exchange, status) {
         timeEl.className = 'btn-time never';
     } else if (status.status === 'success') {
         const fetchDate = new Date(status.last_fetch);
-        const jakartaTime = formatJakartaTime(fetchDate);
-        timeEl.textContent = jakartaTime;
+        const relativeTime = formatRelativeTime(fetchDate);
+        timeEl.textContent = relativeTime;
         timeEl.className = 'btn-time success';
     } else {
         timeEl.textContent = 'Error';

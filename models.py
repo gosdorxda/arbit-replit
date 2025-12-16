@@ -1,5 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from app import db
+
+JAKARTA_TZ = timezone(timedelta(hours=7))
+
+def jakarta_now():
+    return datetime.now(JAKARTA_TZ).replace(tzinfo=None)
 
 
 class SpotTicker(db.Model):
@@ -16,7 +21,7 @@ class SpotTicker(db.Model):
     low_24h = db.Column(db.Float, nullable=True)
     change_24h = db.Column(db.Float, nullable=True)
     turnover_24h = db.Column(db.Float, nullable=True)
-    fetched_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    fetched_at = db.Column(db.DateTime, nullable=False, default=jakarta_now)
     
     __table_args__ = (
         db.UniqueConstraint('exchange', 'symbol', name='unique_exchange_symbol'),
@@ -47,7 +52,7 @@ class FetchLog(db.Model):
     status = db.Column(db.String(20), nullable=False)
     pairs_count = db.Column(db.Integer, default=0)
     error_message = db.Column(db.Text, nullable=True)
-    fetched_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    fetched_at = db.Column(db.DateTime, nullable=False, default=jakarta_now)
     
     def to_dict(self):
         return {
