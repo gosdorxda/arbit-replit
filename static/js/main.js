@@ -305,7 +305,7 @@ async function showOrderbook(exchange, symbol) {
     modal.classList.add('show');
     
     try {
-        const response = await fetch(`/api/orderbook/${exchange}/${symbol}`);
+        const response = await fetch(`/api/orderbook/${exchange}/${encodeURIComponent(symbol)}`);
         const data = await response.json();
         
         if (data.status === 'success') {
