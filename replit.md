@@ -1,7 +1,7 @@
 # Crypto Exchange Data Aggregator
 
 ## Overview
-A Flask-based web application that fetches, normalizes, and displays SPOT/USDT market data from multiple cryptocurrency exchanges. Currently supports LBANK and HashKey exchanges.
+A Flask-based web application that fetches, normalizes, and displays SPOT/USDT market data from multiple cryptocurrency exchanges. Currently supports LBANK, HashKey, and Biconomy exchanges.
 
 ## Key Features
 - **Manual Data Fetching**: Button-triggered fetching from each exchange
@@ -23,7 +23,8 @@ adapters/
   ├── __init__.py   - Adapter exports
   ├── base.py       - BaseAdapter abstract class and NormalizedTicker dataclass
   ├── lbank.py      - LBANK exchange adapter
-  └── hashkey.py    - HashKey exchange adapter
+  ├── hashkey.py    - HashKey exchange adapter
+  └── biconomy.py   - Biconomy exchange adapter
 ```
 
 ### Frontend
@@ -42,6 +43,7 @@ static/
 | `/` | GET | Main page |
 | `/api/fetch/lbank` | POST | Trigger LBANK data fetch |
 | `/api/fetch/hashkey` | POST | Trigger HashKey data fetch |
+| `/api/fetch/biconomy` | POST | Trigger Biconomy data fetch |
 | `/api/tickers` | GET | Get all stored ticker data |
 | `/api/status` | GET | Get fetch status for each exchange |
 | `/api/logs` | GET | Get recent fetch logs |
@@ -53,7 +55,7 @@ Each exchange adapter transforms exchange-specific API responses into a unified 
 
 | Field | Description |
 |-------|-------------|
-| exchange | Exchange name (LBANK, HASHKEY) |
+| exchange | Exchange name (LBANK, HASHKEY, BICONOMY) |
 | symbol | Trading pair (e.g., BTC/USDT) |
 | base_currency | Base asset (e.g., BTC) |
 | quote_currency | Quote asset (always USDT) |
@@ -80,8 +82,9 @@ To add a new exchange:
 - `SESSION_SECRET` - Flask session secret key
 
 ## Recent Changes
+- Added Biconomy exchange adapter (1132 USDT pairs) with X-SITE-ID header requirement
 - Added orderbook viewing feature with modal popup for each trading pair
-- Initial implementation with LBANK and HashKey adapters
+- Added cross-exchange price comparison column
+- Clickable table headers for sorting
 - PostgreSQL database integration
 - Interactive table with filtering and sorting
-- Real-time status indicators
