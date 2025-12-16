@@ -256,16 +256,23 @@ function formatPrice(price) {
     if (price === null || price === undefined) return '−';
     if (price === 0) return '0.00';
     
-    if (price < 0.0001) {
-        return price.toExponential(4);
-    } else if (price < 1) {
-        return price.toFixed(6);
-    } else if (price < 100) {
-        return price.toFixed(4);
-    } else if (price < 10000) {
-        return price.toFixed(2);
-    } else {
+    if (price >= 100000) {
         return price.toLocaleString('en-US', { maximumFractionDigits: 2 });
+    } else if (price >= 1000) {
+        return price.toFixed(2);
+    } else if (price >= 1) {
+        return price.toFixed(4);
+    } else if (price >= 0.0001) {
+        return price.toFixed(6);
+    } else {
+        const str = price.toFixed(20);
+        const match = str.match(/^0\.(0*)([1-9]\d*)/);
+        if (match) {
+            const leadingZeros = match[1].length;
+            const significantDigits = Math.min(8, match[2].length);
+            return price.toFixed(leadingZeros + significantDigits);
+        }
+        return price.toFixed(10);
     }
 }
 
