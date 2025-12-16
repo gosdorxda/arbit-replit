@@ -1,7 +1,7 @@
 import requests
 import logging
 from typing import List
-from .base import BaseAdapter, NormalizedTicker
+from .base import BaseAdapter, NormalizedTicker, NormalizedOrderbook
 
 logger = logging.getLogger(__name__)
 
@@ -55,4 +55,36 @@ class LBankAdapter(BaseAdapter):
             raise Exception(f"Failed to fetch LBANK data: {str(e)}")
         except Exception as e:
             logger.error(f"LBANK processing error: {str(e)}")
+            raise
+    
+    def fetch_orderbook(self, symbol: str, limit: int = 20) -> NormalizedOrderbook:
+        try:
+            api_symbol = symbol.lower().replace('/', '_')
+            
+            response = requests.get(
+                f"{self.BASE_URL}/v1/depth.do",
+                params={"symbol": api_symbol, "size": min(limit, 60)},
+                timeout=30
+            )
+            response.raise_for_status()
+            data = response.json()
+            
+            asks = [[self._safe_float(item[0]), self._safe_float(item[1])] 
+                    for item in data.get('asks', [])]
+            bids = [[self._safe_float(item[0]), self._safe_float(item[1])] 
+                    for item in data.get('bids', [])]
+            
+            return NormalizedOrderbook(
+                exchange=self.exchange_name,
+                symbol=symbol,
+                asks=asks,
+                bids=bids,
+                timestamp=data.get('timestamp')
+            )
+            
+        except requests.RequestException as e:
+            logger.error(f"LBANK orderbook API error: {str(e)}")
+            raise Exception(f"Failed to fetch LBANK orderbook: {str(e)}")
+        except Exception as e:
+            logger.error(f"LBANK orderbook processing error: {str(e)}")
             raise

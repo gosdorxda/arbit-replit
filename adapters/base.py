@@ -1,6 +1,24 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any
-from dataclasses import dataclass
+from typing import List, Dict, Any, Optional
+from dataclasses import dataclass, field
+
+
+@dataclass
+class NormalizedOrderbook:
+    exchange: str
+    symbol: str
+    asks: List[List[float]] = field(default_factory=list)
+    bids: List[List[float]] = field(default_factory=list)
+    timestamp: Optional[int] = None
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            'exchange': self.exchange,
+            'symbol': self.symbol,
+            'asks': self.asks,
+            'bids': self.bids,
+            'timestamp': self.timestamp
+        }
 
 
 @dataclass
@@ -40,6 +58,10 @@ class BaseAdapter(ABC):
     
     @abstractmethod
     def fetch_usdt_tickers(self) -> List[NormalizedTicker]:
+        pass
+    
+    @abstractmethod
+    def fetch_orderbook(self, symbol: str, limit: int = 20) -> NormalizedOrderbook:
         pass
     
     def _safe_float(self, value, default=0.0) -> float:

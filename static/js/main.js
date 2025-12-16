@@ -96,7 +96,7 @@ function renderTable(tickers) {
     if (tickers.length === 0) {
         tbody.innerHTML = `
             <tr class="empty-row">
-                <td colspan="7">
+                <td colspan="8">
                     <div class="empty-state">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                             <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
@@ -127,6 +127,14 @@ function renderTable(tickers) {
                 <td class="td-low">${formatPrice(t.low_24h)}</td>
                 <td class="td-change ${changeClass}">
                     <span class="change-arrow">${changeArrow}</span>${formatChange(t.change_24h)}%
+                </td>
+                <td class="td-action">
+                    <button class="orderbook-btn" onclick="showOrderbook('${t.exchange}', '${t.symbol}')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                        View
+                    </button>
                 </td>
             </tr>
         `;
@@ -235,3 +243,69 @@ function showToast(message, type) {
         toast.classList.remove('show');
     }, 4000);
 }
+
+async function showOrderbook(exchange, symbol) {
+    const modal = document.getElementById('orderbook-modal');
+    const title = document.getElementById('modal-title');
+    const asksList = document.getElementById('asks-list');
+    const bidsList = document.getElementById('bids-list');
+    
+    title.textContent = `Orderbook: ${symbol} (${exchange})`;
+    asksList.innerHTML = '<div class="loading-spinner">Loading...</div>';
+    bidsList.innerHTML = '<div class="loading-spinner">Loading...</div>';
+    modal.classList.add('show');
+    
+    try {
+        const response = await fetch(`/api/orderbook/${exchange}/${symbol}?limit=20`);
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            const orderbook = data.data;
+            
+            asksList.innerHTML = orderbook.asks.slice(0, 20).map(([price, qty]) => `
+                <div class="orderbook-row ask">
+                    <span class="ob-price">${formatPrice(price)}</span>
+                    <span class="ob-qty">${formatQuantity(qty)}</span>
+                </div>
+            `).join('') || '<div class="no-data">No asks</div>';
+            
+            bidsList.innerHTML = orderbook.bids.slice(0, 20).map(([price, qty]) => `
+                <div class="orderbook-row bid">
+                    <span class="ob-price">${formatPrice(price)}</span>
+                    <span class="ob-qty">${formatQuantity(qty)}</span>
+                </div>
+            `).join('') || '<div class="no-data">No bids</div>';
+        } else {
+            asksList.innerHTML = `<div class="error-msg">${data.message}</div>`;
+            bidsList.innerHTML = `<div class="error-msg">${data.message}</div>`;
+        }
+    } catch (error) {
+        asksList.innerHTML = `<div class="error-msg">Failed to load orderbook</div>`;
+        bidsList.innerHTML = `<div class="error-msg">Failed to load orderbook</div>`;
+    }
+}
+
+function closeOrderbookModal() {
+    const modal = document.getElementById('orderbook-modal');
+    modal.classList.remove('show');
+}
+
+function formatQuantity(qty) {
+    if (qty === null || qty === undefined) return '−';
+    if (qty >= 1e6) return (qty / 1e6).toFixed(2) + 'M';
+    if (qty >= 1e3) return (qty / 1e3).toFixed(2) + 'K';
+    if (qty >= 1) return qty.toFixed(4);
+    return qty.toFixed(6);
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeOrderbookModal();
+    }
+});
+
+document.getElementById('orderbook-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeOrderbookModal();
+    }
+});

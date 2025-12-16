@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import render_template, jsonify
+from flask import render_template, jsonify, request
 from app import app, db
 from models import SpotTicker, FetchLog
 from adapters import LBankAdapter, HashKeyAdapter
@@ -129,3 +129,31 @@ def get_status():
             'pairs_count': hashkey_count
         }
     })
+
+
+@app.route('/api/orderbook/<exchange>/<path:symbol>')
+def get_orderbook(exchange, symbol):
+    try:
+        limit = request.args.get('limit', 20, type=int)
+        
+        if exchange.upper() == 'LBANK':
+            adapter = LBankAdapter()
+        elif exchange.upper() == 'HASHKEY':
+            adapter = HashKeyAdapter()
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': f'Unknown exchange: {exchange}'
+            }), 400
+        
+        orderbook = adapter.fetch_orderbook(symbol, limit)
+        
+        return jsonify({
+            'status': 'success',
+            'data': orderbook.to_dict()
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500

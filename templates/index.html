@@ -90,11 +90,12 @@
                             <th class="th-high">24h High</th>
                             <th class="th-low">24h Low</th>
                             <th class="th-change">24h Change</th>
+                            <th class="th-action">Orderbook</th>
                         </tr>
                     </thead>
                     <tbody id="ticker-body">
                         <tr class="empty-row">
-                            <td colspan="7">
+                            <td colspan="8">
                                 <div class="empty-state">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                         <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
@@ -112,6 +113,35 @@
         </section>
 
         <div id="toast" class="toast"></div>
+    </div>
+
+    <div id="orderbook-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Orderbook</h2>
+                <button class="modal-close" onclick="closeOrderbookModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="orderbook-container">
+                    <div class="orderbook-side asks">
+                        <h3>Asks (Sell Orders)</h3>
+                        <div class="orderbook-header">
+                            <span>Price</span>
+                            <span>Quantity</span>
+                        </div>
+                        <div id="asks-list" class="orderbook-list"></div>
+                    </div>
+                    <div class="orderbook-side bids">
+                        <h3>Bids (Buy Orders)</h3>
+                        <div class="orderbook-header">
+                            <span>Price</span>
+                            <span>Quantity</span>
+                        </div>
+                        <div id="bids-list" class="orderbook-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
