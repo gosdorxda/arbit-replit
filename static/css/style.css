@@ -1,7 +1,9 @@
-:root {
+:root,
+[data-theme="dark"] {
     --bg-primary: #0f1419;
     --bg-secondary: #1a1f26;
     --bg-tertiary: #242a33;
+    --bg-hover: #2d333b;
     --text-primary: #e7eaed;
     --text-secondary: #8b949e;
     --text-muted: #656d76;
@@ -16,6 +18,27 @@
     --mexc-color: #1873e8;
     --bitrue-color: #00c853;
     --ascendex-color: #ff6b35;
+}
+
+[data-theme="light"] {
+    --bg-primary: #f6f8fa;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f0f3f6;
+    --bg-hover: #e8ecf0;
+    --text-primary: #1f2328;
+    --text-secondary: #656d76;
+    --text-muted: #8b949e;
+    --border-color: #d1d9e0;
+    --accent-blue: #0969da;
+    --accent-green: #1a7f37;
+    --accent-red: #cf222e;
+    --accent-yellow: #9a6700;
+    --lbank-color: #2962ff;
+    --hashkey-color: #7c3aed;
+    --biconomy-color: #00a884;
+    --mexc-color: #1873e8;
+    --bitrue-color: #00a846;
+    --ascendex-color: #e85d2d;
 }
 
 * {
@@ -53,12 +76,44 @@ body {
 .header {
     padding: 12px 0;
     border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .header-content {
     display: flex;
     flex-direction: column;
     gap: 2px;
+}
+
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-secondary);
+}
+
+.theme-toggle:hover {
+    background-color: var(--bg-hover);
+    color: var(--accent-yellow);
+    border-color: var(--accent-yellow);
+}
+
+.theme-toggle svg {
+    width: 20px;
+    height: 20px;
+}
+
+.icon-sun, .icon-moon {
+    display: none;
 }
 
 .title {
@@ -438,16 +493,30 @@ tbody tr:last-child td {
     white-space: nowrap;
 }
 
-.td-change.positive {
+.td-change.positive,
+.change-positive {
     color: var(--accent-green);
+    font-weight: 500;
 }
 
-.td-change.negative {
+.td-change.negative,
+.change-negative {
     color: var(--accent-red);
+    font-weight: 500;
 }
 
-.td-change.neutral {
+.td-change.neutral,
+.change-neutral {
     color: var(--text-muted);
+}
+
+.change-arrow {
+    margin-right: 2px;
+}
+
+.price-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
 }
 
 .change-arrow {

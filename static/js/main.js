@@ -1,6 +1,7 @@
 let dataTable = null;
 
 $(document).ready(function() {
+    initTheme();
     initDataTable();
     loadStatus();
     
@@ -38,9 +39,11 @@ function initDataTable() {
                 orderable: true
             },
             { 
-                data: 'price',
+                data: 'change_24h',
                 render: function(data) {
-                    return formatPrice(data);
+                    const changeClass = data > 0 ? 'change-positive' : data < 0 ? 'change-negative' : 'change-neutral';
+                    const changeArrow = data > 0 ? '↑' : data < 0 ? '↓' : '−';
+                    return `<span class="${changeClass}"><span class="change-arrow">${changeArrow}</span>${formatChange(data)}%</span>`;
                 },
                 orderable: true
             },
@@ -63,15 +66,6 @@ function initDataTable() {
                 },
                 orderable: true
             },
-            { 
-                data: 'change_24h',
-                render: function(data) {
-                    const changeClass = data > 0 ? 'positive' : data < 0 ? 'negative' : 'neutral';
-                    const changeArrow = data > 0 ? '↑' : data < 0 ? '↓' : '−';
-                    return `<span class="${changeClass}"><span class="change-arrow">${changeArrow}</span>${formatChange(data)}%</span>`;
-                },
-                orderable: true
-            },
             {
                 data: null,
                 render: function(data) {
@@ -84,40 +78,12 @@ function initDataTable() {
                 },
                 orderable: false
             },
-            {
-                data: 'peers',
-                render: function(peers, type, row) {
-                    if (!peers || peers.length === 0) {
-                        return '<span class="no-peer">−</span>';
-                    }
-                    
-                    let html = '<div class="peer-list">';
-                    peers.forEach(peer => {
-                        if (!peer.price) return;
-                        const peerExchangeClass = peer.exchange.toLowerCase();
-                        const priceDiff = ((peer.price - row.price) / row.price * 100);
-                        const diffClass = priceDiff > 0.01 ? 'positive' : priceDiff < -0.01 ? 'negative' : 'neutral';
-                        const diffSign = priceDiff > 0 ? '+' : '';
-                        const peerVolume = peer.turnover_24h ? formatVolume(peer.turnover_24h) : '−';
-                        
-                        html += `
-                            <div class="peer-data">
-                                <span class="peer-exchange ${peerExchangeClass}">${peer.exchange}</span>
-                                <span class="peer-price">${formatPrice(peer.price)}</span>
-                                <span class="peer-diff ${diffClass}">(${diffSign}${priceDiff.toFixed(2)}%)</span>
-                                <span class="peer-volume">Vol: ${peerVolume}</span>
-                                <button class="orderbook-btn-sm" onclick="showOrderbook('${peer.exchange}', '${peer.symbol}')">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M4 6h16M4 12h16M4 18h16"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        `;
-                    });
-                    html += '</div>';
-                    return html;
+            { 
+                data: 'price',
+                render: function(data) {
+                    return `<span class="price-value">${formatPrice(data)}</span>`;
                 },
-                orderable: false
+                orderable: true
             }
         ],
         order: [[1, 'asc']],
@@ -322,4 +288,32 @@ function showToast(message, type = 'info') {
     setTimeout(() => {
         toast.classList.remove('show');
     }, 3000);
+}
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+}
+
+function updateThemeIcon(theme) {
+    const iconSun = document.querySelector('.icon-sun');
+    const iconMoon = document.querySelector('.icon-moon');
+    
+    if (theme === 'dark') {
+        iconSun.style.display = 'block';
+        iconMoon.style.display = 'none';
+    } else {
+        iconSun.style.display = 'none';
+        iconMoon.style.display = 'block';
+    }
 }

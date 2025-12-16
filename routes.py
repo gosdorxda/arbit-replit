@@ -196,9 +196,10 @@ def get_tickers():
     column_map = {
         '0': SpotTicker.exchange,
         '1': SpotTicker.symbol,
-        '2': SpotTicker.price,
+        '2': SpotTicker.change_24h,
         '3': SpotTicker.turnover_24h,
-        '4': SpotTicker.change_24h
+        '4': None,
+        '5': SpotTicker.price
     }
     
     query = SpotTicker.query
@@ -227,10 +228,13 @@ def get_tickers():
     filtered_records = query.count()
     
     order_col = column_map.get(order_column, SpotTicker.symbol)
-    if order_dir == 'desc':
-        query = query.order_by(order_col.desc())
+    if order_col is not None:
+        if order_dir == 'desc':
+            query = query.order_by(order_col.desc())
+        else:
+            query = query.order_by(order_col.asc())
     else:
-        query = query.order_by(order_col.asc())
+        query = query.order_by(SpotTicker.symbol.asc())
     
     tickers = query.offset(start).limit(length).all()
     
