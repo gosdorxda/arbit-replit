@@ -311,25 +311,36 @@ async function showOrderbook(exchange, symbol) {
         if (data.status === 'success') {
             const orderbook = data.data;
             
+            const parseEntry = (item) => {
+                if (Array.isArray(item)) {
+                    return { price: parseFloat(item[0]), amount: parseFloat(item[1]) };
+                }
+                return { price: parseFloat(item.price), amount: parseFloat(item.amount) };
+            };
+            
             const asks = orderbook.asks.slice(0, 15).reverse();
-            asksList.innerHTML = asks.map(item => `
+            asksList.innerHTML = asks.map(item => {
+                const { price, amount } = parseEntry(item);
+                return `
                 <div class="orderbook-row ask">
-                    <span class="ob-price">${formatPrice(item.price)}</span>
-                    <span class="ob-qty">${formatVolume(item.amount)}</span>
+                    <span class="ob-price">${formatPrice(price)}</span>
+                    <span class="ob-qty">${formatVolume(amount)}</span>
                 </div>
-            `).join('');
+            `}).join('');
             
             const bids = orderbook.bids.slice(0, 15);
-            bidsList.innerHTML = bids.map(item => `
+            bidsList.innerHTML = bids.map(item => {
+                const { price, amount } = parseEntry(item);
+                return `
                 <div class="orderbook-row bid">
-                    <span class="ob-price">${formatPrice(item.price)}</span>
-                    <span class="ob-qty">${formatVolume(item.amount)}</span>
+                    <span class="ob-price">${formatPrice(price)}</span>
+                    <span class="ob-qty">${formatVolume(amount)}</span>
                 </div>
-            `).join('');
+            `}).join('');
             
             if (asks.length > 0 && bids.length > 0) {
-                const lowestAsk = orderbook.asks[0].price;
-                const highestBid = orderbook.bids[0].price;
+                const lowestAsk = parseEntry(orderbook.asks[0]).price;
+                const highestBid = parseEntry(orderbook.bids[0]).price;
                 const spread = ((lowestAsk - highestBid) / lowestAsk * 100).toFixed(4);
                 spreadDivider.textContent = `Spread: ${spread}%`;
             }
