@@ -611,7 +611,7 @@ tbody tr:last-child td {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(0, 0, 0, 0.5);
     z-index: 2000;
     justify-content: center;
     align-items: center;
@@ -624,25 +624,26 @@ tbody tr:last-child td {
 .modal-content {
     background-color: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
-    width: 90%;
-    max-width: 800px;
-    max-height: 80vh;
+    border-radius: 8px;
+    width: 280px;
+    max-height: 450px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 20px;
+    padding: 10px 12px;
     border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-tertiary);
 }
 
 .modal-header h2 {
-    font-size: 1.125rem;
+    font-size: 0.8125rem;
     font-weight: 600;
     color: var(--text-primary);
 }
@@ -650,10 +651,10 @@ tbody tr:last-child td {
 .modal-close {
     background: none;
     border: none;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     color: var(--text-muted);
     cursor: pointer;
-    padding: 4px;
+    padding: 2px;
     line-height: 1;
 }
 
@@ -662,70 +663,64 @@ tbody tr:last-child td {
 }
 
 .modal-body {
-    padding: 20px;
+    padding: 0;
     overflow-y: auto;
 }
 
 .orderbook-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-@media (max-width: 640px) {
-    .orderbook-container {
-        grid-template-columns: 1fr;
-    }
+    display: flex;
+    flex-direction: column;
 }
 
 .orderbook-side {
-    background-color: var(--bg-tertiary);
-    border-radius: 8px;
-    padding: 16px;
+    padding: 0;
 }
 
 .orderbook-side h3 {
-    font-size: 0.875rem;
-    font-weight: 600;
-    margin-bottom: 12px;
-    color: var(--text-secondary);
-}
-
-.orderbook-side.asks h3 {
-    color: var(--accent-red);
-}
-
-.orderbook-side.bids h3 {
-    color: var(--accent-green);
+    display: none;
 }
 
 .orderbook-header {
     display: flex;
     justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--border-color);
-    font-size: 0.75rem;
+    padding: 6px 12px;
+    font-size: 0.625rem;
     font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
+    background-color: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .orderbook-list {
-    max-height: 400px;
+    max-height: 160px;
     overflow-y: auto;
+}
+
+.orderbook-side.asks .orderbook-list {
+    display: flex;
+    flex-direction: column-reverse;
 }
 
 .orderbook-row {
     display: flex;
     justify-content: space-between;
-    padding: 6px 0;
+    padding: 3px 12px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.8125rem;
-    border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+    font-size: 0.6875rem;
+    position: relative;
 }
 
 .orderbook-row:last-child {
     border-bottom: none;
+}
+
+.orderbook-row.ask {
+    background: linear-gradient(to left, rgba(248, 81, 73, 0.1) var(--depth, 0%), transparent var(--depth, 0%));
+}
+
+.orderbook-row.bid {
+    background: linear-gradient(to left, rgba(63, 185, 80, 0.1) var(--depth, 0%), transparent var(--depth, 0%));
 }
 
 .orderbook-row.ask .ob-price {
@@ -740,20 +735,34 @@ tbody tr:last-child td {
     color: var(--text-secondary);
 }
 
+.orderbook-divider {
+    padding: 6px 12px;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    background-color: var(--bg-tertiary);
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
 .loading-spinner {
     text-align: center;
-    padding: 20px;
+    padding: 16px;
     color: var(--text-muted);
+    font-size: 0.75rem;
 }
 
 .error-msg {
     text-align: center;
-    padding: 20px;
+    padding: 16px;
     color: var(--accent-red);
+    font-size: 0.75rem;
 }
 
 .no-data {
     text-align: center;
-    padding: 20px;
+    padding: 12px;
     color: var(--text-muted);
+    font-size: 0.75rem;
 }

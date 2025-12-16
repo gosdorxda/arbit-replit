@@ -322,10 +322,12 @@ async function showOrderbook(exchange, symbol) {
     const title = document.getElementById('modal-title');
     const asksList = document.getElementById('asks-list');
     const bidsList = document.getElementById('bids-list');
+    const spreadDiv = document.getElementById('spread-divider');
     
-    title.textContent = `Orderbook: ${symbol} (${exchange})`;
+    title.textContent = `${symbol}`;
     asksList.innerHTML = '<div class="loading-spinner">Loading...</div>';
-    bidsList.innerHTML = '<div class="loading-spinner">Loading...</div>';
+    bidsList.innerHTML = '';
+    spreadDiv.textContent = '−';
     modal.classList.add('show');
     
     try {
@@ -334,27 +336,47 @@ async function showOrderbook(exchange, symbol) {
         
         if (data.status === 'success') {
             const orderbook = data.data;
+            const asks = orderbook.asks.slice(0, 10);
+            const bids = orderbook.bids.slice(0, 10);
             
-            asksList.innerHTML = orderbook.asks.slice(0, 10).map(([price, qty]) => `
-                <div class="orderbook-row ask">
-                    <span class="ob-price">${formatPrice(price)}</span>
-                    <span class="ob-qty">${formatQuantity(qty)}</span>
-                </div>
-            `).join('') || '<div class="no-data">No asks</div>';
+            const maxAskQty = Math.max(...asks.map(a => a[1]), 1);
+            const maxBidQty = Math.max(...bids.map(b => b[1]), 1);
+            const maxQty = Math.max(maxAskQty, maxBidQty);
             
-            bidsList.innerHTML = orderbook.bids.slice(0, 10).map(([price, qty]) => `
-                <div class="orderbook-row bid">
-                    <span class="ob-price">${formatPrice(price)}</span>
-                    <span class="ob-qty">${formatQuantity(qty)}</span>
-                </div>
-            `).join('') || '<div class="no-data">No bids</div>';
+            asksList.innerHTML = asks.map(([price, qty]) => {
+                const depth = (qty / maxQty * 100).toFixed(0);
+                return `
+                    <div class="orderbook-row ask" style="--depth: ${depth}%">
+                        <span class="ob-price">${formatPrice(price)}</span>
+                        <span class="ob-qty">${formatQuantity(qty)}</span>
+                    </div>
+                `;
+            }).join('') || '<div class="no-data">No asks</div>';
+            
+            bidsList.innerHTML = bids.map(([price, qty]) => {
+                const depth = (qty / maxQty * 100).toFixed(0);
+                return `
+                    <div class="orderbook-row bid" style="--depth: ${depth}%">
+                        <span class="ob-price">${formatPrice(price)}</span>
+                        <span class="ob-qty">${formatQuantity(qty)}</span>
+                    </div>
+                `;
+            }).join('') || '<div class="no-data">No bids</div>';
+            
+            if (asks.length > 0 && bids.length > 0) {
+                const lowestAsk = asks[0][0];
+                const highestBid = bids[0][0];
+                const spread = lowestAsk - highestBid;
+                const spreadPct = ((spread / lowestAsk) * 100).toFixed(3);
+                spreadDiv.innerHTML = `<span style="color: var(--accent-green)">${formatPrice(highestBid)}</span> / <span style="color: var(--accent-red)">${formatPrice(lowestAsk)}</span> <span style="color: var(--text-muted); font-size: 0.625rem">(${spreadPct}%)</span>`;
+            }
         } else {
             asksList.innerHTML = `<div class="error-msg">${data.message}</div>`;
-            bidsList.innerHTML = `<div class="error-msg">${data.message}</div>`;
+            bidsList.innerHTML = '';
         }
     } catch (error) {
-        asksList.innerHTML = `<div class="error-msg">Failed to load orderbook</div>`;
-        bidsList.innerHTML = `<div class="error-msg">Failed to load orderbook</div>`;
+        asksList.innerHTML = `<div class="error-msg">Failed to load</div>`;
+        bidsList.innerHTML = '';
     }
 }
 

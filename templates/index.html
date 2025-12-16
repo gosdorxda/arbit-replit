@@ -113,21 +113,16 @@
                 <button class="modal-close" onclick="closeOrderbookModal()">&times;</button>
             </div>
             <div class="modal-body">
+                <div class="orderbook-header">
+                    <span>Price</span>
+                    <span>Qty</span>
+                </div>
                 <div class="orderbook-container">
                     <div class="orderbook-side asks">
-                        <h3>Asks (Sell Orders)</h3>
-                        <div class="orderbook-header">
-                            <span>Price</span>
-                            <span>Quantity</span>
-                        </div>
                         <div id="asks-list" class="orderbook-list"></div>
                     </div>
+                    <div id="spread-divider" class="orderbook-divider">−</div>
                     <div class="orderbook-side bids">
-                        <h3>Bids (Buy Orders)</h3>
-                        <div class="orderbook-header">
-                            <span>Price</span>
-                            <span>Quantity</span>
-                        </div>
                         <div id="bids-list" class="orderbook-list"></div>
                     </div>
                 </div>
