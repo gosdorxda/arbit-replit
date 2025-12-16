@@ -312,24 +312,24 @@ async function showOrderbook(exchange, symbol) {
             const orderbook = data.data;
             
             const asks = orderbook.asks.slice(0, 15).reverse();
-            asksList.innerHTML = asks.map(([price, qty]) => `
+            asksList.innerHTML = asks.map(item => `
                 <div class="orderbook-row ask">
-                    <span class="ob-price">${formatPrice(price)}</span>
-                    <span class="ob-qty">${formatVolume(qty)}</span>
+                    <span class="ob-price">${formatPrice(item.price)}</span>
+                    <span class="ob-qty">${formatVolume(item.amount)}</span>
                 </div>
             `).join('');
             
             const bids = orderbook.bids.slice(0, 15);
-            bidsList.innerHTML = bids.map(([price, qty]) => `
+            bidsList.innerHTML = bids.map(item => `
                 <div class="orderbook-row bid">
-                    <span class="ob-price">${formatPrice(price)}</span>
-                    <span class="ob-qty">${formatVolume(qty)}</span>
+                    <span class="ob-price">${formatPrice(item.price)}</span>
+                    <span class="ob-qty">${formatVolume(item.amount)}</span>
                 </div>
             `).join('');
             
             if (asks.length > 0 && bids.length > 0) {
-                const lowestAsk = orderbook.asks[0][0];
-                const highestBid = orderbook.bids[0][0];
+                const lowestAsk = orderbook.asks[0].price;
+                const highestBid = orderbook.bids[0].price;
                 const spread = ((lowestAsk - highestBid) / lowestAsk * 100).toFixed(4);
                 spreadDivider.textContent = `Spread: ${spread}%`;
             }
