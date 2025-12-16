@@ -256,20 +256,20 @@ async function showOrderbook(exchange, symbol) {
     modal.classList.add('show');
     
     try {
-        const response = await fetch(`/api/orderbook/${exchange}/${symbol}?limit=20`);
+        const response = await fetch(`/api/orderbook/${exchange}/${symbol}?limit=10`);
         const data = await response.json();
         
         if (data.status === 'success') {
             const orderbook = data.data;
             
-            asksList.innerHTML = orderbook.asks.slice(0, 20).map(([price, qty]) => `
+            asksList.innerHTML = orderbook.asks.slice(0, 10).map(([price, qty]) => `
                 <div class="orderbook-row ask">
                     <span class="ob-price">${formatPrice(price)}</span>
                     <span class="ob-qty">${formatQuantity(qty)}</span>
                 </div>
             `).join('') || '<div class="no-data">No asks</div>';
             
-            bidsList.innerHTML = orderbook.bids.slice(0, 20).map(([price, qty]) => `
+            bidsList.innerHTML = orderbook.bids.slice(0, 10).map(([price, qty]) => `
                 <div class="orderbook-row bid">
                     <span class="ob-price">${formatPrice(price)}</span>
                     <span class="ob-qty">${formatQuantity(qty)}</span>
