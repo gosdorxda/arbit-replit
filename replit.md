@@ -1,7 +1,7 @@
 # Crypto Exchange Data Aggregator
 
 ## Overview
-A Flask-based web application that fetches, normalizes, and displays SPOT/USDT market data from multiple cryptocurrency exchanges. Currently supports LBANK, HashKey, and Biconomy exchanges.
+A Flask-based web application that fetches, normalizes, and displays SPOT/USDT market data from multiple cryptocurrency exchanges. Currently supports LBANK, HashKey, Biconomy, and MEXC exchanges.
 
 ## Key Features
 - **Manual Data Fetching**: Button-triggered fetching from each exchange
@@ -24,7 +24,8 @@ adapters/
   ├── base.py       - BaseAdapter abstract class and NormalizedTicker dataclass
   ├── lbank.py      - LBANK exchange adapter
   ├── hashkey.py    - HashKey exchange adapter
-  └── biconomy.py   - Biconomy exchange adapter
+  ├── biconomy.py   - Biconomy exchange adapter
+  └── mexc.py       - MEXC exchange adapter
 ```
 
 ### Frontend
@@ -44,6 +45,7 @@ static/
 | `/api/fetch/lbank` | POST | Trigger LBANK data fetch |
 | `/api/fetch/hashkey` | POST | Trigger HashKey data fetch |
 | `/api/fetch/biconomy` | POST | Trigger Biconomy data fetch |
+| `/api/fetch/mexc` | POST | Trigger MEXC data fetch |
 | `/api/tickers` | GET | Get all stored ticker data |
 | `/api/status` | GET | Get fetch status for each exchange |
 | `/api/logs` | GET | Get recent fetch logs |
@@ -82,6 +84,10 @@ To add a new exchange:
 - `SESSION_SECRET` - Flask session secret key
 
 ## Recent Changes
+- Added MEXC exchange adapter (2000+ USDT pairs)
+- Volume display now uses turnover (USD value) instead of raw volume
+- Removed 24H High/Low columns (unused)
+- Added volume info to peer exchange comparison
 - Added Biconomy exchange adapter (1132 USDT pairs) with X-SITE-ID header requirement
 - Added orderbook viewing feature with modal popup for each trading pair
 - Added cross-exchange price comparison column

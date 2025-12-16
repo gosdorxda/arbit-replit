@@ -100,6 +100,7 @@ async function loadStatus() {
         updateStatusDisplay('lbank', data.lbank);
         updateStatusDisplay('hashkey', data.hashkey);
         updateStatusDisplay('biconomy', data.biconomy);
+        updateStatusDisplay('mexc', data.mexc);
     } catch (error) {
         console.error('Failed to load status:', error);
     }

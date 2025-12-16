@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import render_template, jsonify, request
 from app import app, db
 from models import SpotTicker, FetchLog
-from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter
+from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter
 
 
 def save_tickers(tickers, exchange_name):
@@ -113,6 +113,29 @@ def fetch_biconomy():
         }), 500
 
 
+@app.route('/api/fetch/mexc', methods=['POST'])
+def fetch_mexc():
+    try:
+        adapter = MEXCAdapter()
+        tickers = adapter.fetch_usdt_tickers()
+        save_tickers(tickers, adapter.exchange_name)
+        log_fetch(adapter.exchange_name, 'success', len(tickers))
+        
+        return jsonify({
+            'status': 'success',
+            'exchange': adapter.exchange_name,
+            'pairs_count': len(tickers),
+            'message': f'Successfully fetched {len(tickers)} USDT pairs from MEXC'
+        })
+    except Exception as e:
+        log_fetch('MEXC', 'error', error_message=str(e))
+        return jsonify({
+            'status': 'error',
+            'exchange': 'MEXC',
+            'message': str(e)
+        }), 500
+
+
 @app.route('/api/tickers')
 def get_tickers():
     tickers = SpotTicker.query.order_by(SpotTicker.exchange, SpotTicker.symbol).all()
@@ -137,10 +160,12 @@ def get_status():
     lbank_log = FetchLog.query.filter_by(exchange='LBANK').order_by(FetchLog.fetched_at.desc()).first()
     hashkey_log = FetchLog.query.filter_by(exchange='HASHKEY').order_by(FetchLog.fetched_at.desc()).first()
     biconomy_log = FetchLog.query.filter_by(exchange='BICONOMY').order_by(FetchLog.fetched_at.desc()).first()
+    mexc_log = FetchLog.query.filter_by(exchange='MEXC').order_by(FetchLog.fetched_at.desc()).first()
     
     lbank_count = SpotTicker.query.filter_by(exchange='LBANK').count()
     hashkey_count = SpotTicker.query.filter_by(exchange='HASHKEY').count()
     biconomy_count = SpotTicker.query.filter_by(exchange='BICONOMY').count()
+    mexc_count = SpotTicker.query.filter_by(exchange='MEXC').count()
     
     return jsonify({
         'lbank': {
@@ -157,6 +182,11 @@ def get_status():
             'last_fetch': biconomy_log.fetched_at.isoformat() if biconomy_log else None,
             'status': biconomy_log.status if biconomy_log else 'never',
             'pairs_count': biconomy_count
+        },
+        'mexc': {
+            'last_fetch': mexc_log.fetched_at.isoformat() if mexc_log else None,
+            'status': mexc_log.status if mexc_log else 'never',
+            'pairs_count': mexc_count
         }
     })
 
@@ -172,6 +202,8 @@ def get_orderbook(exchange, symbol):
             adapter = HashKeyAdapter()
         elif exchange.upper() == 'BICONOMY':
             adapter = BiconomyAdapter()
+        elif exchange.upper() == 'MEXC':
+            adapter = MEXCAdapter()
         else:
             return jsonify({
                 'status': 'error',

@@ -13,6 +13,7 @@
     --lbank-color: #2962ff;
     --hashkey-color: #7c3aed;
     --biconomy-color: #00b894;
+    --mexc-color: #1873e8;
 }
 
 * {
@@ -166,6 +167,17 @@ body {
     background-color: #00a187;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 184, 148, 0.3);
+}
+
+.mexc-btn {
+    background-color: var(--mexc-color);
+    color: white;
+}
+
+.mexc-btn:hover:not(:disabled) {
+    background-color: #1563c7;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(24, 115, 232, 0.3);
 }
 
 .status-row {
@@ -360,6 +372,11 @@ tbody tr:last-child td {
 .exchange-badge.biconomy {
     background-color: rgba(0, 184, 148, 0.2);
     color: var(--biconomy-color);
+}
+
+.exchange-badge.mexc {
+    background-color: rgba(24, 115, 232, 0.2);
+    color: var(--mexc-color);
 }
 
 .td-symbol {
@@ -608,6 +625,11 @@ tbody tr:last-child td {
 .peer-exchange.biconomy {
     background-color: rgba(0, 184, 148, 0.2);
     color: var(--biconomy-color);
+}
+
+.peer-exchange.mexc {
+    background-color: rgba(24, 115, 232, 0.2);
+    color: var(--mexc-color);
 }
 
 .peer-price {
