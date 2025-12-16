@@ -59,16 +59,37 @@ function buildSymbolMap() {
     });
 }
 
-function getPeerExchangeData(ticker) {
+function getAllPeerExchangeData(ticker) {
     const symbolData = symbolMap[ticker.symbol];
-    if (!symbolData) return null;
+    if (!symbolData) return [];
     
+    const peers = [];
     for (const exchange in symbolData) {
         if (exchange !== ticker.exchange) {
-            return symbolData[exchange];
+            peers.push(symbolData[exchange]);
         }
     }
-    return null;
+    return peers;
+}
+
+function getTotalVolumeForSymbol(symbol) {
+    const symbolData = symbolMap[symbol];
+    if (!symbolData) return 0;
+    
+    let total = 0;
+    for (const exchange in symbolData) {
+        const ticker = symbolData[exchange];
+        if (ticker.volume_24h) {
+            total += ticker.volume_24h;
+        }
+    }
+    return total;
+}
+
+function getExchangeCountForSymbol(symbol) {
+    const symbolData = symbolMap[symbol];
+    if (!symbolData) return 0;
+    return Object.keys(symbolData).length;
 }
 
 async function loadStatus() {
@@ -169,28 +190,38 @@ function renderTable(tickers) {
         const changeClass = t.change_24h > 0 ? 'positive' : t.change_24h < 0 ? 'negative' : 'neutral';
         const changeArrow = t.change_24h > 0 ? '↑' : t.change_24h < 0 ? '↓' : '−';
         
-        const peer = getPeerExchangeData(t);
+        const peers = getAllPeerExchangeData(t);
+        const totalVolume = getTotalVolumeForSymbol(t.symbol);
+        const exchangeCount = getExchangeCountForSymbol(t.symbol);
+        
         let peerDataHtml = '<span class="no-peer">−</span>';
         
-        if (peer && peer.price && t.price) {
-            const peerExchangeClass = peer.exchange.toLowerCase();
-            const priceDiff = ((peer.price - t.price) / t.price * 100);
-            const diffClass = priceDiff > 0.01 ? 'positive' : priceDiff < -0.01 ? 'negative' : 'neutral';
-            const diffSign = priceDiff > 0 ? '+' : '';
-            
-            peerDataHtml = `
-                <div class="peer-data">
-                    <span class="peer-exchange ${peerExchangeClass}">${peer.exchange}</span>
-                    <span class="peer-price">${formatPrice(peer.price)}</span>
-                    <span class="peer-diff ${diffClass}">(${diffSign}${priceDiff.toFixed(2)}%)</span>
-                    <button class="orderbook-btn-sm" onclick="showOrderbook('${peer.exchange}', '${peer.symbol}')">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 6h16M4 12h16M4 18h16"/>
-                        </svg>
-                    </button>
-                </div>
-            `;
+        if (peers.length > 0 && t.price) {
+            peerDataHtml = '<div class="peer-list">' + peers.map(peer => {
+                if (!peer.price) return '';
+                const peerExchangeClass = peer.exchange.toLowerCase();
+                const priceDiff = ((peer.price - t.price) / t.price * 100);
+                const diffClass = priceDiff > 0.01 ? 'positive' : priceDiff < -0.01 ? 'negative' : 'neutral';
+                const diffSign = priceDiff > 0 ? '+' : '';
+                
+                return `
+                    <div class="peer-data">
+                        <span class="peer-exchange ${peerExchangeClass}">${peer.exchange}</span>
+                        <span class="peer-price">${formatPrice(peer.price)}</span>
+                        <span class="peer-diff ${diffClass}">(${diffSign}${priceDiff.toFixed(2)}%)</span>
+                        <button class="orderbook-btn-sm" onclick="showOrderbook('${peer.exchange}', '${peer.symbol}')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 6h16M4 12h16M4 18h16"/>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+            }).filter(Boolean).join('') + '</div>';
         }
+        
+        const volumeHtml = exchangeCount > 1 
+            ? `<div class="volume-info"><span class="volume-own">${formatVolume(t.volume_24h)}</span><span class="volume-total" title="Total across ${exchangeCount} exchanges">Σ ${formatVolume(totalVolume)}</span></div>`
+            : formatVolume(t.volume_24h);
         
         return `
             <tr>
@@ -199,7 +230,7 @@ function renderTable(tickers) {
                 </td>
                 <td class="td-symbol">${t.symbol}</td>
                 <td class="td-price">${formatPrice(t.price)}</td>
-                <td class="td-volume">${formatVolume(t.volume_24h)}</td>
+                <td class="td-volume">${volumeHtml}</td>
                 <td class="td-high">${formatPrice(t.high_24h)}</td>
                 <td class="td-low">${formatPrice(t.low_24h)}</td>
                 <td class="td-change ${changeClass}">
@@ -261,6 +292,7 @@ function formatChange(change) {
 function filterTable() {
     const exchangeFilter = document.getElementById('exchange-filter').value;
     const searchValue = document.getElementById('search-input').value.toLowerCase();
+    const multiExchangeOnly = document.getElementById('multi-exchange-filter')?.checked || false;
     
     let filtered = allTickers;
     
@@ -273,6 +305,10 @@ function filterTable() {
             t.symbol.toLowerCase().includes(searchValue) ||
             t.base_currency.toLowerCase().includes(searchValue)
         );
+    }
+    
+    if (multiExchangeOnly) {
+        filtered = filtered.filter(t => getExchangeCountForSymbol(t.symbol) > 1);
     }
     
     filtered = sortTickersByColumn(filtered);

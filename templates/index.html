@@ -78,6 +78,12 @@
                     <label for="search-input">Search:</label>
                     <input type="text" id="search-input" placeholder="Search symbol..." oninput="filterTable()">
                 </div>
+                <div class="filter-item filter-checkbox">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="multi-exchange-filter" onchange="filterTable()">
+                        <span>Multi-exchange pairs only</span>
+                    </label>
+                </div>
             </div>
             <p class="sort-hint">Click on column headers to sort</p>
         </section>

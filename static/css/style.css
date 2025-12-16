@@ -511,15 +511,21 @@ tbody tr:last-child td {
 }
 
 .th-peer {
-    min-width: 200px;
+    min-width: 280px;
 }
 
 .td-peer {
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .no-peer {
     color: var(--text-muted);
+}
+
+.peer-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .peer-data {
@@ -527,6 +533,49 @@ tbody tr:last-child td {
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
+}
+
+.volume-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.volume-own {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.875rem;
+}
+
+.volume-total {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent-blue);
+    cursor: help;
+}
+
+.filter-checkbox {
+    display: flex;
+    align-items: center;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent-blue);
+    cursor: pointer;
+}
+
+.checkbox-label span {
+    white-space: nowrap;
 }
 
 .peer-exchange {
