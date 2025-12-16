@@ -1,6 +1,7 @@
 import requests
 import logging
 from typing import List
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from .base import BaseAdapter, NormalizedTicker, NormalizedOrderbook
 
 logger = logging.getLogger(__name__)
@@ -13,9 +14,56 @@ class DexTradeAdapter(BaseAdapter):
     def exchange_name(self) -> str:
         return "DEXTRADE"
     
+    def _fetch_single_ticker(self, session, pair_info):
+        pair_name = pair_info.get('pair', '')
+        base = pair_info.get('base', '')
+        
+        try:
+            ticker_response = session.get(
+                f"{self.BASE_URL}/ticker",
+                params={"pair": pair_name},
+                timeout=5
+            )
+            
+            if ticker_response.status_code != 200:
+                return None
+            
+            ticker_data = ticker_response.json()
+            
+            if not ticker_data or 'error' in ticker_data:
+                return None
+            
+            data = ticker_data.get('data', ticker_data)
+            
+            last_price = self._safe_float(data.get('last'))
+            volume_24h = self._safe_float(data.get('volume_24H', data.get('volume')))
+            high_24h = self._safe_float(data.get('high'))
+            low_24h = self._safe_float(data.get('low'))
+            change_24h = self._safe_float(data.get('percent_сhange', data.get('percent_change', 0)))
+            
+            turnover_24h = volume_24h * last_price if volume_24h and last_price else 0
+            
+            return NormalizedTicker(
+                exchange=self.exchange_name,
+                symbol=f"{base}/USDT",
+                base_currency=base,
+                quote_currency='USDT',
+                price=last_price,
+                volume_24h=volume_24h,
+                high_24h=high_24h,
+                low_24h=low_24h,
+                change_24h=change_24h,
+                turnover_24h=turnover_24h
+            )
+        except Exception as e:
+            logger.debug(f"Dex-Trade: Failed to fetch ticker for {pair_name}: {e}")
+            return None
+    
     def fetch_usdt_tickers(self) -> List[NormalizedTicker]:
         try:
-            symbols_response = requests.get(
+            session = requests.Session()
+            
+            symbols_response = session.get(
                 f"{self.BASE_URL}/symbols",
                 timeout=30
             )
@@ -30,55 +78,17 @@ class DexTradeAdapter(BaseAdapter):
                 if s.get('quote') == 'USDT'
             ]
             
-            logger.info(f"Dex-Trade: Found {len(usdt_pairs)} USDT pairs, fetching tickers...")
+            logger.info(f"Dex-Trade: Found {len(usdt_pairs)} USDT pairs, fetching tickers concurrently...")
             
             tickers = []
-            for pair_info in usdt_pairs:
-                pair_name = pair_info.get('pair', '')
-                base = pair_info.get('base', '')
+            with ThreadPoolExecutor(max_workers=20) as executor:
+                futures = {executor.submit(self._fetch_single_ticker, session, pair): pair 
+                          for pair in usdt_pairs}
                 
-                try:
-                    ticker_response = requests.get(
-                        f"{self.BASE_URL}/ticker",
-                        params={"pair": pair_name},
-                        timeout=10
-                    )
-                    
-                    if ticker_response.status_code != 200:
-                        continue
-                    
-                    ticker_data = ticker_response.json()
-                    
-                    if not ticker_data or 'error' in ticker_data:
-                        continue
-                    
-                    data = ticker_data.get('data', ticker_data)
-                    
-                    last_price = self._safe_float(data.get('last'))
-                    volume_24h = self._safe_float(data.get('volume_24H', data.get('volume')))
-                    high_24h = self._safe_float(data.get('high'))
-                    low_24h = self._safe_float(data.get('low'))
-                    change_24h = self._safe_float(data.get('percent_change', 0))
-                    
-                    turnover_24h = volume_24h * last_price if volume_24h and last_price else 0
-                    
-                    normalized = NormalizedTicker(
-                        exchange=self.exchange_name,
-                        symbol=f"{base}/USDT",
-                        base_currency=base,
-                        quote_currency='USDT',
-                        price=last_price,
-                        volume_24h=volume_24h,
-                        high_24h=high_24h,
-                        low_24h=low_24h,
-                        change_24h=change_24h,
-                        turnover_24h=turnover_24h
-                    )
-                    tickers.append(normalized)
-                    
-                except Exception as e:
-                    logger.debug(f"Dex-Trade: Failed to fetch ticker for {pair_name}: {e}")
-                    continue
+                for future in as_completed(futures):
+                    result = future.result()
+                    if result:
+                        tickers.append(result)
             
             logger.info(f"Dex-Trade: Fetched {len(tickers)} USDT pairs")
             return tickers
