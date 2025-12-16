@@ -30,61 +30,61 @@ body {
 }
 
 .container {
-    max-width: 1400px;
+    max-width: 100%;
     margin: 0 auto;
-    padding: 0 16px;
+    padding: 0 12px;
 }
 
 @media (min-width: 640px) {
     .container {
-        padding: 0 24px;
+        padding: 0 16px;
     }
 }
 
 @media (min-width: 1024px) {
     .container {
-        padding: 0 32px;
+        padding: 0 20px;
     }
 }
 
 .header {
-    padding: 24px 0;
+    padding: 12px 0;
     border-bottom: 1px solid var(--border-color);
 }
 
 .header-content {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
 }
 
 .title {
-    font-size: 1.875rem;
-    font-weight: 700;
+    font-size: 1.25rem;
+    font-weight: 600;
     color: var(--text-primary);
 }
 
 .subtitle {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     color: var(--text-secondary);
 }
 
 .control-panel {
-    padding: 24px 0;
+    padding: 12px 0;
     border-bottom: 1px solid var(--border-color);
 }
 
 .button-group {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    margin-bottom: 16px;
+    gap: 8px;
+    margin-bottom: 10px;
 }
 
 @media (min-width: 640px) {
     .button-group {
         flex-direction: row;
-        gap: 16px;
+        gap: 10px;
     }
 }
 
@@ -92,14 +92,14 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 12px 24px;
-    font-size: 1rem;
+    gap: 6px;
+    padding: 6px 14px;
+    font-size: 0.75rem;
     font-weight: 600;
     border: none;
-    border-radius: 8px;
+    border-radius: 4px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
     position: relative;
 }
 
@@ -109,14 +109,14 @@ body {
 }
 
 .fetch-btn .btn-icon {
-    width: 20px;
-    height: 20px;
+    width: 14px;
+    height: 14px;
 }
 
 .fetch-btn .spinner {
     display: none;
-    width: 20px;
-    height: 20px;
+    width: 14px;
+    height: 14px;
     border: 2px solid transparent;
     border-top-color: currentColor;
     border-radius: 50%;
@@ -171,21 +171,21 @@ body {
 .status-row {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 @media (min-width: 640px) {
     .status-row {
         flex-direction: row;
-        gap: 24px;
+        gap: 16px;
     }
 }
 
 .status-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.875rem;
+    gap: 6px;
+    font-size: 0.6875rem;
 }
 
 .status-label {
@@ -194,9 +194,9 @@ body {
 }
 
 .status-badge {
-    padding: 2px 8px;
+    padding: 1px 6px;
     border-radius: 9999px;
-    font-size: 0.75rem;
+    font-size: 0.625rem;
     font-weight: 500;
 }
 
@@ -218,35 +218,36 @@ body {
 .status-count {
     color: var(--text-muted);
     font-family: 'JetBrains Mono', monospace;
+    font-size: 0.625rem;
 }
 
 .filter-section {
-    padding: 16px 0;
+    padding: 10px 0;
     border-bottom: 1px solid var(--border-color);
 }
 
 .filter-group {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
 }
 
 @media (min-width: 768px) {
     .filter-group {
         flex-direction: row;
         align-items: center;
-        gap: 16px;
+        gap: 12px;
     }
 }
 
 .filter-item {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .filter-item label {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 500;
     color: var(--text-secondary);
     white-space: nowrap;
@@ -254,15 +255,15 @@ body {
 
 .filter-item select,
 .filter-item input {
-    height: 40px;
-    padding: 0 12px;
+    height: 28px;
+    padding: 0 8px;
     background-color: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 3px;
     color: var(--text-primary);
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-family: inherit;
-    min-width: 150px;
+    min-width: 120px;
 }
 
 .filter-item select:focus,
@@ -276,20 +277,21 @@ body {
 }
 
 .table-section {
-    padding: 24px 0;
+    padding: 10px 0;
 }
 
 .table-wrapper {
     overflow-x: auto;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 4px;
     background-color: var(--bg-secondary);
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 800px;
+    min-width: 900px;
+    font-size: 0.75rem;
 }
 
 thead {
@@ -300,14 +302,15 @@ thead {
 }
 
 th {
-    padding: 12px 16px;
+    padding: 8px 10px;
     text-align: left;
-    font-size: 0.75rem;
+    font-size: 0.6875rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.03em;
     color: var(--text-secondary);
     border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
 }
 
 .th-price,
@@ -319,8 +322,8 @@ th {
 }
 
 td {
-    padding: 12px 16px;
-    font-size: 0.875rem;
+    padding: 6px 10px;
+    font-size: 0.75rem;
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -338,9 +341,9 @@ tbody tr:last-child td {
 
 .td-exchange .exchange-badge {
     display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.625rem;
     font-weight: 600;
 }
 
@@ -362,6 +365,7 @@ tbody tr:last-child td {
 .td-symbol {
     font-weight: 600;
     color: var(--text-primary);
+    white-space: nowrap;
 }
 
 .td-price,
@@ -370,13 +374,17 @@ tbody tr:last-child td {
 .td-low {
     text-align: right;
     font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6875rem;
     color: var(--text-primary);
+    white-space: nowrap;
 }
 
 .td-change {
     text-align: right;
     font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6875rem;
     font-weight: 500;
+    white-space: nowrap;
 }
 
 .td-change.positive {
@@ -392,7 +400,7 @@ tbody tr:last-child td {
 }
 
 .change-arrow {
-    margin-right: 4px;
+    margin-right: 2px;
 }
 
 .empty-state {
@@ -400,19 +408,19 @@ tbody tr:last-child td {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 48px 24px;
+    padding: 32px 16px;
     color: var(--text-muted);
 }
 
 .empty-state svg {
-    width: 48px;
-    height: 48px;
-    margin-bottom: 16px;
+    width: 32px;
+    height: 32px;
+    margin-bottom: 12px;
     opacity: 0.5;
 }
 
 .empty-state p {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
 }
 
 .empty-row td {
@@ -420,8 +428,8 @@ tbody tr:last-child td {
 }
 
 .table-footer {
-    padding: 12px 16px;
-    font-size: 0.75rem;
+    padding: 8px 12px;
+    font-size: 0.6875rem;
     color: var(--text-muted);
     border-top: 1px solid var(--border-color);
 }
@@ -466,9 +474,9 @@ tbody tr:last-child td {
 }
 
 .sort-hint {
-    font-size: 0.75rem;
+    font-size: 0.625rem;
     color: var(--text-muted);
-    margin-top: 12px;
+    margin-top: 6px;
 }
 
 .sortable {
@@ -503,7 +511,7 @@ tbody tr:last-child td {
 
 .th-action {
     text-align: center;
-    width: 100px;
+    width: 70px;
 }
 
 .td-action {
@@ -511,7 +519,7 @@ tbody tr:last-child td {
 }
 
 .th-peer {
-    min-width: 280px;
+    min-width: 220px;
 }
 
 .td-peer {
@@ -520,35 +528,36 @@ tbody tr:last-child td {
 
 .no-peer {
     color: var(--text-muted);
+    font-size: 0.6875rem;
 }
 
 .peer-list {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
 }
 
 .peer-data {
     display: flex;
     align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
+    gap: 6px;
+    flex-wrap: nowrap;
 }
 
 .volume-info {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
 }
 
 .volume-own {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.875rem;
+    font-size: 0.6875rem;
 }
 
 .volume-total {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
+    font-size: 0.625rem;
     color: var(--accent-blue);
     cursor: help;
 }
@@ -561,15 +570,15 @@ tbody tr:last-child td {
 .checkbox-label {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     cursor: pointer;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     color: var(--text-secondary);
 }
 
 .checkbox-label input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     accent-color: var(--accent-blue);
     cursor: pointer;
 }
@@ -579,10 +588,10 @@ tbody tr:last-child td {
 }
 
 .peer-exchange {
-    font-size: 0.625rem;
+    font-size: 0.5625rem;
     font-weight: 600;
-    padding: 2px 6px;
-    border-radius: 4px;
+    padding: 1px 4px;
+    border-radius: 3px;
     text-transform: uppercase;
 }
 
@@ -603,12 +612,12 @@ tbody tr:last-child td {
 
 .peer-price {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.8125rem;
+    font-size: 0.6875rem;
     color: var(--text-primary);
 }
 
 .peer-diff {
-    font-size: 0.75rem;
+    font-size: 0.625rem;
     font-weight: 500;
 }
 
@@ -628,14 +637,14 @@ tbody tr:last-child td {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    width: 18px;
+    height: 18px;
     background-color: var(--bg-tertiary);
     color: var(--accent-blue);
     border: 1px solid var(--border-color);
-    border-radius: 4px;
+    border-radius: 3px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
 }
 
 .orderbook-btn-sm:hover {
@@ -645,23 +654,23 @@ tbody tr:last-child td {
 }
 
 .orderbook-btn-sm svg {
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
 }
 
 .orderbook-btn {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 6px 12px;
-    font-size: 0.75rem;
+    gap: 3px;
+    padding: 4px 8px;
+    font-size: 0.625rem;
     font-weight: 500;
     background-color: var(--bg-tertiary);
     color: var(--accent-blue);
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 3px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
 }
 
 .orderbook-btn:hover {
@@ -671,8 +680,8 @@ tbody tr:last-child td {
 }
 
 .orderbook-btn svg {
-    width: 14px;
-    height: 14px;
+    width: 10px;
+    height: 10px;
 }
 
 .modal {
