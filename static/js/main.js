@@ -318,29 +318,29 @@ async function showOrderbook(exchange, symbol) {
                 return { price: parseFloat(item.price), amount: parseFloat(item.amount) };
             };
             
-            const asks = orderbook.asks.slice(0, 15).reverse();
-            asksList.innerHTML = asks.map(item => {
-                const { price, amount } = parseEntry(item);
-                return `
+            // Parse and sort asks: lowest price near spread (bottom), highest at top
+            const parsedAsks = orderbook.asks.slice(0, 15).map(parseEntry);
+            parsedAsks.sort((a, b) => b.price - a.price); // descending: high to low
+            asksList.innerHTML = parsedAsks.map(({ price, amount }) => `
                 <div class="orderbook-row ask">
                     <span class="ob-price">${formatPrice(price)}</span>
                     <span class="ob-qty">${formatVolume(amount)}</span>
                 </div>
-            `}).join('');
+            `).join('');
             
-            const bids = orderbook.bids.slice(0, 15);
-            bidsList.innerHTML = bids.map(item => {
-                const { price, amount } = parseEntry(item);
-                return `
+            // Parse and sort bids: highest price near spread (top), lowest at bottom
+            const parsedBids = orderbook.bids.slice(0, 15).map(parseEntry);
+            parsedBids.sort((a, b) => b.price - a.price); // descending: high to low
+            bidsList.innerHTML = parsedBids.map(({ price, amount }) => `
                 <div class="orderbook-row bid">
                     <span class="ob-price">${formatPrice(price)}</span>
                     <span class="ob-qty">${formatVolume(amount)}</span>
                 </div>
-            `}).join('');
+            `).join('');
             
-            if (asks.length > 0 && bids.length > 0) {
-                const lowestAsk = parseEntry(orderbook.asks[0]).price;
-                const highestBid = parseEntry(orderbook.bids[0]).price;
+            if (parsedAsks.length > 0 && parsedBids.length > 0) {
+                const lowestAsk = Math.min(...parsedAsks.map(a => a.price));
+                const highestBid = Math.max(...parsedBids.map(b => b.price));
                 const spread = ((lowestAsk - highestBid) / lowestAsk * 100).toFixed(4);
                 spreadDivider.textContent = `Spread: ${spread}%`;
             }
