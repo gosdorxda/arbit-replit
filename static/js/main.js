@@ -1,5 +1,30 @@
 let dataTable = null;
 
+function getExchangeUrl(exchange, symbol) {
+    const pair = symbol.replace('/', '_').toLowerCase();
+    const pairUpper = symbol.replace('/', '_');
+    const base = symbol.split('/')[0];
+    
+    switch(exchange.toUpperCase()) {
+        case 'LBANK':
+            return `https://www.lbank.com/trade/${pair}`;
+        case 'HASHKEY':
+            return `https://global.hashkey.com/en-US/spot/${symbol.replace('/', '-')}`;
+        case 'BICONOMY':
+            return `https://www.biconomy.com/exchange?coin=${pairUpper}`;
+        case 'MEXC':
+            return `https://www.mexc.com/exchange/${pairUpper}`;
+        case 'BITRUE':
+            return `https://www.bitrue.com/trade/${pair}`;
+        case 'ASCENDEX':
+            return `https://ascendex.com/en/cashtrade-spottrading/usdt/${base.toLowerCase()}`;
+        case 'BITMART':
+            return `https://www.bitmart.com/trade/en-US?symbol=${pairUpper}`;
+        default:
+            return '#';
+    }
+}
+
 $(document).ready(function() {
     initTheme();
     initDataTable();
@@ -35,7 +60,11 @@ function initDataTable() {
                 orderable: true
             },
             { 
-                data: 'symbol',
+                data: null,
+                render: function(data) {
+                    const url = getExchangeUrl(data.exchange, data.symbol);
+                    return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="symbol-link">${data.symbol}</a>`;
+                },
                 orderable: true
             },
             { 
@@ -100,10 +129,11 @@ function initDataTable() {
                         const diffClass = priceDiff > 0.01 ? 'change-positive' : priceDiff < -0.01 ? 'change-negative' : 'change-neutral';
                         const diffSign = priceDiff > 0 ? '+' : '';
                         const peerVolume = peer.turnover_24h ? formatVolume(peer.turnover_24h) : '−';
+                        const peerUrl = getExchangeUrl(peer.exchange, peer.symbol);
                         
                         html += `
                             <div class="peer-data">
-                                <span class="peer-exchange ${peerExchangeClass}">${peer.exchange}</span>
+                                <a href="${peerUrl}" target="_blank" rel="noopener noreferrer" class="peer-exchange ${peerExchangeClass}">${peer.exchange}</a>
                                 <span class="peer-price">${formatPrice(peer.price)}</span>
                                 <span class="peer-diff ${diffClass}">(${diffSign}${priceDiff.toFixed(2)}%)</span>
                                 <span class="peer-volume">Vol: ${peerVolume}</span>

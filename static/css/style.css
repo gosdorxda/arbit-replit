@@ -569,6 +569,28 @@ tbody tr:last-child td {
     font-weight: 500;
 }
 
+.symbol-link {
+    color: var(--accent-blue);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.15s ease;
+}
+
+.symbol-link:hover {
+    color: var(--text-primary);
+    text-decoration: underline;
+}
+
+a.peer-exchange {
+    text-decoration: none;
+    transition: opacity 0.15s ease;
+}
+
+a.peer-exchange:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+}
+
 .change-arrow {
     margin-right: 2px;
 }
