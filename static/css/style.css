@@ -448,6 +448,42 @@ tbody tr:last-child td {
     }
 }
 
+.sort-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 12px;
+}
+
+.sortable {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    transition: background-color 0.2s ease;
+}
+
+.sortable:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.sort-icon::after {
+    content: '⇅';
+    margin-left: 4px;
+    opacity: 0.3;
+    font-size: 0.75rem;
+}
+
+.sortable.sort-asc .sort-icon::after {
+    content: '↑';
+    opacity: 1;
+    color: var(--accent-blue);
+}
+
+.sortable.sort-desc .sort-icon::after {
+    content: '↓';
+    opacity: 1;
+    color: var(--accent-blue);
+}
+
 .th-action {
     text-align: center;
     width: 100px;
@@ -455,6 +491,91 @@ tbody tr:last-child td {
 
 .td-action {
     text-align: center;
+}
+
+.th-peer {
+    min-width: 200px;
+}
+
+.td-peer {
+    white-space: nowrap;
+}
+
+.no-peer {
+    color: var(--text-muted);
+}
+
+.peer-data {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.peer-exchange {
+    font-size: 0.625rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.peer-exchange.lbank {
+    background-color: rgba(41, 98, 255, 0.2);
+    color: var(--lbank-color);
+}
+
+.peer-exchange.hashkey {
+    background-color: rgba(124, 58, 237, 0.2);
+    color: var(--hashkey-color);
+}
+
+.peer-price {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8125rem;
+    color: var(--text-primary);
+}
+
+.peer-diff {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.peer-diff.positive {
+    color: var(--accent-green);
+}
+
+.peer-diff.negative {
+    color: var(--accent-red);
+}
+
+.peer-diff.neutral {
+    color: var(--text-muted);
+}
+
+.orderbook-btn-sm {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background-color: var(--bg-tertiary);
+    color: var(--accent-blue);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.orderbook-btn-sm:hover {
+    background-color: var(--accent-blue);
+    color: white;
+    border-color: var(--accent-blue);
+}
+
+.orderbook-btn-sm svg {
+    width: 12px;
+    height: 12px;
 }
 
 .orderbook-btn {

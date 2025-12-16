@@ -1,8 +1,11 @@
 let allTickers = [];
+let symbolMap = {};
+let currentSort = { column: 'symbol', direction: 'asc' };
 
 document.addEventListener('DOMContentLoaded', function() {
     loadTickers();
     loadStatus();
+    setupHeaderSorting();
 });
 
 async function fetchData(exchange) {
@@ -38,11 +41,34 @@ async function loadTickers() {
         
         if (data.status === 'success') {
             allTickers = data.data;
-            renderTable(allTickers);
+            buildSymbolMap();
+            filterTable();
         }
     } catch (error) {
         console.error('Failed to load tickers:', error);
     }
+}
+
+function buildSymbolMap() {
+    symbolMap = {};
+    allTickers.forEach(t => {
+        if (!symbolMap[t.symbol]) {
+            symbolMap[t.symbol] = {};
+        }
+        symbolMap[t.symbol][t.exchange] = t;
+    });
+}
+
+function getPeerExchangeData(ticker) {
+    const symbolData = symbolMap[ticker.symbol];
+    if (!symbolData) return null;
+    
+    for (const exchange in symbolData) {
+        if (exchange !== ticker.exchange) {
+            return symbolData[exchange];
+        }
+    }
+    return null;
 }
 
 async function loadStatus() {
@@ -89,6 +115,33 @@ function formatRelativeTime(date) {
     return `${Math.floor(diff / 86400)}d ago`;
 }
 
+function setupHeaderSorting() {
+    const headers = document.querySelectorAll('th[data-sort]');
+    headers.forEach(th => {
+        th.addEventListener('click', () => {
+            const column = th.dataset.sort;
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'asc';
+            }
+            updateSortIndicators();
+            filterTable();
+        });
+    });
+}
+
+function updateSortIndicators() {
+    const headers = document.querySelectorAll('th[data-sort]');
+    headers.forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        if (th.dataset.sort === currentSort.column) {
+            th.classList.add(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+        }
+    });
+}
+
 function renderTable(tickers) {
     const tbody = document.getElementById('ticker-body');
     const countEl = document.getElementById('ticker-count');
@@ -96,7 +149,7 @@ function renderTable(tickers) {
     if (tickers.length === 0) {
         tbody.innerHTML = `
             <tr class="empty-row">
-                <td colspan="8">
+                <td colspan="9">
                     <div class="empty-state">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                             <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
@@ -114,6 +167,29 @@ function renderTable(tickers) {
         const exchangeClass = t.exchange.toLowerCase();
         const changeClass = t.change_24h > 0 ? 'positive' : t.change_24h < 0 ? 'negative' : 'neutral';
         const changeArrow = t.change_24h > 0 ? '↑' : t.change_24h < 0 ? '↓' : '−';
+        
+        const peer = getPeerExchangeData(t);
+        let peerDataHtml = '<span class="no-peer">−</span>';
+        
+        if (peer && peer.price && t.price) {
+            const peerExchangeClass = peer.exchange.toLowerCase();
+            const priceDiff = ((peer.price - t.price) / t.price * 100);
+            const diffClass = priceDiff > 0.01 ? 'positive' : priceDiff < -0.01 ? 'negative' : 'neutral';
+            const diffSign = priceDiff > 0 ? '+' : '';
+            
+            peerDataHtml = `
+                <div class="peer-data">
+                    <span class="peer-exchange ${peerExchangeClass}">${peer.exchange}</span>
+                    <span class="peer-price">${formatPrice(peer.price)}</span>
+                    <span class="peer-diff ${diffClass}">(${diffSign}${priceDiff.toFixed(2)}%)</span>
+                    <button class="orderbook-btn-sm" onclick="showOrderbook('${peer.exchange}', '${peer.symbol}')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                </div>
+            `;
+        }
         
         return `
             <tr>
@@ -136,6 +212,7 @@ function renderTable(tickers) {
                         View
                     </button>
                 </td>
+                <td class="td-peer">${peerDataHtml}</td>
             </tr>
         `;
     }).join('');
@@ -197,37 +274,33 @@ function filterTable() {
         );
     }
     
-    const sortValue = document.getElementById('sort-select').value;
-    filtered = sortTickers(filtered, sortValue);
-    
+    filtered = sortTickersByColumn(filtered);
     renderTable(filtered);
 }
 
-function sortTable() {
-    filterTable();
-}
-
-function sortTickers(tickers, sortBy) {
+function sortTickersByColumn(tickers) {
     const sorted = [...tickers];
+    const { column, direction } = currentSort;
+    const mult = direction === 'asc' ? 1 : -1;
     
-    switch (sortBy) {
+    switch (column) {
         case 'symbol':
-            sorted.sort((a, b) => a.symbol.localeCompare(b.symbol));
+            sorted.sort((a, b) => mult * a.symbol.localeCompare(b.symbol));
             break;
-        case 'price-desc':
-            sorted.sort((a, b) => (b.price || 0) - (a.price || 0));
+        case 'price':
+            sorted.sort((a, b) => mult * ((a.price || 0) - (b.price || 0)));
             break;
-        case 'price-asc':
-            sorted.sort((a, b) => (a.price || 0) - (b.price || 0));
+        case 'volume':
+            sorted.sort((a, b) => mult * ((a.volume_24h || 0) - (b.volume_24h || 0)));
             break;
-        case 'volume-desc':
-            sorted.sort((a, b) => (b.volume_24h || 0) - (a.volume_24h || 0));
+        case 'high':
+            sorted.sort((a, b) => mult * ((a.high_24h || 0) - (b.high_24h || 0)));
             break;
-        case 'change-desc':
-            sorted.sort((a, b) => (b.change_24h || 0) - (a.change_24h || 0));
+        case 'low':
+            sorted.sort((a, b) => mult * ((a.low_24h || 0) - (b.low_24h || 0)));
             break;
-        case 'change-asc':
-            sorted.sort((a, b) => (a.change_24h || 0) - (b.change_24h || 0));
+        case 'change':
+            sorted.sort((a, b) => mult * ((a.change_24h || 0) - (b.change_24h || 0)));
             break;
     }
     
