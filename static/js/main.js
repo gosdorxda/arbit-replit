@@ -21,7 +21,7 @@ function getExchangeUrl(exchange, symbol) {
         case 'BITMART':
             return `https://www.bitmart.com/trade/en-US?symbol=${pairUpper}`;
         case 'DEXTRADE':
-            return `https://dex-trade.com/spot/trading/${pairUpper}`;
+            return `https://dex-trade.com/spot/trading/${symbol.replace('/', '')}?interface=classic`;
         default:
             return '#';
     }
@@ -205,6 +205,7 @@ async function loadStatus() {
         updateStatusDisplay('bitrue', data.bitrue);
         updateStatusDisplay('ascendex', data.ascendex);
         updateStatusDisplay('bitmart', data.bitmart);
+        updateStatusDisplay('dextrade', data.dextrade);
     } catch (error) {
         console.error('Failed to load status:', error);
     }
