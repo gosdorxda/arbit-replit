@@ -59,14 +59,14 @@ class PoloniexAdapter(BaseAdapter):
             logger.error(f"Poloniex API error: {str(e)}")
             raise Exception(f"Failed to fetch Poloniex data: {str(e)}")
     
-    def fetch_orderbook(self, symbol: str) -> NormalizedOrderbook:
+    def fetch_orderbook(self, symbol: str, limit: int = 20) -> NormalizedOrderbook:
         try:
             base = symbol.replace('/USDT', '').replace('/', '')
             api_symbol = f"{base}_USDT"
             
             response = requests.get(
                 f"{self.BASE_URL}/markets/{api_symbol}/orderBook",
-                params={"limit": 20},
+                params={"limit": limit},
                 timeout=10
             )
             response.raise_for_status()
