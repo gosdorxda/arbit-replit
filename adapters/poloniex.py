@@ -72,17 +72,19 @@ class PoloniexAdapter(BaseAdapter):
             response.raise_for_status()
             data = response.json()
             
+            asks_raw = data.get('asks', [])
             asks = []
-            for ask in data.get('asks', [])[:10]:
-                price = self._safe_float(ask[0]) if isinstance(ask, list) else self._safe_float(ask.get('price'))
-                amount = self._safe_float(ask[1]) if isinstance(ask, list) else self._safe_float(ask.get('quantity'))
+            for i in range(0, min(len(asks_raw), 20), 2):
+                price = self._safe_float(asks_raw[i])
+                amount = self._safe_float(asks_raw[i + 1]) if i + 1 < len(asks_raw) else 0
                 if price and amount:
                     asks.append({'price': price, 'amount': amount})
             
+            bids_raw = data.get('bids', [])
             bids = []
-            for bid in data.get('bids', [])[:10]:
-                price = self._safe_float(bid[0]) if isinstance(bid, list) else self._safe_float(bid.get('price'))
-                amount = self._safe_float(bid[1]) if isinstance(bid, list) else self._safe_float(bid.get('quantity'))
+            for i in range(0, min(len(bids_raw), 20), 2):
+                price = self._safe_float(bids_raw[i])
+                amount = self._safe_float(bids_raw[i + 1]) if i + 1 < len(bids_raw) else 0
                 if price and amount:
                     bids.append({'price': price, 'amount': amount})
             
