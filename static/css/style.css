@@ -18,6 +18,7 @@
     --mexc-color: #1873e8;
     --bitrue-color: #00c853;
     --ascendex-color: #ff6b35;
+    --bitmart-color: #00b8d4;
 }
 
 [data-theme="light"] {
@@ -259,6 +260,17 @@ body {
     box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
 }
 
+.bitmart-btn {
+    background-color: var(--bitmart-color);
+    color: white;
+}
+
+.bitmart-btn:hover:not(:disabled) {
+    background-color: #009eb8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 184, 212, 0.3);
+}
+
 .status-row {
     display: flex;
     flex-direction: column;
@@ -466,6 +478,11 @@ tbody tr:last-child td {
 .exchange-badge.ascendex {
     background-color: rgba(255, 107, 53, 0.2);
     color: var(--ascendex-color);
+}
+
+.exchange-badge.bitmart {
+    background-color: rgba(0, 184, 212, 0.2);
+    color: var(--bitmart-color);
 }
 
 .td-symbol {
@@ -745,6 +762,11 @@ tbody tr:last-child td {
 .peer-exchange.ascendex {
     background-color: rgba(255, 107, 53, 0.2);
     color: var(--ascendex-color);
+}
+
+.peer-exchange.bitmart {
+    background-color: rgba(0, 184, 212, 0.2);
+    color: var(--bitmart-color);
 }
 
 .peer-price {

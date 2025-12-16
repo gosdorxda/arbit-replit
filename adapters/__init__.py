@@ -5,5 +5,6 @@ from .biconomy import BiconomyAdapter
 from .mexc import MEXCAdapter
 from .bitrue import BitrueAdapter
 from .ascendex import AscendEXAdapter
+from .bitmart import BitMartAdapter
 
-__all__ = ['BaseAdapter', 'LBankAdapter', 'HashKeyAdapter', 'BiconomyAdapter', 'MEXCAdapter', 'BitrueAdapter', 'AscendEXAdapter']
+__all__ = ['BaseAdapter', 'LBankAdapter', 'HashKeyAdapter', 'BiconomyAdapter', 'MEXCAdapter', 'BitrueAdapter', 'AscendEXAdapter', 'BitMartAdapter']

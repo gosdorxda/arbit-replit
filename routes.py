@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import render_template, jsonify, request
 from app import app, db
 from models import SpotTicker, FetchLog
-from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter
+from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter
 
 
 def save_tickers(tickers, exchange_name):
@@ -182,6 +182,29 @@ def fetch_ascendex():
         }), 500
 
 
+@app.route('/api/fetch/bitmart', methods=['POST'])
+def fetch_bitmart():
+    try:
+        adapter = BitMartAdapter()
+        tickers = adapter.fetch_usdt_tickers()
+        save_tickers(tickers, adapter.exchange_name)
+        log_fetch(adapter.exchange_name, 'success', len(tickers))
+        
+        return jsonify({
+            'status': 'success',
+            'exchange': adapter.exchange_name,
+            'pairs_count': len(tickers),
+            'message': f'Successfully fetched {len(tickers)} USDT pairs from BitMart'
+        })
+    except Exception as e:
+        log_fetch('BITMART', 'error', error_message=str(e))
+        return jsonify({
+            'status': 'error',
+            'exchange': 'BITMART',
+            'message': str(e)
+        }), 500
+
+
 @app.route('/api/tickers')
 def get_tickers():
     draw = request.args.get('draw', 1, type=int)
@@ -283,6 +306,7 @@ def get_status():
     mexc_log = FetchLog.query.filter_by(exchange='MEXC').order_by(FetchLog.fetched_at.desc()).first()
     bitrue_log = FetchLog.query.filter_by(exchange='BITRUE').order_by(FetchLog.fetched_at.desc()).first()
     ascendex_log = FetchLog.query.filter_by(exchange='ASCENDEX').order_by(FetchLog.fetched_at.desc()).first()
+    bitmart_log = FetchLog.query.filter_by(exchange='BITMART').order_by(FetchLog.fetched_at.desc()).first()
     
     lbank_count = SpotTicker.query.filter_by(exchange='LBANK').count()
     hashkey_count = SpotTicker.query.filter_by(exchange='HASHKEY').count()
@@ -290,6 +314,7 @@ def get_status():
     mexc_count = SpotTicker.query.filter_by(exchange='MEXC').count()
     bitrue_count = SpotTicker.query.filter_by(exchange='BITRUE').count()
     ascendex_count = SpotTicker.query.filter_by(exchange='ASCENDEX').count()
+    bitmart_count = SpotTicker.query.filter_by(exchange='BITMART').count()
     
     return jsonify({
         'lbank': {
@@ -321,6 +346,11 @@ def get_status():
             'last_fetch': ascendex_log.fetched_at.isoformat() if ascendex_log else None,
             'status': ascendex_log.status if ascendex_log else 'never',
             'pairs_count': ascendex_count
+        },
+        'bitmart': {
+            'last_fetch': bitmart_log.fetched_at.isoformat() if bitmart_log else None,
+            'status': bitmart_log.status if bitmart_log else 'never',
+            'pairs_count': bitmart_count
         }
     })
 
@@ -342,6 +372,8 @@ def get_orderbook(exchange, symbol):
             adapter = BitrueAdapter()
         elif exchange.upper() == 'ASCENDEX':
             adapter = AscendEXAdapter()
+        elif exchange.upper() == 'BITMART':
+            adapter = BitMartAdapter()
         else:
             return jsonify({
                 'status': 'error',

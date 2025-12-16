@@ -76,6 +76,14 @@
                     <span class="btn-text">Fetch AscendEX</span>
                     <span class="spinner"></span>
                 </button>
+                <button id="btn-bitmart" class="fetch-btn bitmart-btn" onclick="fetchData('bitmart')">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        <path d="M9 12l2 2 4-4"/>
+                    </svg>
+                    <span class="btn-text">Fetch BitMart</span>
+                    <span class="spinner"></span>
+                </button>
             </div>
             
             <div class="status-row">
@@ -109,6 +117,11 @@
                     <span class="status-badge never">Never fetched</span>
                     <span class="status-count">0 pairs</span>
                 </div>
+                <div class="status-item" id="status-bitmart">
+                    <span class="status-label">BITMART:</span>
+                    <span class="status-badge never">Never fetched</span>
+                    <span class="status-count">0 pairs</span>
+                </div>
             </div>
         </section>
 
@@ -124,6 +137,7 @@
                         <option value="MEXC">MEXC</option>
                         <option value="BITRUE">BITRUE</option>
                         <option value="ASCENDEX">ASCENDEX</option>
+                        <option value="BITMART">BITMART</option>
                     </select>
                 </div>
                 <div class="filter-item filter-checkbox">

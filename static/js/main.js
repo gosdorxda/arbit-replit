@@ -172,6 +172,7 @@ async function loadStatus() {
         updateStatusDisplay('mexc', data.mexc);
         updateStatusDisplay('bitrue', data.bitrue);
         updateStatusDisplay('ascendex', data.ascendex);
+        updateStatusDisplay('bitmart', data.bitmart);
     } catch (error) {
         console.error('Failed to load status:', error);
     }
