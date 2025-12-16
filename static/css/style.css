@@ -555,10 +555,10 @@ tbody tr:last-child td {
 }
 
 .peer-data {
-    display: flex;
+    display: grid;
+    grid-template-columns: 70px 75px 60px 65px 24px;
     align-items: center;
-    gap: 6px;
-    flex-wrap: nowrap;
+    gap: 4px;
 }
 
 .volume-info {
@@ -610,6 +610,8 @@ tbody tr:last-child td {
     padding: 1px 4px;
     border-radius: 3px;
     text-transform: uppercase;
+    text-align: center;
+    white-space: nowrap;
 }
 
 .peer-exchange.lbank {
@@ -636,11 +638,15 @@ tbody tr:last-child td {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.6875rem;
     color: var(--text-primary);
+    text-align: right;
+    white-space: nowrap;
 }
 
 .peer-diff {
     font-size: 0.625rem;
     font-weight: 500;
+    text-align: right;
+    white-space: nowrap;
 }
 
 .peer-diff.positive {
@@ -659,6 +665,8 @@ tbody tr:last-child td {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.5625rem;
     color: var(--text-muted);
+    text-align: right;
+    white-space: nowrap;
 }
 
 .orderbook-btn-sm {
