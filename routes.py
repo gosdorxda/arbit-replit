@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import render_template, jsonify, request
 from app import app, db
 from models import SpotTicker, FetchLog
-from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter
+from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter
 
 
 def save_tickers(tickers, exchange_name):
@@ -228,6 +228,29 @@ def fetch_dextrade():
         }), 500
 
 
+@app.route('/api/fetch/poloniex', methods=['POST'])
+def fetch_poloniex():
+    try:
+        adapter = PoloniexAdapter()
+        tickers = adapter.fetch_usdt_tickers()
+        save_tickers(tickers, adapter.exchange_name)
+        log_fetch(adapter.exchange_name, 'success', len(tickers))
+        
+        return jsonify({
+            'status': 'success',
+            'exchange': adapter.exchange_name,
+            'pairs_count': len(tickers),
+            'message': f'Successfully fetched {len(tickers)} USDT pairs from Poloniex'
+        })
+    except Exception as e:
+        log_fetch('POLONIEX', 'error', error_message=str(e))
+        return jsonify({
+            'status': 'error',
+            'exchange': 'POLONIEX',
+            'message': str(e)
+        }), 500
+
+
 @app.route('/api/tickers')
 def get_tickers():
     draw = request.args.get('draw', 1, type=int)
@@ -331,6 +354,7 @@ def get_status():
     ascendex_log = FetchLog.query.filter_by(exchange='ASCENDEX').order_by(FetchLog.fetched_at.desc()).first()
     bitmart_log = FetchLog.query.filter_by(exchange='BITMART').order_by(FetchLog.fetched_at.desc()).first()
     dextrade_log = FetchLog.query.filter_by(exchange='DEXTRADE').order_by(FetchLog.fetched_at.desc()).first()
+    poloniex_log = FetchLog.query.filter_by(exchange='POLONIEX').order_by(FetchLog.fetched_at.desc()).first()
     
     lbank_count = SpotTicker.query.filter_by(exchange='LBANK').count()
     hashkey_count = SpotTicker.query.filter_by(exchange='HASHKEY').count()
@@ -340,6 +364,7 @@ def get_status():
     ascendex_count = SpotTicker.query.filter_by(exchange='ASCENDEX').count()
     bitmart_count = SpotTicker.query.filter_by(exchange='BITMART').count()
     dextrade_count = SpotTicker.query.filter_by(exchange='DEXTRADE').count()
+    poloniex_count = SpotTicker.query.filter_by(exchange='POLONIEX').count()
     
     return jsonify({
         'lbank': {
@@ -381,6 +406,11 @@ def get_status():
             'last_fetch': dextrade_log.fetched_at.isoformat() if dextrade_log else None,
             'status': dextrade_log.status if dextrade_log else 'never',
             'pairs_count': dextrade_count
+        },
+        'poloniex': {
+            'last_fetch': poloniex_log.fetched_at.isoformat() if poloniex_log else None,
+            'status': poloniex_log.status if poloniex_log else 'never',
+            'pairs_count': poloniex_count
         }
     })
 
@@ -406,6 +436,8 @@ def get_orderbook(exchange, symbol):
             adapter = BitMartAdapter()
         elif exchange.upper() == 'DEXTRADE':
             adapter = DexTradeAdapter()
+        elif exchange.upper() == 'POLONIEX':
+            adapter = PoloniexAdapter()
         else:
             return jsonify({
                 'status': 'error',

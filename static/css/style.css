@@ -20,6 +20,7 @@
     --ascendex-color: #ff6b35;
     --bitmart-color: #00b8d4;
     --dextrade-color: #9b59b6;
+    --poloniex-color: #0c9c4e;
 }
 
 [data-theme="light"] {
@@ -42,6 +43,7 @@
     --bitrue-color: #00a846;
     --ascendex-color: #e85d2d;
     --dextrade-color: #8e44ad;
+    --poloniex-color: #0a8a43;
 }
 
 * {
@@ -315,6 +317,17 @@ body {
     background-color: #7b3a9e;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(155, 89, 182, 0.3);
+}
+
+.poloniex-btn {
+    background-color: var(--poloniex-color);
+    color: white;
+}
+
+.poloniex-btn:hover:not(:disabled) {
+    background-color: #0a7b3e;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(12, 156, 78, 0.3);
 }
 
 .status-row {
