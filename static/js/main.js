@@ -1,0 +1,237 @@
+let allTickers = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadTickers();
+    loadStatus();
+});
+
+async function fetchData(exchange) {
+    const btn = document.getElementById(`btn-${exchange}`);
+    btn.classList.add('loading');
+    btn.disabled = true;
+    
+    try {
+        const response = await fetch(`/api/fetch/${exchange}`, {
+            method: 'POST'
+        });
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            showToast(`${data.message}`, 'success');
+            await loadTickers();
+            await loadStatus();
+        } else {
+            showToast(`Error: ${data.message}`, 'error');
+        }
+    } catch (error) {
+        showToast(`Failed to fetch data: ${error.message}`, 'error');
+    } finally {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+    }
+}
+
+async function loadTickers() {
+    try {
+        const response = await fetch('/api/tickers');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            allTickers = data.data;
+            renderTable(allTickers);
+        }
+    } catch (error) {
+        console.error('Failed to load tickers:', error);
+    }
+}
+
+async function loadStatus() {
+    try {
+        const response = await fetch('/api/status');
+        const data = await response.json();
+        
+        updateStatusDisplay('lbank', data.lbank);
+        updateStatusDisplay('hashkey', data.hashkey);
+    } catch (error) {
+        console.error('Failed to load status:', error);
+    }
+}
+
+function updateStatusDisplay(exchange, status) {
+    const statusItem = document.getElementById(`status-${exchange}`);
+    if (!statusItem) return;
+    
+    const badge = statusItem.querySelector('.status-badge');
+    const count = statusItem.querySelector('.status-count');
+    
+    if (status.status === 'never' || !status.last_fetch) {
+        badge.className = 'status-badge never';
+        badge.textContent = 'Never fetched';
+    } else if (status.status === 'success') {
+        badge.className = 'status-badge success';
+        const time = formatRelativeTime(new Date(status.last_fetch));
+        badge.textContent = time;
+    } else {
+        badge.className = 'status-badge error';
+        badge.textContent = 'Error';
+    }
+    
+    count.textContent = `${status.pairs_count} pairs`;
+}
+
+function formatRelativeTime(date) {
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000);
+    
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+}
+
+function renderTable(tickers) {
+    const tbody = document.getElementById('ticker-body');
+    const countEl = document.getElementById('ticker-count');
+    
+    if (tickers.length === 0) {
+        tbody.innerHTML = `
+            <tr class="empty-row">
+                <td colspan="7">
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                        <p>No data yet. Click a fetch button to load exchange data.</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+        countEl.textContent = '0 pairs displayed';
+        return;
+    }
+    
+    tbody.innerHTML = tickers.map(t => {
+        const exchangeClass = t.exchange.toLowerCase();
+        const changeClass = t.change_24h > 0 ? 'positive' : t.change_24h < 0 ? 'negative' : 'neutral';
+        const changeArrow = t.change_24h > 0 ? '↑' : t.change_24h < 0 ? '↓' : '−';
+        
+        return `
+            <tr>
+                <td class="td-exchange">
+                    <span class="exchange-badge ${exchangeClass}">${t.exchange}</span>
+                </td>
+                <td class="td-symbol">${t.symbol}</td>
+                <td class="td-price">${formatPrice(t.price)}</td>
+                <td class="td-volume">${formatVolume(t.volume_24h)}</td>
+                <td class="td-high">${formatPrice(t.high_24h)}</td>
+                <td class="td-low">${formatPrice(t.low_24h)}</td>
+                <td class="td-change ${changeClass}">
+                    <span class="change-arrow">${changeArrow}</span>${formatChange(t.change_24h)}%
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    countEl.textContent = `${tickers.length} pairs displayed`;
+}
+
+function formatPrice(price) {
+    if (price === null || price === undefined) return '−';
+    if (price === 0) return '0.00';
+    
+    if (price < 0.0001) {
+        return price.toExponential(4);
+    } else if (price < 1) {
+        return price.toFixed(6);
+    } else if (price < 100) {
+        return price.toFixed(4);
+    } else if (price < 10000) {
+        return price.toFixed(2);
+    } else {
+        return price.toLocaleString('en-US', { maximumFractionDigits: 2 });
+    }
+}
+
+function formatVolume(volume) {
+    if (volume === null || volume === undefined) return '−';
+    if (volume === 0) return '0';
+    
+    if (volume >= 1e9) {
+        return (volume / 1e9).toFixed(2) + 'B';
+    } else if (volume >= 1e6) {
+        return (volume / 1e6).toFixed(2) + 'M';
+    } else if (volume >= 1e3) {
+        return (volume / 1e3).toFixed(2) + 'K';
+    } else {
+        return volume.toFixed(2);
+    }
+}
+
+function formatChange(change) {
+    if (change === null || change === undefined) return '0.00';
+    return Math.abs(change).toFixed(2);
+}
+
+function filterTable() {
+    const exchangeFilter = document.getElementById('exchange-filter').value;
+    const searchValue = document.getElementById('search-input').value.toLowerCase();
+    
+    let filtered = allTickers;
+    
+    if (exchangeFilter !== 'all') {
+        filtered = filtered.filter(t => t.exchange === exchangeFilter);
+    }
+    
+    if (searchValue) {
+        filtered = filtered.filter(t => 
+            t.symbol.toLowerCase().includes(searchValue) ||
+            t.base_currency.toLowerCase().includes(searchValue)
+        );
+    }
+    
+    const sortValue = document.getElementById('sort-select').value;
+    filtered = sortTickers(filtered, sortValue);
+    
+    renderTable(filtered);
+}
+
+function sortTable() {
+    filterTable();
+}
+
+function sortTickers(tickers, sortBy) {
+    const sorted = [...tickers];
+    
+    switch (sortBy) {
+        case 'symbol':
+            sorted.sort((a, b) => a.symbol.localeCompare(b.symbol));
+            break;
+        case 'price-desc':
+            sorted.sort((a, b) => (b.price || 0) - (a.price || 0));
+            break;
+        case 'price-asc':
+            sorted.sort((a, b) => (a.price || 0) - (b.price || 0));
+            break;
+        case 'volume-desc':
+            sorted.sort((a, b) => (b.volume_24h || 0) - (a.volume_24h || 0));
+            break;
+        case 'change-desc':
+            sorted.sort((a, b) => (b.change_24h || 0) - (a.change_24h || 0));
+            break;
+        case 'change-asc':
+            sorted.sort((a, b) => (a.change_24h || 0) - (b.change_24h || 0));
+            break;
+    }
+    
+    return sorted;
+}
+
+function showToast(message, type) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = `toast ${type} show`;
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 4000);
+}

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Exchange Data Aggregator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <h1 class="title">Crypto Exchange Aggregator</h1>
+                <p class="subtitle">SPOT/USDT Market Data from Multiple Exchanges</p>
+            </div>
+        </header>
+
+        <section class="control-panel">
+            <div class="button-group">
+                <button id="btn-lbank" class="fetch-btn lbank-btn" onclick="fetchData('lbank')">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        <path d="M9 12l2 2 4-4"/>
+                    </svg>
+                    <span class="btn-text">Fetch LBANK</span>
+                    <span class="spinner"></span>
+                </button>
+                <button id="btn-hashkey" class="fetch-btn hashkey-btn" onclick="fetchData('hashkey')">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        <path d="M9 12l2 2 4-4"/>
+                    </svg>
+                    <span class="btn-text">Fetch HashKey</span>
+                    <span class="spinner"></span>
+                </button>
+            </div>
+            
+            <div class="status-row">
+                <div class="status-item" id="status-lbank">
+                    <span class="status-label">LBANK:</span>
+                    <span class="status-badge never">Never fetched</span>
+                    <span class="status-count">0 pairs</span>
+                </div>
+                <div class="status-item" id="status-hashkey">
+                    <span class="status-label">HASHKEY:</span>
+                    <span class="status-badge never">Never fetched</span>
+                    <span class="status-count">0 pairs</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="filter-section">
+            <div class="filter-group">
+                <div class="filter-item">
+                    <label for="exchange-filter">Exchange:</label>
+                    <select id="exchange-filter" onchange="filterTable()">
+                        <option value="all">All Exchanges</option>
+                        <option value="LBANK">LBANK</option>
+                        <option value="HASHKEY">HASHKEY</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label for="search-input">Search:</label>
+                    <input type="text" id="search-input" placeholder="Search symbol..." oninput="filterTable()">
+                </div>
+                <div class="filter-item">
+                    <label for="sort-select">Sort by:</label>
+                    <select id="sort-select" onchange="sortTable()">
+                        <option value="symbol">Symbol</option>
+                        <option value="price-desc">Price (High-Low)</option>
+                        <option value="price-asc">Price (Low-High)</option>
+                        <option value="volume-desc">Volume (High-Low)</option>
+                        <option value="change-desc">Change (High-Low)</option>
+                        <option value="change-asc">Change (Low-High)</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <section class="table-section">
+            <div class="table-wrapper">
+                <table id="ticker-table">
+                    <thead>
+                        <tr>
+                            <th class="th-exchange">Exchange</th>
+                            <th class="th-symbol">Symbol</th>
+                            <th class="th-price">Price</th>
+                            <th class="th-volume">24h Volume</th>
+                            <th class="th-high">24h High</th>
+                            <th class="th-low">24h Low</th>
+                            <th class="th-change">24h Change</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ticker-body">
+                        <tr class="empty-row">
+                            <td colspan="7">
+                                <div class="empty-state">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                    </svg>
+                                    <p>No data yet. Click a fetch button to load exchange data.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-footer">
+                <span id="ticker-count">0 pairs displayed</span>
+            </div>
+        </section>
+
+        <div id="toast" class="toast"></div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
