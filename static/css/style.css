@@ -21,6 +21,8 @@
     --bitmart-color: #00b8d4;
     --dextrade-color: #9b59b6;
     --poloniex-color: #0c9c4e;
+    --gateio-color: #c23b33;
+    --niza-color: #6366f1;
 }
 
 [data-theme="light"] {
@@ -44,6 +46,8 @@
     --ascendex-color: #e85d2d;
     --dextrade-color: #8e44ad;
     --poloniex-color: #0a8a43;
+    --gateio-color: #b02e26;
+    --niza-color: #4f46e5;
 }
 
 * {
@@ -53,7 +57,7 @@
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: var(--font-primary, 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
     background-color: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.6;
@@ -110,6 +114,49 @@ body {
     background-color: var(--bg-hover);
     color: var(--accent-yellow);
     border-color: var(--accent-yellow);
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.font-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-secondary);
+}
+
+.font-toggle:hover {
+    background-color: var(--bg-hover);
+    color: var(--accent-blue);
+    border-color: var(--accent-blue);
+}
+
+.font-icon {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+[data-font="inter"] {
+    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+[data-font="roboto"] {
+    --font-primary: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+[data-font="opensans"] {
+    --font-primary: 'Open Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .theme-toggle svg {
@@ -330,6 +377,28 @@ body {
     box-shadow: 0 4px 12px rgba(12, 156, 78, 0.3);
 }
 
+.gateio-btn {
+    background-color: var(--gateio-color);
+    color: white;
+}
+
+.gateio-btn:hover:not(:disabled) {
+    background-color: #a32e27;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(194, 59, 51, 0.3);
+}
+
+.niza-btn {
+    background-color: var(--niza-color);
+    color: white;
+}
+
+.niza-btn:hover:not(:disabled) {
+    background-color: #4338ca;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
 .status-row {
     display: flex;
     flex-direction: column;
@@ -547,6 +616,21 @@ tbody tr:last-child td {
 .exchange-badge.dextrade {
     background-color: rgba(155, 89, 182, 0.2);
     color: var(--dextrade-color);
+}
+
+.exchange-badge.poloniex {
+    background-color: rgba(12, 156, 78, 0.2);
+    color: var(--poloniex-color);
+}
+
+.exchange-badge.gateio {
+    background-color: rgba(194, 59, 51, 0.2);
+    color: var(--gateio-color);
+}
+
+.exchange-badge.niza {
+    background-color: rgba(99, 102, 241, 0.2);
+    color: var(--niza-color);
 }
 
 .td-symbol {
