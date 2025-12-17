@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import render_template, jsonify, request
 from app import app, db
 from models import SpotTicker, FetchLog
-from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter
+from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter
 
 
 def save_tickers(tickers, exchange_name):
@@ -251,6 +251,29 @@ def fetch_poloniex():
         }), 500
 
 
+@app.route('/api/fetch/gateio', methods=['POST'])
+def fetch_gateio():
+    try:
+        adapter = GateIOAdapter()
+        tickers = adapter.fetch_usdt_tickers()
+        save_tickers(tickers, adapter.exchange_name)
+        log_fetch(adapter.exchange_name, 'success', len(tickers))
+        
+        return jsonify({
+            'status': 'success',
+            'exchange': adapter.exchange_name,
+            'pairs_count': len(tickers),
+            'message': f'Successfully fetched {len(tickers)} USDT pairs from Gate.io'
+        })
+    except Exception as e:
+        log_fetch('GATEIO', 'error', error_message=str(e))
+        return jsonify({
+            'status': 'error',
+            'exchange': 'GATEIO',
+            'message': str(e)
+        }), 500
+
+
 @app.route('/api/tickers')
 def get_tickers():
     draw = request.args.get('draw', 1, type=int)
@@ -438,6 +461,8 @@ def get_orderbook(exchange, symbol):
             adapter = DexTradeAdapter()
         elif exchange.upper() == 'POLONIEX':
             adapter = PoloniexAdapter()
+        elif exchange.upper() == 'GATEIO':
+            adapter = GateIOAdapter()
         else:
             return jsonify({
                 'status': 'error',

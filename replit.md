@@ -1,7 +1,7 @@
 # Crypto Exchange Data Aggregator
 
 ## Overview
-A Flask-based web application that fetches, normalizes, and displays SPOT/USDT market data from multiple cryptocurrency exchanges. Currently supports LBANK, HashKey, Biconomy, MEXC, Bitrue, AscendEX, BitMart, Dex-Trade, and Poloniex exchanges.
+A Flask-based web application that fetches, normalizes, and displays SPOT/USDT market data from multiple cryptocurrency exchanges. Currently supports LBANK, HashKey, Biconomy, MEXC, Bitrue, AscendEX, BitMart, Dex-Trade, Poloniex, and Gate.io exchanges.
 
 ## Key Features
 - **Manual Data Fetching**: Button-triggered fetching from each exchange
@@ -30,7 +30,8 @@ adapters/
   ├── ascendex.py   - AscendEX exchange adapter
   ├── bitmart.py    - BitMart exchange adapter
   ├── dextrade.py   - Dex-Trade exchange adapter
-  └── poloniex.py   - Poloniex exchange adapter
+  ├── poloniex.py   - Poloniex exchange adapter
+  └── gateio.py     - Gate.io exchange adapter
 ```
 
 ### Frontend
@@ -56,6 +57,7 @@ static/
 | `/api/fetch/bitmart` | POST | Trigger BitMart data fetch |
 | `/api/fetch/dextrade` | POST | Trigger Dex-Trade data fetch |
 | `/api/fetch/poloniex` | POST | Trigger Poloniex data fetch |
+| `/api/fetch/gateio` | POST | Trigger Gate.io data fetch |
 | `/api/tickers` | GET | Get all stored ticker data |
 | `/api/status` | GET | Get fetch status for each exchange |
 | `/api/logs` | GET | Get recent fetch logs |

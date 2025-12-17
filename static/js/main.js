@@ -24,6 +24,8 @@ function getExchangeUrl(exchange, symbol) {
             return `https://dex-trade.com/spot/trading/${symbol.replace('/', '')}?interface=classic`;
         case 'POLONIEX':
             return `https://poloniex.com/trade/${base}_USDT`;
+        case 'GATEIO':
+            return `https://www.gate.io/trade/${pairUpper}`;
         default:
             return '#';
     }
