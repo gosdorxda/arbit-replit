@@ -211,6 +211,7 @@ async function loadStatus() {
         updateStatusDisplay('bitmart', data.bitmart);
         updateStatusDisplay('dextrade', data.dextrade);
         updateStatusDisplay('poloniex', data.poloniex);
+        updateStatusDisplay('gateio', data.gateio);
     } catch (error) {
         console.error('Failed to load status:', error);
     }

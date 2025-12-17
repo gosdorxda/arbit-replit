@@ -378,6 +378,7 @@ def get_status():
     bitmart_log = FetchLog.query.filter_by(exchange='BITMART').order_by(FetchLog.fetched_at.desc()).first()
     dextrade_log = FetchLog.query.filter_by(exchange='DEXTRADE').order_by(FetchLog.fetched_at.desc()).first()
     poloniex_log = FetchLog.query.filter_by(exchange='POLONIEX').order_by(FetchLog.fetched_at.desc()).first()
+    gateio_log = FetchLog.query.filter_by(exchange='GATEIO').order_by(FetchLog.fetched_at.desc()).first()
     
     lbank_count = SpotTicker.query.filter_by(exchange='LBANK').count()
     hashkey_count = SpotTicker.query.filter_by(exchange='HASHKEY').count()
@@ -388,6 +389,7 @@ def get_status():
     bitmart_count = SpotTicker.query.filter_by(exchange='BITMART').count()
     dextrade_count = SpotTicker.query.filter_by(exchange='DEXTRADE').count()
     poloniex_count = SpotTicker.query.filter_by(exchange='POLONIEX').count()
+    gateio_count = SpotTicker.query.filter_by(exchange='GATEIO').count()
     
     return jsonify({
         'lbank': {
@@ -434,6 +436,11 @@ def get_status():
             'last_fetch': poloniex_log.fetched_at.isoformat() if poloniex_log else None,
             'status': poloniex_log.status if poloniex_log else 'never',
             'pairs_count': poloniex_count
+        },
+        'gateio': {
+            'last_fetch': gateio_log.fetched_at.isoformat() if gateio_log else None,
+            'status': gateio_log.status if gateio_log else 'never',
+            'pairs_count': gateio_count
         }
     })
 
