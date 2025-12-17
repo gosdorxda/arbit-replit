@@ -511,3 +511,50 @@ function updateFontIcon(font) {
         fontIcon.textContent = fontNames[font] || 'Aa';
     }
 }
+
+function makeDraggable(modalId) {
+    const modal = document.getElementById(modalId);
+    const modalContent = modal.querySelector('.modal-content');
+    const header = modal.querySelector('.modal-header');
+    
+    let isDragging = false;
+    let startX, startY, initialX, initialY;
+    
+    header.addEventListener('mousedown', function(e) {
+        if (e.target.classList.contains('modal-close')) return;
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        
+        const transform = window.getComputedStyle(modalContent).transform;
+        if (transform && transform !== 'none') {
+            const matrix = new DOMMatrix(transform);
+            initialX = matrix.m41;
+            initialY = matrix.m42;
+        } else {
+            initialX = 0;
+            initialY = 0;
+        }
+        
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    });
+    
+    function onMouseMove(e) {
+        if (!isDragging) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        modalContent.style.transform = `translate(${initialX + dx}px, ${initialY + dy}px)`;
+    }
+    
+    function onMouseUp() {
+        isDragging = false;
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    makeDraggable('orderbook-modal');
+    makeDraggable('orderbook-modal2');
+});

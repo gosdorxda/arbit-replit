@@ -1110,11 +1110,15 @@ a.peer-exchange:hover {
     display: flex;
     flex-direction: column;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    position: relative;
+    cursor: default;
 }
 
 .modal-header {
     display: flex;
     justify-content: space-between;
+    cursor: move;
+    user-select: none;
     align-items: center;
     padding: 10px 12px;
     border-bottom: 1px solid var(--border-color);
