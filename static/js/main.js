@@ -11,7 +11,7 @@ function getExchangeUrl(exchange, symbol) {
         case 'HASHKEY':
             return `https://global.hashkey.com/en-US/spot/${symbol.replace('/', '-')}`;
         case 'BICONOMY':
-            return `https://www.biconomy.com/exchange?coin=${pairUpper}`;
+            return `https://www.biconomy.com/exchange/${pairUpper}`;
         case 'MEXC':
             return `https://www.mexc.com/exchange/${pairUpper}`;
         case 'BITRUE':
