@@ -31,7 +31,7 @@ function getExchangeUrl(exchange, symbol) {
         case 'XT':
             return `https://www.xt.com/en/trade/${pair}`;
         case 'COINSTORE':
-            return `https://www.coinstore.com/spot/${pairUpper.replace('/', '')}`;
+            return `https://www.coinstore.com/spot/${base}USDT`;
         default:
             return '#';
     }
