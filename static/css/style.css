@@ -655,6 +655,12 @@ td {
     border-color: var(--accent-blue) !important;
 }
 
+#ticker-table.dataTable tbody tr.row-active td {
+    background-color: rgba(99, 102, 241, 0.2);
+    border-color: var(--accent-blue) !important;
+    box-shadow: 0 0 0 1px var(--accent-blue);
+}
+
 /* ============================================
    COLUMN WIDTH SETTINGS - Ubah nilai di sini
    ============================================ */

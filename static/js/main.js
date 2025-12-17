@@ -121,7 +121,7 @@ function initDataTable() {
                 data: null,
                 className: 'td-action',
                 render: function(data) {
-                    return `<button class="orderbook-btn" onclick="showOrderbook('${data.exchange}', '${data.symbol}')">
+                    return `<button class="orderbook-btn" onclick="showOrderbook('${data.exchange}', '${data.symbol}', this)">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
@@ -156,7 +156,7 @@ function initDataTable() {
                         html += `
                             <div class="peer-data">
                                 <span class="peer-price">${formatPrice(peer.price)}</span>
-                                <button class="orderbook-btn-sm" onclick="showOrderbook2('${peer.exchange}', '${peer.symbol}')">
+                                <button class="orderbook-btn-sm" onclick="showOrderbook2('${peer.exchange}', '${peer.symbol}', this)">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M4 6h16M4 12h16M4 18h16"/>
                                     </svg>
@@ -337,12 +337,25 @@ function formatChange(change) {
     return Math.abs(change).toFixed(2);
 }
 
-async function showOrderbook(exchange, symbol) {
+let activeRow = null;
+let activeRow2 = null;
+
+async function showOrderbook(exchange, symbol, btnElement) {
     const modal = document.getElementById('orderbook-modal');
     const modalTitle = document.getElementById('modal-title');
     const asksList = document.getElementById('asks-list');
     const bidsList = document.getElementById('bids-list');
     const spreadDivider = document.getElementById('spread-divider');
+    
+    if (activeRow) {
+        activeRow.classList.remove('row-active');
+    }
+    if (btnElement) {
+        activeRow = btnElement.closest('tr');
+        if (activeRow) {
+            activeRow.classList.add('row-active');
+        }
+    }
     
     modalTitle.textContent = `${symbol} Orderbook (${exchange})`;
     asksList.innerHTML = '<div class="orderbook-loading">Loading...</div>';
@@ -405,14 +418,28 @@ async function showOrderbook(exchange, symbol) {
 function closeOrderbookModal() {
     const modal = document.getElementById('orderbook-modal');
     modal.classList.remove('show');
+    if (activeRow) {
+        activeRow.classList.remove('row-active');
+        activeRow = null;
+    }
 }
 
-async function showOrderbook2(exchange, symbol) {
+async function showOrderbook2(exchange, symbol, btnElement) {
     const modal = document.getElementById('orderbook-modal2');
     const modalTitle = document.getElementById('modal-title2');
     const asksList = document.getElementById('asks-list2');
     const bidsList = document.getElementById('bids-list2');
     const spreadDivider = document.getElementById('spread-divider2');
+    
+    if (activeRow2) {
+        activeRow2.classList.remove('row-active');
+    }
+    if (btnElement) {
+        activeRow2 = btnElement.closest('tr');
+        if (activeRow2) {
+            activeRow2.classList.add('row-active');
+        }
+    }
     
     modalTitle.textContent = `${symbol} Orderbook (${exchange})`;
     asksList.innerHTML = '<div class="orderbook-loading">Loading...</div>';
@@ -472,6 +499,10 @@ async function showOrderbook2(exchange, symbol) {
 function closeOrderbookModal2() {
     const modal = document.getElementById('orderbook-modal2');
     modal.classList.remove('show');
+    if (activeRow2) {
+        activeRow2.classList.remove('row-active');
+        activeRow2 = null;
+    }
 }
 
 document.addEventListener('keydown', function(e) {
