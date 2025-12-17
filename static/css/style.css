@@ -562,10 +562,17 @@ body {
 
 table {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 6px;
     min-width: 900px;
     font-size: 0.75rem;
+}
+
+#ticker-table.dataTable {
+    border-collapse: separate !important;
+    border-spacing: 0 8px !important;
+}
+
+#ticker-table.dataTable tbody tr {
+    border-bottom: none !important;
 }
 
 thead {
@@ -598,26 +605,30 @@ th {
 td {
     padding: 10px 12px;
     font-size: 0.75rem;
-    background-color: var(--bg-tertiary);
-    border-top: 1px solid var(--border-color);
-    border-bottom: 1px solid var(--border-color);
 }
 
-td:first-child {
-    border-left: 1px solid var(--border-color);
+#ticker-table.dataTable tbody td {
+    background-color: var(--bg-tertiary);
+    border-top: 1px solid var(--border-color) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+#ticker-table.dataTable tbody td:first-child {
+    border-left: 1px solid var(--border-color) !important;
     border-top-left-radius: 8px;
     border-bottom-left-radius: 8px;
 }
 
-td:last-child {
-    border-right: 1px solid var(--border-color);
+#ticker-table.dataTable tbody td:last-child {
+    border-right: 1px solid var(--border-color) !important;
     border-top-right-radius: 8px;
     border-bottom-right-radius: 8px;
 }
 
-tbody tr:hover td {
-    background-color: rgba(99, 102, 241, 0.08);
-    border-color: var(--accent-blue);
+#ticker-table.dataTable tbody tr:hover td {
+    background-color: rgba(99, 102, 241, 0.1);
+    border-color: var(--accent-blue) !important;
 }
 
 .td-exchange {
