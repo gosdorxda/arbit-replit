@@ -17,9 +17,11 @@
     --poloniex-color: #0c9c4e;     /* Dark Green */
     --gateio-color: #c23b33;       /* Red */
     --niza-color: #6366f1;         /* Indigo */
+    --xt-color: #2563eb;           /* Blue */
     
     /* ---- EXCHANGE HOVER COLORS (darker shade for hover) ---- */
     --lbank-hover: #1e4dd8;
+    --xt-hover: #1d4ed8;
     --hashkey-hover: #6d28d9;
     --biconomy-hover: #00a187;
     --mexc-hover: #1563c7;
@@ -400,6 +402,16 @@ body {
     transform: translateY(-1px);
 }
 
+.xt-btn {
+    background-color: var(--xt-color);
+    color: white;
+}
+
+.xt-btn:hover:not(:disabled) {
+    background-color: var(--xt-hover);
+    transform: translateY(-1px);
+}
+
 .status-row {
     display: flex;
     flex-direction: column;
@@ -661,6 +673,11 @@ tbody tr:last-child td {
 .exchange-badge.niza {
     background-color: rgba(99, 102, 241, 0.2);
     color: var(--niza-color);
+}
+
+.exchange-badge.xt {
+    background-color: rgba(37, 99, 235, 0.2);
+    color: var(--xt-color);
 }
 
 .td-symbol {
@@ -1005,6 +1022,11 @@ a.peer-exchange:hover {
 .peer-exchange.niza {
     background-color: rgba(99, 102, 241, 0.2);
     color: var(--niza-color);
+}
+
+.peer-exchange.xt {
+    background-color: rgba(37, 99, 235, 0.2);
+    color: var(--xt-color);
 }
 
 .peer-price {

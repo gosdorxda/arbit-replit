@@ -28,6 +28,8 @@ function getExchangeUrl(exchange, symbol) {
             return `https://www.gate.io/trade/${pairUpper}`;
         case 'NIZA':
             return `https://niza.io/trade/${pairUpper}`;
+        case 'XT':
+            return `https://www.xt.com/en/trade/${pair}`;
         default:
             return '#';
     }
@@ -226,9 +228,10 @@ async function loadStatus() {
         updateStatusDisplay('poloniex', data.poloniex);
         updateStatusDisplay('gateio', data.gateio);
         updateStatusDisplay('niza', data.niza);
+        updateStatusDisplay('xt', data.xt);
         
         let totalMarkets = 0;
-        const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza'];
+        const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt'];
         exchanges.forEach(ex => {
             if (data[ex] && data[ex].pairs_count) {
                 totalMarkets += data[ex].pairs_count;

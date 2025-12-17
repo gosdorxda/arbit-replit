@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import render_template, jsonify, request
 from app import app, db
 from models import SpotTicker, FetchLog
-from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter
+from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter
 
 
 def save_tickers(tickers, exchange_name):
@@ -297,6 +297,29 @@ def fetch_niza():
         }), 500
 
 
+@app.route('/api/fetch/xt', methods=['POST'])
+def fetch_xt():
+    try:
+        adapter = XTAdapter()
+        tickers = adapter.fetch_usdt_tickers()
+        save_tickers(tickers, adapter.exchange_name)
+        log_fetch(adapter.exchange_name, 'success', len(tickers))
+        
+        return jsonify({
+            'status': 'success',
+            'exchange': adapter.exchange_name,
+            'pairs_count': len(tickers),
+            'message': f'Successfully fetched {len(tickers)} USDT pairs from XT.com'
+        })
+    except Exception as e:
+        log_fetch('XT', 'error', error_message=str(e))
+        return jsonify({
+            'status': 'error',
+            'exchange': 'XT',
+            'message': str(e)
+        }), 500
+
+
 @app.route('/api/tickers')
 def get_tickers():
     draw = request.args.get('draw', 1, type=int)
@@ -425,6 +448,7 @@ def get_status():
     poloniex_log = FetchLog.query.filter_by(exchange='POLONIEX').order_by(FetchLog.fetched_at.desc()).first()
     gateio_log = FetchLog.query.filter_by(exchange='GATEIO').order_by(FetchLog.fetched_at.desc()).first()
     niza_log = FetchLog.query.filter_by(exchange='NIZA').order_by(FetchLog.fetched_at.desc()).first()
+    xt_log = FetchLog.query.filter_by(exchange='XT').order_by(FetchLog.fetched_at.desc()).first()
     
     lbank_count = SpotTicker.query.filter_by(exchange='LBANK').count()
     hashkey_count = SpotTicker.query.filter_by(exchange='HASHKEY').count()
@@ -437,6 +461,7 @@ def get_status():
     poloniex_count = SpotTicker.query.filter_by(exchange='POLONIEX').count()
     gateio_count = SpotTicker.query.filter_by(exchange='GATEIO').count()
     niza_count = SpotTicker.query.filter_by(exchange='NIZA').count()
+    xt_count = SpotTicker.query.filter_by(exchange='XT').count()
     
     return jsonify({
         'lbank': {
@@ -493,6 +518,11 @@ def get_status():
             'last_fetch': niza_log.fetched_at.isoformat() if niza_log else None,
             'status': niza_log.status if niza_log else 'never',
             'pairs_count': niza_count
+        },
+        'xt': {
+            'last_fetch': xt_log.fetched_at.isoformat() if xt_log else None,
+            'status': xt_log.status if xt_log else 'never',
+            'pairs_count': xt_count
         }
     })
 
@@ -524,6 +554,8 @@ def get_orderbook(exchange, symbol):
             adapter = GateIOAdapter()
         elif exchange.upper() == 'NIZA':
             adapter = NizaAdapter()
+        elif exchange.upper() == 'XT':
+            adapter = XTAdapter()
         else:
             return jsonify({
                 'status': 'error',

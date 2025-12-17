@@ -143,6 +143,16 @@
                         <span class="btn-pairs">0 pairs</span>
                     </div>
                 </button>
+                <button id="btn-xt" class="fetch-btn xt-btn" onclick="fetchData('xt')">
+                    <div class="btn-main">
+                        <span class="btn-name">XT.com</span>
+                        <span class="spinner"></span>
+                    </div>
+                    <div class="btn-status">
+                        <span class="btn-time">Never fetched</span>
+                        <span class="btn-pairs">0 pairs</span>
+                    </div>
+                </button>
             </div>
         </section>
 
@@ -163,6 +173,7 @@
                         <option value="POLONIEX">POLONIEX</option>
                         <option value="GATEIO">GATEIO</option>
                         <option value="NIZA">NIZA</option>
+                        <option value="XT">XT</option>
                     </select>
                 </div>
                 <div class="filter-item filter-checkbox">
@@ -178,7 +189,7 @@
                 <div class="filter-item stats-info">
                     <div class="stat-item">
                         <span class="stat-label">Exchanges:</span>
-                        <span class="stat-value" id="total-exchanges">11</span>
+                        <span class="stat-value" id="total-exchanges">12</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Total Markets:</span>
