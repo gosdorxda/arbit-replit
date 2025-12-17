@@ -26,6 +26,8 @@ function getExchangeUrl(exchange, symbol) {
             return `https://poloniex.com/trade/${base}_USDT`;
         case 'GATEIO':
             return `https://www.gate.io/trade/${pairUpper}`;
+        case 'NIZA':
+            return `https://niza.io/trade/${pairUpper}`;
         default:
             return '#';
     }
@@ -212,6 +214,7 @@ async function loadStatus() {
         updateStatusDisplay('dextrade', data.dextrade);
         updateStatusDisplay('poloniex', data.poloniex);
         updateStatusDisplay('gateio', data.gateio);
+        updateStatusDisplay('niza', data.niza);
     } catch (error) {
         console.error('Failed to load status:', error);
     }
