@@ -343,6 +343,27 @@ def get_tickers():
     total_records = SpotTicker.query.count()
     filtered_records = query.count()
     
+    from sqlalchemy import func
+    if exchange_filter:
+        base_query = SpotTicker.query.filter(SpotTicker.exchange == exchange_filter)
+        if search_value:
+            base_query = base_query.filter(
+                db.or_(
+                    SpotTicker.symbol.ilike(f'%{search_value}%'),
+                    SpotTicker.base_currency.ilike(f'%{search_value}%')
+                )
+            )
+        filtered_symbols = [t.symbol for t in base_query.all()]
+        multi_symbol_counts = db.session.query(
+            SpotTicker.symbol
+        ).filter(SpotTicker.symbol.in_(filtered_symbols)).group_by(SpotTicker.symbol).having(func.count(SpotTicker.exchange) > 1).all()
+        comparable_pairs = len(multi_symbol_counts)
+    else:
+        multi_symbol_counts = db.session.query(
+            SpotTicker.symbol
+        ).group_by(SpotTicker.symbol).having(func.count(SpotTicker.exchange) > 1).all()
+        comparable_pairs = len(multi_symbol_counts)
+    
     order_col = column_map.get(order_column, SpotTicker.symbol)
     if order_col is not None:
         if order_dir == 'desc':
@@ -375,8 +396,9 @@ def get_tickers():
     
     return jsonify({
         'draw': draw,
-        'recordsTotal': total_records,
+        'recordsTotal': filtered_records,
         'recordsFiltered': filtered_records,
+        'comparablePairs': comparable_pairs,
         'data': data
     })
 

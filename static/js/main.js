@@ -39,12 +39,15 @@ $(document).ready(function() {
     loadStatus();
     
     $('#exchange-filter').on('change', function() {
+        updateExchangeColumnVisibility();
         dataTable.ajax.reload();
     });
     
     $('#multi-exchange-filter').on('change', function() {
         dataTable.ajax.reload();
     });
+    
+    updateExchangeColumnVisibility();
 });
 
 function initDataTable() {
@@ -164,9 +167,21 @@ function initDataTable() {
             zeroRecords: 'No matching records found'
         },
         dom: '<"dt-top"lf>rt<"dt-bottom"ip>',
-        drawCallback: function() {
+        drawCallback: function(settings) {
+            const json = settings.json;
+            if (json) {
+                $('#current-pairs').text(json.recordsTotal || 0);
+                $('#comparable-pairs').text(json.comparablePairs || 0);
+            }
         }
     });
+}
+
+function updateExchangeColumnVisibility() {
+    const selectedExchange = $('#exchange-filter').val();
+    if (dataTable) {
+        dataTable.column(0).visible(selectedExchange === '');
+    }
 }
 
 async function fetchData(exchange) {

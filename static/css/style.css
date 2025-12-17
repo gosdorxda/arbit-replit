@@ -911,6 +911,15 @@ a.peer-exchange:hover {
 .filter-checkbox {
     display: flex;
     align-items: center;
+    gap: 12px;
+}
+
+.pair-stats {
+    font-size: 0.6875rem;
+    color: var(--text-secondary);
+    background-color: var(--bg-tertiary);
+    padding: 4px 8px;
+    border-radius: 4px;
 }
 
 .checkbox-label {
