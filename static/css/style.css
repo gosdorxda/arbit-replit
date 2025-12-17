@@ -186,14 +186,13 @@ body {
 
 .button-group {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 8px;
     margin-bottom: 10px;
 }
 
 @media (min-width: 640px) {
     .button-group {
-        flex-direction: row;
         gap: 10px;
     }
 }
@@ -505,6 +504,35 @@ body {
 
 .filter-item input::placeholder {
     color: var(--text-muted);
+}
+
+.stats-info {
+    display: flex;
+    gap: 16px;
+    margin-left: auto;
+    padding: 6px 12px;
+    background-color: var(--bg-tertiary);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.stat-label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.stat-value {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent-blue);
+    font-family: 'JetBrains Mono', monospace;
 }
 
 .table-section {

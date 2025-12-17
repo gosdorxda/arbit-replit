@@ -215,6 +215,19 @@ async function loadStatus() {
         updateStatusDisplay('poloniex', data.poloniex);
         updateStatusDisplay('gateio', data.gateio);
         updateStatusDisplay('niza', data.niza);
+        
+        let totalMarkets = 0;
+        const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza'];
+        exchanges.forEach(ex => {
+            if (data[ex] && data[ex].pairs_count) {
+                totalMarkets += data[ex].pairs_count;
+            }
+        });
+        
+        const totalMarketsEl = document.getElementById('total-markets');
+        if (totalMarketsEl) {
+            totalMarketsEl.textContent = totalMarkets.toLocaleString();
+        }
     } catch (error) {
         console.error('Failed to load status:', error);
     }
