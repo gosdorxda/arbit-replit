@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import render_template, jsonify, request
 from app import app, db
 from models import SpotTicker, FetchLog
-from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter
+from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter, VindaxAdapter
 
 
 def save_tickers(tickers, exchange_name):
@@ -343,6 +343,29 @@ def fetch_coinstore():
         }), 500
 
 
+@app.route('/api/fetch/vindax', methods=['POST'])
+def fetch_vindax():
+    try:
+        adapter = VindaxAdapter()
+        tickers = adapter.fetch_usdt_tickers()
+        save_tickers(tickers, adapter.exchange_name)
+        log_fetch(adapter.exchange_name, 'success', len(tickers))
+        
+        return jsonify({
+            'status': 'success',
+            'exchange': adapter.exchange_name,
+            'pairs_count': len(tickers),
+            'message': f'Successfully fetched {len(tickers)} USDT pairs from Vindax'
+        })
+    except Exception as e:
+        log_fetch('VINDAX', 'error', error_message=str(e))
+        return jsonify({
+            'status': 'error',
+            'exchange': 'VINDAX',
+            'message': str(e)
+        }), 500
+
+
 @app.route('/api/tickers')
 def get_tickers():
     draw = request.args.get('draw', 1, type=int)
@@ -473,6 +496,7 @@ def get_status():
     niza_log = FetchLog.query.filter_by(exchange='NIZA').order_by(FetchLog.fetched_at.desc()).first()
     xt_log = FetchLog.query.filter_by(exchange='XT').order_by(FetchLog.fetched_at.desc()).first()
     coinstore_log = FetchLog.query.filter_by(exchange='COINSTORE').order_by(FetchLog.fetched_at.desc()).first()
+    vindax_log = FetchLog.query.filter_by(exchange='VINDAX').order_by(FetchLog.fetched_at.desc()).first()
     
     lbank_count = SpotTicker.query.filter_by(exchange='LBANK').count()
     hashkey_count = SpotTicker.query.filter_by(exchange='HASHKEY').count()
@@ -487,6 +511,7 @@ def get_status():
     niza_count = SpotTicker.query.filter_by(exchange='NIZA').count()
     xt_count = SpotTicker.query.filter_by(exchange='XT').count()
     coinstore_count = SpotTicker.query.filter_by(exchange='COINSTORE').count()
+    vindax_count = SpotTicker.query.filter_by(exchange='VINDAX').count()
     
     return jsonify({
         'lbank': {
@@ -553,6 +578,11 @@ def get_status():
             'last_fetch': coinstore_log.fetched_at.isoformat() if coinstore_log else None,
             'status': coinstore_log.status if coinstore_log else 'never',
             'pairs_count': coinstore_count
+        },
+        'vindax': {
+            'last_fetch': vindax_log.fetched_at.isoformat() if vindax_log else None,
+            'status': vindax_log.status if vindax_log else 'never',
+            'pairs_count': vindax_count
         }
     })
 
@@ -588,6 +618,8 @@ def get_orderbook(exchange, symbol):
             adapter = XTAdapter()
         elif exchange.upper() == 'COINSTORE':
             adapter = CoinstoreAdapter()
+        elif exchange.upper() == 'VINDAX':
+            adapter = VindaxAdapter()
         else:
             return jsonify({
                 'status': 'error',

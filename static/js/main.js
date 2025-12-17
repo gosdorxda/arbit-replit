@@ -32,6 +32,8 @@ function getExchangeUrl(exchange, symbol) {
             return `https://www.xt.com/en/trade/${pair}`;
         case 'COINSTORE':
             return `https://www.coinstore.com/spot/${base}USDT`;
+        case 'VINDAX':
+            return `https://vindax.com/exchange-base.html?symbol=${base}_USDT`;
         default:
             return '#';
     }
@@ -232,9 +234,10 @@ async function loadStatus() {
         updateStatusDisplay('niza', data.niza);
         updateStatusDisplay('xt', data.xt);
         updateStatusDisplay('coinstore', data.coinstore);
+        updateStatusDisplay('vindax', data.vindax);
         
         let totalMarkets = 0;
-        const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt', 'coinstore'];
+        const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt', 'coinstore', 'vindax'];
         exchanges.forEach(ex => {
             if (data[ex] && data[ex].pairs_count) {
                 totalMarkets += data[ex].pairs_count;
