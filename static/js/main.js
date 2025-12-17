@@ -60,6 +60,7 @@ function initDataTable() {
     dataTable = $('#ticker-table').DataTable({
         processing: true,
         serverSide: true,
+        autoWidth: false,
         ajax: {
             url: '/api/tickers',
             data: function(d) {
@@ -70,6 +71,7 @@ function initDataTable() {
         columns: [
             { 
                 data: 'exchange',
+                className: 'td-exchange',
                 render: function(data) {
                     const exchangeClass = data.toLowerCase();
                     return `<span class="exchange-badge ${exchangeClass}">${data}</span>`;
@@ -78,6 +80,7 @@ function initDataTable() {
             },
             { 
                 data: null,
+                className: 'td-symbol',
                 render: function(data) {
                     const url = getExchangeUrl(data.exchange, data.symbol);
                     return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="symbol-link">${data.symbol}</a>`;
@@ -86,6 +89,7 @@ function initDataTable() {
             },
             { 
                 data: 'change_24h',
+                className: 'td-change',
                 render: function(data) {
                     const changeClass = data > 0 ? 'change-positive' : data < 0 ? 'change-negative' : 'change-neutral';
                     const changeArrow = data > 0 ? '↑' : data < 0 ? '↓' : '−';
@@ -95,6 +99,7 @@ function initDataTable() {
             },
             { 
                 data: null,
+                className: 'td-volume',
                 render: function(data) {
                     const turnover = data.turnover_24h;
                     const exchangeCount = data.exchange_count || 1;
@@ -114,6 +119,7 @@ function initDataTable() {
             },
             {
                 data: null,
+                className: 'td-action',
                 render: function(data) {
                     return `<button class="orderbook-btn" onclick="showOrderbook('${data.exchange}', '${data.symbol}')">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -126,6 +132,7 @@ function initDataTable() {
             },
             { 
                 data: 'price',
+                className: 'td-price',
                 render: function(data) {
                     return `<span class="price-value">${formatPrice(data)}</span>`;
                 },
@@ -133,6 +140,7 @@ function initDataTable() {
             },
             {
                 data: 'peers',
+                className: 'td-peer',
                 render: function(peers, type, row) {
                     if (!peers || peers.length === 0) {
                         return '<span class="no-peer">−</span>';

@@ -655,6 +655,59 @@ td {
     border-color: var(--accent-blue) !important;
 }
 
+/* ============================================
+   COLUMN WIDTH SETTINGS - Ubah nilai di sini
+   ============================================ */
+#ticker-table th.td-exchange,
+#ticker-table td.td-exchange {
+    width: 90px !important;
+    min-width: 80px !important;
+    max-width: 100px !important;
+}
+
+#ticker-table th.td-symbol,
+#ticker-table td.td-symbol {
+    width: 100px !important;
+    min-width: 90px !important;
+    max-width: 120px !important;
+}
+
+#ticker-table th.td-price,
+#ticker-table td.td-price {
+    width: 110px !important;
+    min-width: 100px !important;
+    max-width: 130px !important;
+}
+
+#ticker-table th.td-volume,
+#ticker-table td.td-volume {
+    width: 120px !important;
+    min-width: 100px !important;
+    max-width: 140px !important;
+}
+
+#ticker-table th.td-change,
+#ticker-table td.td-change {
+    width: 80px !important;
+    min-width: 70px !important;
+    max-width: 100px !important;
+}
+
+#ticker-table th.td-action,
+#ticker-table td.td-action {
+    width: 70px !important;
+    min-width: 60px !important;
+    max-width: 80px !important;
+}
+
+#ticker-table th.td-peer,
+#ticker-table td.td-peer {
+    width: 220px !important;
+    min-width: 200px !important;
+    max-width: 280px !important;
+}
+/* ============================================ */
+
 .td-exchange {
     font-weight: 500;
 }
