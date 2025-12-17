@@ -133,23 +133,19 @@ function initDataTable() {
                     peers.forEach(peer => {
                         if (!peer.price) return;
                         const peerExchangeClass = peer.exchange.toLowerCase();
-                        const priceDiff = ((peer.price - row.price) / row.price * 100);
-                        const diffClass = priceDiff > 0.01 ? 'change-positive' : priceDiff < -0.01 ? 'change-negative' : 'change-neutral';
-                        const diffSign = priceDiff > 0 ? '+' : '';
                         const peerVolume = peer.turnover_24h ? formatVolume(peer.turnover_24h) : '−';
                         const peerUrl = getExchangeUrl(peer.exchange, peer.symbol);
                         
                         html += `
                             <div class="peer-data">
-                                <a href="${peerUrl}" target="_blank" rel="noopener noreferrer" class="peer-exchange ${peerExchangeClass}">${peer.exchange}</a>
                                 <span class="peer-price">${formatPrice(peer.price)}</span>
-                                <span class="peer-diff ${diffClass}">(${diffSign}${priceDiff.toFixed(2)}%)</span>
-                                <span class="peer-volume">Vol: ${peerVolume}</span>
-                                <button class="orderbook-btn-sm" onclick="showOrderbook('${peer.exchange}', '${peer.symbol}')">
+                                <button class="orderbook-btn-sm" onclick="showOrderbook2('${peer.exchange}', '${peer.symbol}')">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M4 6h16M4 12h16M4 18h16"/>
                                     </svg>
                                 </button>
+                                <span class="peer-volume">${peerVolume}</span>
+                                <a href="${peerUrl}" target="_blank" rel="noopener noreferrer" class="peer-exchange ${peerExchangeClass}">${peer.exchange}</a>
                             </div>
                         `;
                     });
@@ -379,9 +375,77 @@ function closeOrderbookModal() {
     modal.classList.remove('show');
 }
 
+async function showOrderbook2(exchange, symbol) {
+    const modal = document.getElementById('orderbook-modal2');
+    const modalTitle = document.getElementById('modal-title2');
+    const asksList = document.getElementById('asks-list2');
+    const bidsList = document.getElementById('bids-list2');
+    const spreadDivider = document.getElementById('spread-divider2');
+    
+    modalTitle.textContent = `${symbol} Orderbook (${exchange})`;
+    asksList.innerHTML = '<div class="orderbook-loading">Loading...</div>';
+    bidsList.innerHTML = '';
+    spreadDivider.textContent = '−';
+    
+    modal.classList.add('show');
+    
+    try {
+        const response = await fetch(`/api/orderbook/${exchange}/${encodeURIComponent(symbol)}`);
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            const orderbook = data.data;
+            
+            const parseEntry = (item) => {
+                if (Array.isArray(item)) {
+                    return { price: parseFloat(item[0]), amount: parseFloat(item[1]) };
+                }
+                return { price: parseFloat(item.price), amount: parseFloat(item.amount) };
+            };
+            
+            const allAsks = orderbook.asks.map(parseEntry).sort((a, b) => a.price - b.price);
+            const asksToShow = allAsks.slice(0, 15).reverse();
+            asksList.innerHTML = asksToShow.map(({ price, amount }) => `
+                <div class="orderbook-row ask">
+                    <span class="ob-price">${formatPrice(price)}</span>
+                    <span class="ob-qty">${formatVolume(amount)}</span>
+                </div>
+            `).join('');
+            
+            asksList.scrollTop = asksList.scrollHeight;
+            
+            const allBids = orderbook.bids.map(parseEntry).sort((a, b) => b.price - a.price);
+            const bidsToShow = allBids.slice(0, 15);
+            bidsList.innerHTML = bidsToShow.map(({ price, amount }) => `
+                <div class="orderbook-row bid">
+                    <span class="ob-price">${formatPrice(price)}</span>
+                    <span class="ob-qty">${formatVolume(amount)}</span>
+                </div>
+            `).join('');
+            
+            if (allAsks.length > 0 && allBids.length > 0) {
+                const lowestAsk = allAsks[0].price;
+                const highestBid = allBids[0].price;
+                const spread = ((lowestAsk - highestBid) / lowestAsk * 100).toFixed(4);
+                spreadDivider.textContent = `Spread: ${spread}%`;
+            }
+        } else {
+            asksList.innerHTML = `<div class="orderbook-error">${data.message}</div>`;
+        }
+    } catch (error) {
+        asksList.innerHTML = `<div class="orderbook-error">Failed to load orderbook</div>`;
+    }
+}
+
+function closeOrderbookModal2() {
+    const modal = document.getElementById('orderbook-modal2');
+    modal.classList.remove('show');
+}
+
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeOrderbookModal();
+        closeOrderbookModal2();
     }
 });
 

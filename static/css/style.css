@@ -1092,6 +1092,14 @@ a.peer-exchange:hover {
     display: flex;
 }
 
+.modal-secondary {
+    z-index: 2001;
+}
+
+.modal-secondary .modal-content {
+    transform: translate(160px, 40px);
+}
+
 .modal-content {
     background-color: var(--bg-secondary);
     border: 1px solid var(--border-color);
