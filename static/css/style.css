@@ -876,9 +876,18 @@ a.peer-exchange:hover {
 
 .peer-data {
     display: grid;
-    grid-template-columns: 70px 75px 60px 65px 24px;
+    grid-template-columns: 70px 24px 55px 70px;
     align-items: center;
     gap: 4px;
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.peer-data:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
 }
 
 .volume-info {
