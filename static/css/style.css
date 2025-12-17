@@ -1,3 +1,37 @@
+/* ============================================
+   EXCHANGE COLOR PALETTE
+   Customize each exchange color here.
+   These colors are used for buttons, badges, and compare column.
+   ============================================ */
+
+:root {
+    /* ---- EXCHANGE COLORS (edit these to customize) ---- */
+    --lbank-color: #2962ff;        /* Blue */
+    --hashkey-color: #7c3aed;      /* Purple */
+    --biconomy-color: #00b894;     /* Teal */
+    --mexc-color: #1873e8;         /* Light Blue */
+    --bitrue-color: #00c853;       /* Green */
+    --ascendex-color: #ff6b35;     /* Orange */
+    --bitmart-color: #00b8d4;      /* Cyan */
+    --dextrade-color: #9b59b6;     /* Violet */
+    --poloniex-color: #0c9c4e;     /* Dark Green */
+    --gateio-color: #c23b33;       /* Red */
+    --niza-color: #6366f1;         /* Indigo */
+    
+    /* ---- EXCHANGE HOVER COLORS (darker shade for hover) ---- */
+    --lbank-hover: #1e4dd8;
+    --hashkey-hover: #6d28d9;
+    --biconomy-hover: #00a187;
+    --mexc-hover: #1563c7;
+    --bitrue-hover: #00a844;
+    --ascendex-hover: #e55a2b;
+    --bitmart-hover: #009eb8;
+    --dextrade-hover: #7b3a9e;
+    --poloniex-hover: #0a7b3e;
+    --gateio-hover: #a32e27;
+    --niza-hover: #4338ca;
+}
+
 :root,
 [data-theme="dark"] {
     --bg-primary: #0f1419;
@@ -12,17 +46,6 @@
     --accent-green: #3fb950;
     --accent-red: #f85149;
     --accent-yellow: #d29922;
-    --lbank-color: #2962ff;
-    --hashkey-color: #7c3aed;
-    --biconomy-color: #00b894;
-    --mexc-color: #1873e8;
-    --bitrue-color: #00c853;
-    --ascendex-color: #ff6b35;
-    --bitmart-color: #00b8d4;
-    --dextrade-color: #9b59b6;
-    --poloniex-color: #0c9c4e;
-    --gateio-color: #c23b33;
-    --niza-color: #6366f1;
 }
 
 [data-theme="light"] {
@@ -38,16 +61,6 @@
     --accent-green: #1a7f37;
     --accent-red: #cf222e;
     --accent-yellow: #9a6700;
-    --lbank-color: #2962ff;
-    --hashkey-color: #7c3aed;
-    --biconomy-color: #00a884;
-    --mexc-color: #1873e8;
-    --bitrue-color: #00a846;
-    --ascendex-color: #e85d2d;
-    --dextrade-color: #8e44ad;
-    --poloniex-color: #0a8a43;
-    --gateio-color: #b02e26;
-    --niza-color: #4f46e5;
 }
 
 * {
@@ -283,9 +296,8 @@ body {
 }
 
 .lbank-btn:hover:not(:disabled) {
-    background-color: #1e4dd8;
+    background-color: var(--lbank-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(41, 98, 255, 0.3);
 }
 
 .hashkey-btn {
@@ -294,9 +306,8 @@ body {
 }
 
 .hashkey-btn:hover:not(:disabled) {
-    background-color: #6d28d9;
+    background-color: var(--hashkey-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
 }
 
 .biconomy-btn {
@@ -305,9 +316,8 @@ body {
 }
 
 .biconomy-btn:hover:not(:disabled) {
-    background-color: #00a187;
+    background-color: var(--biconomy-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 184, 148, 0.3);
 }
 
 .mexc-btn {
@@ -316,9 +326,8 @@ body {
 }
 
 .mexc-btn:hover:not(:disabled) {
-    background-color: #1563c7;
+    background-color: var(--mexc-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(24, 115, 232, 0.3);
 }
 
 .bitrue-btn {
@@ -327,9 +336,8 @@ body {
 }
 
 .bitrue-btn:hover:not(:disabled) {
-    background-color: #00a844;
+    background-color: var(--bitrue-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 200, 83, 0.3);
 }
 
 .ascendex-btn {
@@ -338,9 +346,8 @@ body {
 }
 
 .ascendex-btn:hover:not(:disabled) {
-    background-color: #e55a2b;
+    background-color: var(--ascendex-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
 }
 
 .bitmart-btn {
@@ -349,9 +356,8 @@ body {
 }
 
 .bitmart-btn:hover:not(:disabled) {
-    background-color: #009eb8;
+    background-color: var(--bitmart-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 184, 212, 0.3);
 }
 
 .dextrade-btn {
@@ -360,9 +366,8 @@ body {
 }
 
 .dextrade-btn:hover:not(:disabled) {
-    background-color: #7b3a9e;
+    background-color: var(--dextrade-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(155, 89, 182, 0.3);
 }
 
 .poloniex-btn {
@@ -371,9 +376,8 @@ body {
 }
 
 .poloniex-btn:hover:not(:disabled) {
-    background-color: #0a7b3e;
+    background-color: var(--poloniex-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(12, 156, 78, 0.3);
 }
 
 .gateio-btn {
@@ -382,9 +386,8 @@ body {
 }
 
 .gateio-btn:hover:not(:disabled) {
-    background-color: #a32e27;
+    background-color: var(--gateio-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(194, 59, 51, 0.3);
 }
 
 .niza-btn {
@@ -393,9 +396,8 @@ body {
 }
 
 .niza-btn:hover:not(:disabled) {
-    background-color: #4338ca;
+    background-color: var(--niza-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .status-row {
@@ -965,6 +967,26 @@ a.peer-exchange:hover {
 .peer-exchange.bitmart {
     background-color: rgba(0, 184, 212, 0.2);
     color: var(--bitmart-color);
+}
+
+.peer-exchange.dextrade {
+    background-color: rgba(155, 89, 182, 0.2);
+    color: var(--dextrade-color);
+}
+
+.peer-exchange.poloniex {
+    background-color: rgba(12, 156, 78, 0.2);
+    color: var(--poloniex-color);
+}
+
+.peer-exchange.gateio {
+    background-color: rgba(194, 59, 51, 0.2);
+    color: var(--gateio-color);
+}
+
+.peer-exchange.niza {
+    background-color: rgba(99, 102, 241, 0.2);
+    color: var(--niza-color);
 }
 
 .peer-price {
