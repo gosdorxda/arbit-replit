@@ -40,17 +40,23 @@ class BiconomyAdapter(BaseAdapter):
             normalized_symbol = f"{base}/USDT"
 
             try:
+                price = self._safe_float(item.get("last"))
+                volume = self._safe_float(item.get("vol"))
+                turnover = None
+                if price is not None and volume is not None:
+                    turnover = price * volume
+                
                 ticker = NormalizedTicker(
                     exchange=self.exchange_name,
                     symbol=normalized_symbol,
                     base_currency=base,
                     quote_currency="USDT",
-                    price=self._safe_float(item.get("last")),
-                    volume_24h=self._safe_float(item.get("vol")),
+                    price=price,
+                    volume_24h=volume,
                     high_24h=self._safe_float(item.get("high")),
                     low_24h=self._safe_float(item.get("low")),
                     change_24h=self._calculate_change(item),
-                    turnover_24h=None
+                    turnover_24h=turnover
                 )
                 tickers.append(ticker)
             except Exception as e:
