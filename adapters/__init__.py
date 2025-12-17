@@ -11,5 +11,6 @@ from .poloniex import PoloniexAdapter
 from .gateio import GateIOAdapter
 from .niza import NizaAdapter
 from .xt import XTAdapter
+from .coinstore import CoinstoreAdapter
 
-__all__ = ['BaseAdapter', 'LBankAdapter', 'HashKeyAdapter', 'BiconomyAdapter', 'MEXCAdapter', 'BitrueAdapter', 'AscendEXAdapter', 'BitMartAdapter', 'DexTradeAdapter', 'PoloniexAdapter', 'GateIOAdapter', 'NizaAdapter', 'XTAdapter']
+__all__ = ['BaseAdapter', 'LBankAdapter', 'HashKeyAdapter', 'BiconomyAdapter', 'MEXCAdapter', 'BitrueAdapter', 'AscendEXAdapter', 'BitMartAdapter', 'DexTradeAdapter', 'PoloniexAdapter', 'GateIOAdapter', 'NizaAdapter', 'XTAdapter', 'CoinstoreAdapter']

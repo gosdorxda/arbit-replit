@@ -18,10 +18,12 @@
     --gateio-color: #c23b33;       /* Red */
     --niza-color: #6366f1;         /* Indigo */
     --xt-color: #2563eb;           /* Blue */
+    --coinstore-color: #f59e0b;    /* Amber */
     
     /* ---- EXCHANGE HOVER COLORS (darker shade for hover) ---- */
     --lbank-hover: #1e4dd8;
     --xt-hover: #1d4ed8;
+    --coinstore-hover: #d97706;
     --hashkey-hover: #6d28d9;
     --biconomy-hover: #00a187;
     --mexc-hover: #1563c7;
@@ -412,6 +414,16 @@ body {
     transform: translateY(-1px);
 }
 
+.coinstore-btn {
+    background-color: var(--coinstore-color);
+    color: white;
+}
+
+.coinstore-btn:hover:not(:disabled) {
+    background-color: var(--coinstore-hover);
+    transform: translateY(-1px);
+}
+
 .status-row {
     display: flex;
     flex-direction: column;
@@ -701,6 +713,11 @@ td {
 .exchange-badge.xt {
     background-color: rgba(37, 99, 235, 0.2);
     color: var(--xt-color);
+}
+
+.exchange-badge.coinstore {
+    background-color: rgba(245, 158, 11, 0.2);
+    color: var(--coinstore-color);
 }
 
 .td-symbol {
@@ -1050,6 +1067,11 @@ a.peer-exchange:hover {
 .peer-exchange.xt {
     background-color: rgba(37, 99, 235, 0.2);
     color: var(--xt-color);
+}
+
+.peer-exchange.coinstore {
+    background-color: rgba(245, 158, 11, 0.2);
+    color: var(--coinstore-color);
 }
 
 .peer-price {

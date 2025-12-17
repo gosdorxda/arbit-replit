@@ -30,6 +30,8 @@ function getExchangeUrl(exchange, symbol) {
             return `https://niza.io/trade/${pairUpper}`;
         case 'XT':
             return `https://www.xt.com/en/trade/${pair}`;
+        case 'COINSTORE':
+            return `https://www.coinstore.com/spot/${pairUpper.replace('/', '')}`;
         default:
             return '#';
     }
@@ -229,9 +231,10 @@ async function loadStatus() {
         updateStatusDisplay('gateio', data.gateio);
         updateStatusDisplay('niza', data.niza);
         updateStatusDisplay('xt', data.xt);
+        updateStatusDisplay('coinstore', data.coinstore);
         
         let totalMarkets = 0;
-        const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt'];
+        const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt', 'coinstore'];
         exchanges.forEach(ex => {
             if (data[ex] && data[ex].pairs_count) {
                 totalMarkets += data[ex].pairs_count;
