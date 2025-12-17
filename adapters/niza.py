@@ -61,14 +61,13 @@ class NizaAdapter(BaseAdapter):
     
     def fetch_orderbook(self, symbol: str, limit: int = 20) -> NormalizedOrderbook:
         try:
-            ticker_id = symbol.replace('/', '%2F')
-            
             response = requests.get(
                 f"{self.BASE_URL}/orderbook",
                 params={
                     "ticker_id": symbol,
-                    "depth": limit
+                    "depth": 100
                 },
+                headers={"Accept": "application/json"},
                 timeout=10
             )
             response.raise_for_status()
