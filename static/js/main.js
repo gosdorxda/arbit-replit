@@ -425,10 +425,18 @@ async function showOrderbook(exchange, symbol, btnElement) {
             // Parse all, sort ascending to get lowest asks first, take 15 closest to spread, then reverse for display
             const allAsks = orderbook.asks.map(parseEntry).sort((a, b) => a.price - b.price);
             const asksToShow = allAsks.slice(0, 15).reverse(); // reverse so highest at top, lowest at bottom (near spread)
-            asksList.innerHTML = asksToShow.map(({ price, amount }) => `
+            let askCumulative = 0;
+            // Calculate cumulative from bottom (near spread) to top
+            const askTotals = [];
+            for (let i = asksToShow.length - 1; i >= 0; i--) {
+                askCumulative += asksToShow[i].price * asksToShow[i].amount;
+                askTotals[i] = askCumulative;
+            }
+            asksList.innerHTML = asksToShow.map(({ price, amount }, idx) => `
                 <div class="orderbook-row ask">
                     <span class="ob-price">${formatPrice(price)}</span>
                     <span class="ob-qty">${formatVolume(amount)}</span>
+                    <span class="ob-total">${formatVolume(askTotals[idx])}</span>
                 </div>
             `).join('');
             
@@ -438,12 +446,16 @@ async function showOrderbook(exchange, symbol, btnElement) {
             // Parse all, sort descending to get highest bids first, take 15 closest to spread
             const allBids = orderbook.bids.map(parseEntry).sort((a, b) => b.price - a.price);
             const bidsToShow = allBids.slice(0, 15); // highest at top (near spread), lowest at bottom
-            bidsList.innerHTML = bidsToShow.map(({ price, amount }) => `
+            let bidCumulative = 0;
+            bidsList.innerHTML = bidsToShow.map(({ price, amount }) => {
+                bidCumulative += price * amount;
+                return `
                 <div class="orderbook-row bid">
                     <span class="ob-price">${formatPrice(price)}</span>
                     <span class="ob-qty">${formatVolume(amount)}</span>
+                    <span class="ob-total">${formatVolume(bidCumulative)}</span>
                 </div>
-            `).join('');
+            `}).join('');
             
             if (allAsks.length > 0 && allBids.length > 0) {
                 const lowestAsk = allAsks[0].price;
@@ -508,10 +520,17 @@ async function showOrderbook2(exchange, symbol, btnElement) {
             
             const allAsks = orderbook.asks.map(parseEntry).sort((a, b) => a.price - b.price);
             const asksToShow = allAsks.slice(0, 15).reverse();
-            asksList.innerHTML = asksToShow.map(({ price, amount }) => `
+            let askCumulative2 = 0;
+            const askTotals2 = [];
+            for (let i = asksToShow.length - 1; i >= 0; i--) {
+                askCumulative2 += asksToShow[i].price * asksToShow[i].amount;
+                askTotals2[i] = askCumulative2;
+            }
+            asksList.innerHTML = asksToShow.map(({ price, amount }, idx) => `
                 <div class="orderbook-row ask">
                     <span class="ob-price">${formatPrice(price)}</span>
                     <span class="ob-qty">${formatVolume(amount)}</span>
+                    <span class="ob-total">${formatVolume(askTotals2[idx])}</span>
                 </div>
             `).join('');
             
@@ -519,12 +538,16 @@ async function showOrderbook2(exchange, symbol, btnElement) {
             
             const allBids = orderbook.bids.map(parseEntry).sort((a, b) => b.price - a.price);
             const bidsToShow = allBids.slice(0, 15);
-            bidsList.innerHTML = bidsToShow.map(({ price, amount }) => `
+            let bidCumulative2 = 0;
+            bidsList.innerHTML = bidsToShow.map(({ price, amount }) => {
+                bidCumulative2 += price * amount;
+                return `
                 <div class="orderbook-row bid">
                     <span class="ob-price">${formatPrice(price)}</span>
                     <span class="ob-qty">${formatVolume(amount)}</span>
+                    <span class="ob-total">${formatVolume(bidCumulative2)}</span>
                 </div>
-            `).join('');
+            `}).join('');
             
             if (allAsks.length > 0 && allBids.length > 0) {
                 const lowestAsk = allAsks[0].price;
