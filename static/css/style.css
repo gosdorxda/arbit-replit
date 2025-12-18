@@ -20,12 +20,16 @@
     --xt-color: #2563eb;           /* Blue */
     --coinstore-color: #f59e0b;    /* Amber */
     --vindax-color: #10b981;       /* Emerald */
+    --fameex-color: #e11d48;       /* Rose */
+    --bigone-color: #0ea5e9;       /* Sky */
     
     /* ---- EXCHANGE HOVER COLORS (darker shade for hover) ---- */
     --lbank-hover: #1e4dd8;
     --xt-hover: #1d4ed8;
     --coinstore-hover: #d97706;
     --vindax-hover: #059669;
+    --fameex-hover: #be123c;
+    --bigone-hover: #0284c7;
     --hashkey-hover: #6d28d9;
     --biconomy-hover: #00a187;
     --mexc-hover: #1563c7;
@@ -445,6 +449,26 @@ body {
 
 .vindax-btn:hover:not(:disabled) {
     background-color: var(--vindax-hover);
+    transform: translateY(-1px);
+}
+
+.fameex-btn {
+    background-color: var(--fameex-color);
+    color: white;
+}
+
+.fameex-btn:hover:not(:disabled) {
+    background-color: var(--fameex-hover);
+    transform: translateY(-1px);
+}
+
+.bigone-btn {
+    background-color: var(--bigone-color);
+    color: white;
+}
+
+.bigone-btn:hover:not(:disabled) {
+    background-color: var(--bigone-hover);
     transform: translateY(-1px);
 }
 
@@ -883,6 +907,16 @@ td {
 .exchange-badge.vindax {
     background-color: rgba(16, 185, 129, 0.2);
     color: var(--vindax-color);
+}
+
+.exchange-badge.fameex {
+    background-color: rgba(225, 29, 72, 0.2);
+    color: var(--fameex-color);
+}
+
+.exchange-badge.bigone {
+    background-color: rgba(14, 165, 233, 0.2);
+    color: var(--bigone-color);
 }
 
 .td-symbol {

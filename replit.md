@@ -1,7 +1,7 @@
 # Crypto Exchange Data Aggregator
 
 ## Overview
-A Flask-based web application that fetches, normalizes, and displays SPOT/USDT market data from multiple cryptocurrency exchanges. Currently supports LBANK, HashKey, Biconomy, MEXC, Bitrue, AscendEX, BitMart, Dex-Trade, Poloniex, Gate.io, Niza, XT.com, Coinstore, and Vindax exchanges.
+A Flask-based web application that fetches, normalizes, and displays SPOT/USDT market data from multiple cryptocurrency exchanges. Currently supports LBANK, HashKey, Biconomy, MEXC, Bitrue, AscendEX, BitMart, Dex-Trade, Poloniex, Gate.io, Niza, XT.com, Coinstore, Vindax, FameEX, and BigOne exchanges.
 
 ## Key Features
 - **Manual Data Fetching**: Button-triggered fetching from each exchange
@@ -35,7 +35,9 @@ adapters/
   ├── niza.py       - Niza exchange adapter
   ├── xt.py         - XT.com exchange adapter
   ├── coinstore.py  - Coinstore exchange adapter
-  └── vindax.py     - Vindax exchange adapter
+  ├── vindax.py     - Vindax exchange adapter
+  ├── fameex.py     - FameEX exchange adapter
+  └── bigone.py     - BigOne exchange adapter
 ```
 
 ### Frontend
@@ -66,6 +68,8 @@ static/
 | `/api/fetch/xt` | POST | Trigger XT.com data fetch |
 | `/api/fetch/coinstore` | POST | Trigger Coinstore data fetch |
 | `/api/fetch/vindax` | POST | Trigger Vindax data fetch |
+| `/api/fetch/fameex` | POST | Trigger FameEX data fetch |
+| `/api/fetch/bigone` | POST | Trigger BigOne data fetch |
 | `/api/tickers` | GET | Get all stored ticker data |
 | `/api/status` | GET | Get fetch status for each exchange |
 | `/api/logs` | GET | Get recent fetch logs |
@@ -106,6 +110,8 @@ To add a new exchange:
 - `SESSION_SECRET` - Flask session secret key
 
 ## Recent Changes
+- Added FameEX exchange adapter (15th exchange)
+- Added BigOne exchange adapter (16th exchange)
 - Added blacklist/whitelist system with MarketList database model, per exchange+symbol tracking
 - Filter dropdown: Semua Data, Sembunyikan Blacklist, Hanya Whitelist, Hanya Blacklist
 - Added Niza exchange adapter (11th exchange)

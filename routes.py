@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import render_template, jsonify, request
 from app import app, db
 from models import SpotTicker, FetchLog, MarketList
-from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter, VindaxAdapter
+from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter, VindaxAdapter, FameEXAdapter, BigOneAdapter
 
 
 def save_tickers(tickers, exchange_name):
@@ -366,6 +366,52 @@ def fetch_vindax():
         }), 500
 
 
+@app.route('/api/fetch/fameex', methods=['POST'])
+def fetch_fameex():
+    try:
+        adapter = FameEXAdapter()
+        tickers = adapter.fetch_usdt_tickers()
+        save_tickers(tickers, adapter.exchange_name)
+        log_fetch(adapter.exchange_name, 'success', len(tickers))
+        
+        return jsonify({
+            'status': 'success',
+            'exchange': adapter.exchange_name,
+            'pairs_count': len(tickers),
+            'message': f'Successfully fetched {len(tickers)} USDT pairs from FameEX'
+        })
+    except Exception as e:
+        log_fetch('FAMEEX', 'error', error_message=str(e))
+        return jsonify({
+            'status': 'error',
+            'exchange': 'FAMEEX',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/fetch/bigone', methods=['POST'])
+def fetch_bigone():
+    try:
+        adapter = BigOneAdapter()
+        tickers = adapter.fetch_usdt_tickers()
+        save_tickers(tickers, adapter.exchange_name)
+        log_fetch(adapter.exchange_name, 'success', len(tickers))
+        
+        return jsonify({
+            'status': 'success',
+            'exchange': adapter.exchange_name,
+            'pairs_count': len(tickers),
+            'message': f'Successfully fetched {len(tickers)} USDT pairs from BigOne'
+        })
+    except Exception as e:
+        log_fetch('BIGONE', 'error', error_message=str(e))
+        return jsonify({
+            'status': 'error',
+            'exchange': 'BIGONE',
+            'message': str(e)
+        }), 500
+
+
 @app.route('/api/tickers')
 def get_tickers():
     draw = request.args.get('draw', 1, type=int)
@@ -524,6 +570,8 @@ def get_status():
     xt_log = FetchLog.query.filter_by(exchange='XT').order_by(FetchLog.fetched_at.desc()).first()
     coinstore_log = FetchLog.query.filter_by(exchange='COINSTORE').order_by(FetchLog.fetched_at.desc()).first()
     vindax_log = FetchLog.query.filter_by(exchange='VINDAX').order_by(FetchLog.fetched_at.desc()).first()
+    fameex_log = FetchLog.query.filter_by(exchange='FAMEEX').order_by(FetchLog.fetched_at.desc()).first()
+    bigone_log = FetchLog.query.filter_by(exchange='BIGONE').order_by(FetchLog.fetched_at.desc()).first()
     
     lbank_count = SpotTicker.query.filter_by(exchange='LBANK').count()
     hashkey_count = SpotTicker.query.filter_by(exchange='HASHKEY').count()
@@ -539,10 +587,12 @@ def get_status():
     xt_count = SpotTicker.query.filter_by(exchange='XT').count()
     coinstore_count = SpotTicker.query.filter_by(exchange='COINSTORE').count()
     vindax_count = SpotTicker.query.filter_by(exchange='VINDAX').count()
+    fameex_count = SpotTicker.query.filter_by(exchange='FAMEEX').count()
+    bigone_count = SpotTicker.query.filter_by(exchange='BIGONE').count()
     
     exchanges = ['LBANK', 'HASHKEY', 'BICONOMY', 'MEXC', 'BITRUE', 'ASCENDEX', 
                  'BITMART', 'DEXTRADE', 'POLONIEX', 'GATEIO', 'NIZA', 'XT', 
-                 'COINSTORE', 'VINDAX']
+                 'COINSTORE', 'VINDAX', 'FAMEEX', 'BIGONE']
     
     from sqlalchemy import func
     blacklist_counts = dict(db.session.query(
@@ -651,6 +701,20 @@ def get_status():
             'pairs_count': vindax_count,
             'blacklist_count': blacklist_counts.get('VINDAX', 0),
             'whitelist_count': whitelist_counts.get('VINDAX', 0)
+        },
+        'fameex': {
+            'last_fetch': fameex_log.fetched_at.isoformat() if fameex_log else None,
+            'status': fameex_log.status if fameex_log else 'never',
+            'pairs_count': fameex_count,
+            'blacklist_count': blacklist_counts.get('FAMEEX', 0),
+            'whitelist_count': whitelist_counts.get('FAMEEX', 0)
+        },
+        'bigone': {
+            'last_fetch': bigone_log.fetched_at.isoformat() if bigone_log else None,
+            'status': bigone_log.status if bigone_log else 'never',
+            'pairs_count': bigone_count,
+            'blacklist_count': blacklist_counts.get('BIGONE', 0),
+            'whitelist_count': whitelist_counts.get('BIGONE', 0)
         }
     })
 
@@ -688,6 +752,10 @@ def get_orderbook(exchange, symbol):
             adapter = CoinstoreAdapter()
         elif exchange.upper() == 'VINDAX':
             adapter = VindaxAdapter()
+        elif exchange.upper() == 'FAMEEX':
+            adapter = FameEXAdapter()
+        elif exchange.upper() == 'BIGONE':
+            adapter = BigOneAdapter()
         else:
             return jsonify({
                 'status': 'error',

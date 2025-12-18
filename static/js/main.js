@@ -34,6 +34,10 @@ function getExchangeUrl(exchange, symbol) {
             return `https://www.coinstore.com/spot/${base}USDT`;
         case 'VINDAX':
             return `https://vindax.com/exchange-base.html?symbol=${base}_USDT`;
+        case 'FAMEEX':
+            return `https://www.fameex.com/en-US/trade/${base.toLowerCase()}_usdt`;
+        case 'BIGONE':
+            return `https://big.one/en/trade/${base}-USDT`;
         default:
             return '#';
     }
