@@ -220,7 +220,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    padding: 8px 12px;
+    padding: 8px 14px;
     font-size: 0.75rem;
     font-weight: 600;
     border: none;
@@ -228,8 +228,8 @@ body {
     cursor: pointer;
     transition: all 0.15s ease;
     position: relative;
-    min-width: 120px;
-    text-align: left;
+    min-width: 150px;
+    text-align: center;
 }
 
 .fetch-btn:disabled {
@@ -254,12 +254,14 @@ body {
 
 .btn-status {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: center;
     align-items: center;
-    gap: 2px;
-    font-size: 0.625rem;
+    gap: 8px;
+    font-size: 0.65rem;
     font-weight: 400;
     opacity: 0.9;
+    flex-wrap: wrap;
 }
 
 .btn-time {
