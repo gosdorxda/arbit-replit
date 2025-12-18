@@ -385,7 +385,8 @@ def get_tickers():
         '3': SpotTicker.turnover_24h,
         '4': None,
         '5': SpotTicker.price,
-        '6': None
+        '6': None,
+        '7': None
     }
     
     query = SpotTicker.query

@@ -17,7 +17,7 @@ A Flask-based web application that fetches, normalizes, and displays SPOT/USDT m
 ```
 app.py              - Flask app configuration and database setup
 main.py             - Entry point
-models.py           - SQLAlchemy models (SpotTicker, FetchLog)
+models.py           - SQLAlchemy models (SpotTicker, FetchLog, MarketList)
 routes.py           - Flask routes and API endpoints
 adapters/
   ├── __init__.py   - Adapter exports
@@ -70,6 +70,8 @@ static/
 | `/api/status` | GET | Get fetch status for each exchange |
 | `/api/logs` | GET | Get recent fetch logs |
 | `/api/orderbook/<exchange>/<symbol>` | GET | Get orderbook depth data (asks/bids) |
+| `/api/market-list/toggle` | POST | Toggle blacklist/whitelist for exchange+symbol |
+| `/api/market-list` | GET | Get all blacklist/whitelist entries |
 
 ## Data Normalization
 
@@ -104,6 +106,8 @@ To add a new exchange:
 - `SESSION_SECRET` - Flask session secret key
 
 ## Recent Changes
+- Added blacklist/whitelist system with MarketList database model, per exchange+symbol tracking
+- Filter dropdown: Semua Data, Sembunyikan Blacklist, Hanya Whitelist, Hanya Blacklist
 - Added Niza exchange adapter (11th exchange)
 - Added Gate.io exchange adapter (10th exchange)
 - Added Poloniex exchange adapter (9th exchange)
