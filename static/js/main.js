@@ -155,8 +155,11 @@ function initDataTable() {
                         return '<span class="no-peer">−</span>';
                     }
                     
+                    // Sort by price descending (highest at top, lowest at bottom)
+                    const sortedPeers = [...peers].filter(p => p.price).sort((a, b) => b.price - a.price);
+                    
                     let html = '<div class="peer-list">';
-                    peers.forEach(peer => {
+                    sortedPeers.forEach(peer => {
                         if (!peer.price) return;
                         const peerExchangeClass = peer.exchange.toLowerCase();
                         const peerVolume = peer.turnover_24h ? formatVolume(peer.turnover_24h) : '−';
