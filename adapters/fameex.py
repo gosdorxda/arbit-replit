@@ -63,11 +63,11 @@ class FameEXAdapter(BaseAdapter):
     def fetch_orderbook(self, symbol: str, limit: int = 20) -> NormalizedOrderbook:
         try:
             base = symbol.replace('/USDT', '')
-            api_symbol = f"{base}_USDT"
+            api_symbol = f"{base}USDT"
             
             response = requests.get(
-                f"{self.BASE_URL}/v2/public/orderbook/{api_symbol}",
-                params={"depth": limit},
+                f"{self.BASE_URL}/sapi/v1/depth",
+                params={"symbol": api_symbol, "limit": limit},
                 timeout=10
             )
             response.raise_for_status()
@@ -80,9 +80,6 @@ class FameEXAdapter(BaseAdapter):
                 if isinstance(ask, list) and len(ask) >= 2:
                     price = self._safe_float(ask[0])
                     amount = self._safe_float(ask[1])
-                elif isinstance(ask, dict):
-                    price = self._safe_float(ask.get('price'))
-                    amount = self._safe_float(ask.get('quantity') or ask.get('amount'))
                 else:
                     continue
                 if price and amount:
@@ -93,9 +90,6 @@ class FameEXAdapter(BaseAdapter):
                 if isinstance(bid, list) and len(bid) >= 2:
                     price = self._safe_float(bid[0])
                     amount = self._safe_float(bid[1])
-                elif isinstance(bid, dict):
-                    price = self._safe_float(bid.get('price'))
-                    amount = self._safe_float(bid.get('quantity') or bid.get('amount'))
                 else:
                     continue
                 if price and amount:
