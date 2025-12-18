@@ -35,7 +35,7 @@ function getExchangeUrl(exchange, symbol) {
         case 'VINDAX':
             return `https://vindax.com/exchange-base.html?symbol=${base}_USDT`;
         case 'FAMEEX':
-            return `https://www.fameex.com/en-US/trade/${base.toLowerCase()}_usdt`;
+            return `https://www.fameex.com/en-US/trade/${base.toLowerCase()}-usdt`;
         case 'BIGONE':
             return `https://big.one/en/trade/${base}-USDT`;
         default:
