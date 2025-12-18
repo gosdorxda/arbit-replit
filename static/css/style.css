@@ -711,7 +711,59 @@ td {
     min-width: 200px !important;
     max-width: 280px !important;
 }
+
+#ticker-table th.td-list,
+#ticker-table td.td-list {
+    width: 70px !important;
+    min-width: 60px !important;
+    max-width: 80px !important;
+}
 /* ============================================ */
+
+.list-checkboxes {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    align-items: center;
+}
+
+.list-cb {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    opacity: 0.4;
+    transition: opacity 0.15s ease;
+}
+
+.list-cb:hover {
+    opacity: 0.8;
+}
+
+.list-cb input {
+    display: none;
+}
+
+.list-cb input:checked + .cb-icon {
+    opacity: 1;
+}
+
+.list-cb .cb-icon {
+    font-size: 1rem;
+    opacity: 0.4;
+    transition: opacity 0.15s ease;
+}
+
+.list-cb input:checked + .cb-icon {
+    opacity: 1;
+}
+
+.blacklist-cb:has(input:checked) {
+    opacity: 1;
+}
+
+.whitelist-cb:has(input:checked) {
+    opacity: 1;
+}
 
 .td-exchange {
     font-weight: 500;

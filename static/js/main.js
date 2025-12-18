@@ -53,6 +53,10 @@ $(document).ready(function() {
         dataTable.ajax.reload();
     });
     
+    $('#list-filter').on('change', function() {
+        dataTable.ajax.reload();
+    });
+    
     updateExchangeColumnVisibility();
 });
 
@@ -66,6 +70,7 @@ function initDataTable() {
             data: function(d) {
                 d.exchange = $('#exchange-filter').val();
                 d.multi_exchange = $('#multi-exchange-filter').is(':checked');
+                d.list_filter = $('#list-filter').val();
             }
         },
         columns: [
@@ -168,6 +173,27 @@ function initDataTable() {
                     });
                     html += '</div>';
                     return html;
+                },
+                orderable: false
+            },
+            {
+                data: null,
+                className: 'td-list',
+                render: function(data) {
+                    const blacklistChecked = data.is_blacklisted ? 'checked' : '';
+                    const whitelistChecked = data.is_whitelisted ? 'checked' : '';
+                    return `
+                        <div class="list-checkboxes">
+                            <label class="list-cb blacklist-cb" title="Blacklist">
+                                <input type="checkbox" ${blacklistChecked} onchange="toggleMarketList('${data.exchange}', '${data.symbol}', 'blacklist', this)">
+                                <span class="cb-icon">⛔</span>
+                            </label>
+                            <label class="list-cb whitelist-cb" title="Whitelist">
+                                <input type="checkbox" ${whitelistChecked} onchange="toggleMarketList('${data.exchange}', '${data.symbol}', 'whitelist', this)">
+                                <span class="cb-icon">⭐</span>
+                            </label>
+                        </div>
+                    `;
                 },
                 orderable: false
             }
@@ -511,6 +537,43 @@ document.addEventListener('keydown', function(e) {
         closeOrderbookModal2();
     }
 });
+
+async function toggleMarketList(exchange, symbol, listType, checkbox) {
+    try {
+        const response = await fetch('/api/market-list/toggle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                exchange: exchange,
+                symbol: symbol,
+                list_type: listType
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            const row = checkbox.closest('tr');
+            const otherType = listType === 'blacklist' ? 'whitelist' : 'blacklist';
+            const otherCheckbox = row.querySelector(`.${otherType}-cb input`);
+            if (otherCheckbox && data.action === 'added') {
+                otherCheckbox.checked = false;
+            }
+            
+            const actionText = data.action === 'added' ? 'ditambahkan ke' : 'dihapus dari';
+            const listName = listType === 'blacklist' ? 'Blacklist' : 'Whitelist';
+            showToast(`${symbol} ${actionText} ${listName}`, 'success');
+        } else {
+            checkbox.checked = !checkbox.checked;
+            showToast(data.message || 'Gagal mengubah list', 'error');
+        }
+    } catch (error) {
+        checkbox.checked = !checkbox.checked;
+        showToast('Gagal mengubah list: ' + error.message, 'error');
+    }
+}
 
 function showToast(message, type = 'info') {
     const toast = document.getElementById('toast');

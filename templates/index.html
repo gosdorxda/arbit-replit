@@ -198,6 +198,15 @@
                         <option value="VINDAX">VINDAX</option>
                     </select>
                 </div>
+                <div class="filter-item">
+                    <label for="list-filter">Filter:</label>
+                    <select id="list-filter">
+                        <option value="">Semua Data</option>
+                        <option value="hide_blacklist">Sembunyikan Blacklist</option>
+                        <option value="only_whitelist">Hanya Whitelist</option>
+                        <option value="only_blacklist">Hanya Blacklist</option>
+                    </select>
+                </div>
                 <div class="filter-item filter-checkbox">
                     <label class="checkbox-label">
                         <input type="checkbox" id="multi-exchange-filter">
@@ -233,6 +242,7 @@
                             <th class="td-action">Orderbook</th>
                             <th class="td-price">Price</th>
                             <th class="td-peer">Compare (Other Exchange)</th>
+                            <th class="td-list">List</th>
                         </tr>
                     </thead>
                     <tbody></tbody>

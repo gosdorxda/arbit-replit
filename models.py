@@ -58,3 +58,26 @@ class FetchLog(db.Model):
             'error_message': self.error_message,
             'fetched_at': self.fetched_at.isoformat() if self.fetched_at else None
         }
+
+
+class MarketList(db.Model):
+    __tablename__ = 'market_lists'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    exchange = db.Column(db.String(50), nullable=False)
+    symbol = db.Column(db.String(50), nullable=False)
+    list_type = db.Column(db.String(20), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    
+    __table_args__ = (
+        db.UniqueConstraint('exchange', 'symbol', 'list_type', name='unique_market_list'),
+    )
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'exchange': self.exchange,
+            'symbol': self.symbol,
+            'list_type': self.list_type,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }

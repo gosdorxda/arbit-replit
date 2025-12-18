@@ -1,7 +1,7 @@
 from datetime import datetime
 from flask import render_template, jsonify, request
 from app import app, db
-from models import SpotTicker, FetchLog
+from models import SpotTicker, FetchLog, MarketList
 from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter, VindaxAdapter
 
 
@@ -374,6 +374,7 @@ def get_tickers():
     search_value = request.args.get('search[value]', '', type=str)
     exchange_filter = request.args.get('exchange', '', type=str)
     multi_exchange = request.args.get('multi_exchange', 'false', type=str) == 'true'
+    list_filter = request.args.get('list_filter', '', type=str)
     order_column = request.args.get('order[0][column]', '1', type=str)
     order_dir = request.args.get('order[0][dir]', 'asc', type=str)
     
@@ -408,6 +409,29 @@ def get_tickers():
         ).group_by(SpotTicker.symbol).having(func.count(SpotTicker.exchange) > 1).subquery()
         
         query = query.join(symbol_counts, SpotTicker.symbol == symbol_counts.c.symbol)
+    
+    blacklist_entries = MarketList.query.filter_by(list_type='blacklist').all()
+    whitelist_entries = MarketList.query.filter_by(list_type='whitelist').all()
+    blacklist_set = {(e.exchange, e.symbol) for e in blacklist_entries}
+    whitelist_set = {(e.exchange, e.symbol) for e in whitelist_entries}
+    
+    from sqlalchemy import or_, and_, not_, tuple_
+    
+    if list_filter == 'hide_blacklist' and blacklist_set:
+        blacklist_conditions = [and_(SpotTicker.exchange == ex, SpotTicker.symbol == sym) for ex, sym in blacklist_set]
+        query = query.filter(not_(or_(*blacklist_conditions)))
+    elif list_filter == 'only_whitelist':
+        if whitelist_set:
+            conditions = [and_(SpotTicker.exchange == ex, SpotTicker.symbol == sym) for ex, sym in whitelist_set]
+            query = query.filter(or_(*conditions))
+        else:
+            query = query.filter(db.literal(False))
+    elif list_filter == 'only_blacklist':
+        if blacklist_set:
+            conditions = [and_(SpotTicker.exchange == ex, SpotTicker.symbol == sym) for ex, sym in blacklist_set]
+            query = query.filter(or_(*conditions))
+        else:
+            query = query.filter(db.literal(False))
     
     total_records = SpotTicker.query.count()
     filtered_records = query.count()
@@ -461,6 +485,8 @@ def get_tickers():
                     peers.append(peer_data)
         ticker_dict['peers'] = peers
         ticker_dict['exchange_count'] = len(symbol_map.get(t.symbol, {}))
+        ticker_dict['is_blacklisted'] = (t.exchange, t.symbol) in blacklist_set
+        ticker_dict['is_whitelisted'] = (t.exchange, t.symbol) in whitelist_set
         data.append(ticker_dict)
     
     return jsonify({
@@ -637,3 +663,77 @@ def get_orderbook(exchange, symbol):
             'status': 'error',
             'message': str(e)
         }), 500
+
+
+@app.route('/api/market-list/toggle', methods=['POST'])
+def toggle_market_list():
+    data = request.get_json()
+    exchange = data.get('exchange')
+    symbol = data.get('symbol')
+    list_type = data.get('list_type')
+    
+    if not exchange or not symbol or not list_type:
+        return jsonify({'status': 'error', 'message': 'Missing required fields'}), 400
+    
+    if list_type not in ['blacklist', 'whitelist']:
+        return jsonify({'status': 'error', 'message': 'Invalid list_type'}), 400
+    
+    existing = MarketList.query.filter_by(
+        exchange=exchange,
+        symbol=symbol,
+        list_type=list_type
+    ).first()
+    
+    if existing:
+        db.session.delete(existing)
+        db.session.commit()
+        return jsonify({
+            'status': 'success',
+            'action': 'removed',
+            'exchange': exchange,
+            'symbol': symbol,
+            'list_type': list_type
+        })
+    else:
+        if list_type == 'blacklist':
+            whitelist_entry = MarketList.query.filter_by(
+                exchange=exchange, symbol=symbol, list_type='whitelist'
+            ).first()
+            if whitelist_entry:
+                db.session.delete(whitelist_entry)
+        elif list_type == 'whitelist':
+            blacklist_entry = MarketList.query.filter_by(
+                exchange=exchange, symbol=symbol, list_type='blacklist'
+            ).first()
+            if blacklist_entry:
+                db.session.delete(blacklist_entry)
+        
+        new_entry = MarketList(
+            exchange=exchange,
+            symbol=symbol,
+            list_type=list_type
+        )
+        db.session.add(new_entry)
+        db.session.commit()
+        return jsonify({
+            'status': 'success',
+            'action': 'added',
+            'exchange': exchange,
+            'symbol': symbol,
+            'list_type': list_type
+        })
+
+
+@app.route('/api/market-list')
+def get_market_list():
+    list_type = request.args.get('type', None)
+    
+    query = MarketList.query
+    if list_type:
+        query = query.filter_by(list_type=list_type)
+    
+    entries = query.all()
+    return jsonify({
+        'status': 'success',
+        'data': [e.to_dict() for e in entries]
+    })
