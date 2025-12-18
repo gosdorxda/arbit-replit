@@ -765,6 +765,28 @@ td {
     opacity: 1;
 }
 
+.btn-list {
+    display: none;
+    gap: 6px;
+    font-size: 0.7rem;
+    margin-top: 2px;
+}
+
+.btn-list .wl-count,
+.btn-list .bl-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.btn-list .wl-count {
+    color: #f59e0b;
+}
+
+.btn-list .bl-count {
+    color: #ef4444;
+}
+
 .td-exchange {
     font-weight: 500;
 }

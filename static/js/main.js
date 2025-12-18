@@ -293,6 +293,7 @@ function updateStatusDisplay(exchange, status) {
     
     const timeEl = btn.querySelector('.btn-time');
     const pairsEl = btn.querySelector('.btn-pairs');
+    const listEl = btn.querySelector('.btn-list');
     
     if (status.status === 'never' || !status.last_fetch) {
         timeEl.textContent = 'Never fetched';
@@ -307,6 +308,17 @@ function updateStatusDisplay(exchange, status) {
     }
     
     pairsEl.textContent = `${status.pairs_count} pairs`;
+    
+    if (listEl) {
+        const wl = status.whitelist_count || 0;
+        const bl = status.blacklist_count || 0;
+        if (wl > 0 || bl > 0) {
+            listEl.innerHTML = `<span class="wl-count" title="Whitelist">⭐${wl}</span> <span class="bl-count" title="Blacklist">⛔${bl}</span>`;
+            listEl.style.display = 'flex';
+        } else {
+            listEl.style.display = 'none';
+        }
+    }
 }
 
 function formatRelativeTime(date) {
@@ -565,6 +577,8 @@ async function toggleMarketList(exchange, symbol, listType, checkbox) {
             const actionText = data.action === 'added' ? 'ditambahkan ke' : 'dihapus dari';
             const listName = listType === 'blacklist' ? 'Blacklist' : 'Whitelist';
             showToast(`${symbol} ${actionText} ${listName}`, 'success');
+            
+            loadStatus();
         } else {
             checkbox.checked = !checkbox.checked;
             showToast(data.message || 'Gagal mengubah list', 'error');
