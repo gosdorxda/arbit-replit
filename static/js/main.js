@@ -273,9 +273,11 @@ async function loadStatus() {
         updateStatusDisplay('xt', data.xt);
         updateStatusDisplay('coinstore', data.coinstore);
         updateStatusDisplay('vindax', data.vindax);
+        updateStatusDisplay('fameex', data.fameex);
+        updateStatusDisplay('bigone', data.bigone);
         
         let totalMarkets = 0;
-        const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt', 'coinstore', 'vindax'];
+        const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt', 'coinstore', 'vindax', 'fameex', 'bigone'];
         exchanges.forEach(ex => {
             if (data[ex] && data[ex].pairs_count) {
                 totalMarkets += data[ex].pairs_count;
