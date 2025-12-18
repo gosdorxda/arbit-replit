@@ -22,7 +22,6 @@
     --vindax-color: #10b981;       /* Emerald */
     --fameex-color: #e11d48;       /* Rose */
     --bigone-color: #0ea5e9;       /* Sky */
-    --ourbit-color: #079a4b;       /* Ourbit Green */
     
     /* ---- EXCHANGE HOVER COLORS (darker shade for hover) ---- */
     --lbank-hover: #1e4dd8;
@@ -31,7 +30,6 @@
     --vindax-hover: #059669;
     --fameex-hover: #be123c;
     --bigone-hover: #0284c7;
-    --ourbit-hover: #067a3c;
     --hashkey-hover: #6d28d9;
     --biconomy-hover: #00a187;
     --mexc-hover: #1563c7;
@@ -471,16 +469,6 @@ body {
 
 .bigone-btn:hover:not(:disabled) {
     background-color: var(--bigone-hover);
-    transform: translateY(-1px);
-}
-
-.ourbit-btn {
-    background-color: var(--ourbit-color);
-    color: white;
-}
-
-.ourbit-btn:hover:not(:disabled) {
-    background-color: var(--ourbit-hover);
     transform: translateY(-1px);
 }
 
@@ -929,11 +917,6 @@ td {
 .exchange-badge.bigone {
     background-color: rgba(14, 165, 233, 0.2);
     color: var(--bigone-color);
-}
-
-.exchange-badge.ourbit {
-    background-color: rgba(7, 154, 75, 0.2);
-    color: var(--ourbit-color);
 }
 
 .td-symbol {
