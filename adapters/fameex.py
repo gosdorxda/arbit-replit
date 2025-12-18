@@ -23,37 +23,21 @@ class FameEXAdapter(BaseAdapter):
             data = response.json()
             
             tickers = []
-            ticker_list = data if isinstance(data, list) else data.get('data', [])
+            ticker_data = data.get('data', {}) if isinstance(data, dict) else data
             
-            for item in ticker_list:
-                trading_pairs = item.get('trading_pairs', '') or item.get('symbol', '')
-                if not trading_pairs:
+            for trading_pair, item in ticker_data.items():
+                if not trading_pair.endswith('_USDT'):
                     continue
                 
-                if '_' in trading_pairs:
-                    parts = trading_pairs.split('_')
-                    base = parts[0].upper()
-                    quote = parts[1].upper() if len(parts) > 1 else ''
-                elif 'USDT' in trading_pairs.upper():
-                    upper_pair = trading_pairs.upper()
-                    base = upper_pair.replace('USDT', '')
-                    quote = 'USDT'
-                else:
-                    continue
+                base = trading_pair.replace('_USDT', '').upper()
                 
-                if quote != 'USDT':
-                    continue
+                price = self._safe_float(item.get('last_price'))
+                volume_24h = self._safe_float(item.get('base_volume'))
+                turnover_24h = self._safe_float(item.get('quote_volume'))
+                high_24h = self._safe_float(item.get('high_24h'))
+                low_24h = self._safe_float(item.get('low_24h'))
                 
-                price = self._safe_float(item.get('last_price') or item.get('last'))
-                volume_24h = self._safe_float(item.get('base_volume') or item.get('vol'))
-                turnover_24h = self._safe_float(item.get('quote_volume') or item.get('amount'))
-                high_24h = self._safe_float(item.get('high_24h') or item.get('high'))
-                low_24h = self._safe_float(item.get('low_24h') or item.get('low'))
-                
-                change_str = item.get('price_change_percent_24h') or item.get('rose') or '0'
-                if isinstance(change_str, str):
-                    change_str = change_str.replace('%', '').replace('+', '')
-                change_24h = self._safe_float(change_str)
+                change_24h = None
                 
                 normalized = NormalizedTicker(
                     exchange=self.exchange_name,
