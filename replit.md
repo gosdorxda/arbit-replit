@@ -1,7 +1,7 @@
 # Crypto Exchange Data Aggregator
 
 ## Overview
-A Flask-based web application that fetches, normalizes, and displays SPOT/USDT market data from multiple cryptocurrency exchanges. Currently supports LBANK, HashKey, Biconomy, MEXC, Bitrue, AscendEX, BitMart, Dex-Trade, Poloniex, Gate.io, Niza, XT.com, Coinstore, Vindax, FameEX, and BigOne exchanges.
+A Flask-based web application that fetches, normalizes, and displays SPOT/USDT market data from multiple cryptocurrency exchanges. Currently supports LBANK, HashKey, Biconomy, MEXC, Bitrue, AscendEX, BitMart, Dex-Trade, Poloniex, Gate.io, Niza, XT.com, Coinstore, Vindax, FameEX, BigOne, and Ourbit exchanges.
 
 ## Key Features
 - **Manual Data Fetching**: Button-triggered fetching from each exchange
@@ -37,7 +37,8 @@ adapters/
   ├── coinstore.py  - Coinstore exchange adapter
   ├── vindax.py     - Vindax exchange adapter
   ├── fameex.py     - FameEX exchange adapter
-  └── bigone.py     - BigOne exchange adapter
+  ├── bigone.py     - BigOne exchange adapter
+  └── ourbit.py     - Ourbit exchange adapter (via CoinGecko)
 ```
 
 ### Frontend
@@ -70,6 +71,7 @@ static/
 | `/api/fetch/vindax` | POST | Trigger Vindax data fetch |
 | `/api/fetch/fameex` | POST | Trigger FameEX data fetch |
 | `/api/fetch/bigone` | POST | Trigger BigOne data fetch |
+| `/api/fetch/ourbit` | POST | Trigger Ourbit data fetch |
 | `/api/tickers` | GET | Get all stored ticker data |
 | `/api/status` | GET | Get fetch status for each exchange |
 | `/api/logs` | GET | Get recent fetch logs |
@@ -110,6 +112,9 @@ To add a new exchange:
 - `SESSION_SECRET` - Flask session secret key
 
 ## Recent Changes
+- Added Ourbit exchange adapter (17th exchange, via CoinGecko API)
+- Added total USDT column to orderbook modals (cumulative value)
+- Sorted Compare column by price (highest at top, lowest at bottom)
 - Added FameEX exchange adapter (15th exchange)
 - Added BigOne exchange adapter (16th exchange)
 - Added blacklist/whitelist system with MarketList database model, per exchange+symbol tracking
