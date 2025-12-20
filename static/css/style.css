@@ -1212,88 +1212,100 @@ a.peer-exchange:hover {
 }
 
 .peer-exchange {
-    font-size: 0.5625rem;
-    font-weight: 600;
-    padding: 1px 4px;
+    font-size: 0.625rem;
+    font-weight: 700;
+    padding: 2px 5px;
     border-radius: 3px;
     text-transform: uppercase;
     text-align: center;
     white-space: nowrap;
+    text-decoration: none;
 }
 
 .peer-exchange.lbank {
-    background-color: rgba(41, 98, 255, 0.2);
+    background-color: rgba(41, 98, 255, 0.3);
     color: var(--lbank-color);
 }
 
 .peer-exchange.hashkey {
-    background-color: rgba(124, 58, 237, 0.2);
+    background-color: rgba(124, 58, 237, 0.3);
     color: var(--hashkey-color);
 }
 
 .peer-exchange.biconomy {
-    background-color: rgba(0, 184, 148, 0.2);
+    background-color: rgba(0, 184, 148, 0.3);
     color: var(--biconomy-color);
 }
 
 .peer-exchange.mexc {
-    background-color: rgba(24, 115, 232, 0.2);
+    background-color: rgba(24, 115, 232, 0.3);
     color: var(--mexc-color);
 }
 
 .peer-exchange.bitrue {
-    background-color: rgba(0, 200, 83, 0.2);
+    background-color: rgba(0, 200, 83, 0.3);
     color: var(--bitrue-color);
 }
 
 .peer-exchange.ascendex {
-    background-color: rgba(255, 107, 53, 0.2);
+    background-color: rgba(255, 107, 53, 0.3);
     color: var(--ascendex-color);
 }
 
 .peer-exchange.bitmart {
-    background-color: rgba(0, 184, 212, 0.2);
+    background-color: rgba(0, 184, 212, 0.3);
     color: var(--bitmart-color);
 }
 
 .peer-exchange.dextrade {
-    background-color: rgba(155, 89, 182, 0.2);
+    background-color: rgba(155, 89, 182, 0.3);
     color: var(--dextrade-color);
 }
 
 .peer-exchange.poloniex {
-    background-color: rgba(12, 156, 78, 0.2);
+    background-color: rgba(12, 156, 78, 0.3);
     color: var(--poloniex-color);
 }
 
 .peer-exchange.gateio {
-    background-color: rgba(194, 59, 51, 0.2);
+    background-color: rgba(194, 59, 51, 0.3);
     color: var(--gateio-color);
 }
 
 .peer-exchange.niza {
-    background-color: rgba(99, 102, 241, 0.2);
+    background-color: rgba(99, 102, 241, 0.3);
     color: var(--niza-color);
 }
 
 .peer-exchange.xt {
-    background-color: rgba(37, 99, 235, 0.2);
+    background-color: rgba(37, 99, 235, 0.3);
     color: var(--xt-color);
 }
 
 .peer-exchange.coinstore {
-    background-color: rgba(245, 158, 11, 0.2);
+    background-color: rgba(245, 158, 11, 0.3);
     color: var(--coinstore-color);
 }
 
 .peer-exchange.vindax {
-    background-color: rgba(16, 185, 129, 0.2);
+    background-color: rgba(16, 185, 129, 0.3);
     color: var(--vindax-color);
+}
+
+.peer-exchange.fameex {
+    background-color: rgba(225, 29, 72, 0.3);
+    color: var(--fameex-color);
+}
+
+.peer-exchange.bigone {
+    background-color: rgba(14, 165, 233, 0.3);
+    color: var(--bigone-color);
 }
 
 .peer-price {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
+    font-weight: 600;
     color: var(--text-primary);
     text-align: right;
     white-space: nowrap;
@@ -1320,8 +1332,8 @@ a.peer-exchange:hover {
 
 .peer-volume {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.5625rem;
-    color: var(--text-muted);
+    font-size: 0.625rem;
+    color: var(--text-secondary);
     text-align: right;
     white-space: nowrap;
 }
