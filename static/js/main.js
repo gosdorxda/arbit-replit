@@ -189,6 +189,8 @@ function initDataTable() {
                 render: function(data) {
                     const blacklistChecked = data.is_blacklisted ? 'checked' : '';
                     const whitelistChecked = data.is_whitelisted ? 'checked' : '';
+                    const walletLockChecked = data.is_wallet_locked ? 'checked' : '';
+                    const walletLockVisible = data.is_whitelisted ? '' : 'style="display:none"';
                     return `
                         <div class="list-checkboxes">
                             <label class="list-cb blacklist-cb" title="Blacklist">
@@ -198,6 +200,10 @@ function initDataTable() {
                             <label class="list-cb whitelist-cb" title="Whitelist">
                                 <input type="checkbox" ${whitelistChecked} onchange="toggleMarketList('${data.exchange}', '${data.symbol}', 'whitelist', this)">
                                 <span class="cb-icon">⭐</span>
+                            </label>
+                            <label class="list-cb walletlock-cb" title="Wallet Lock" ${walletLockVisible}>
+                                <input type="checkbox" ${walletLockChecked} onchange="toggleMarketList('${data.exchange}', '${data.symbol}', 'wallet_lock', this)">
+                                <span class="cb-icon">🔒</span>
                             </label>
                         </div>
                     `;
@@ -600,14 +606,30 @@ async function toggleMarketList(exchange, symbol, listType, checkbox) {
         
         if (data.status === 'success') {
             const row = checkbox.closest('tr');
-            const otherType = listType === 'blacklist' ? 'whitelist' : 'blacklist';
-            const otherCheckbox = row.querySelector(`.${otherType}-cb input`);
-            if (otherCheckbox && data.action === 'added') {
-                otherCheckbox.checked = false;
+            
+            if (listType === 'blacklist' && data.action === 'added') {
+                const whitelistCb = row.querySelector('.whitelist-cb input');
+                const walletlockCb = row.querySelector('.walletlock-cb input');
+                const walletlockLabel = row.querySelector('.walletlock-cb');
+                if (whitelistCb) whitelistCb.checked = false;
+                if (walletlockCb) walletlockCb.checked = false;
+                if (walletlockLabel) walletlockLabel.style.display = 'none';
+            } else if (listType === 'whitelist') {
+                const blacklistCb = row.querySelector('.blacklist-cb input');
+                const walletlockLabel = row.querySelector('.walletlock-cb');
+                if (blacklistCb && data.action === 'added') blacklistCb.checked = false;
+                if (walletlockLabel) {
+                    walletlockLabel.style.display = data.action === 'added' ? '' : 'none';
+                    if (data.action === 'removed') {
+                        const walletlockCb = row.querySelector('.walletlock-cb input');
+                        if (walletlockCb) walletlockCb.checked = false;
+                    }
+                }
             }
             
             const actionText = data.action === 'added' ? 'ditambahkan ke' : 'dihapus dari';
-            const listName = listType === 'blacklist' ? 'Blacklist' : 'Whitelist';
+            const listNames = {'blacklist': 'Blacklist', 'whitelist': 'Whitelist', 'wallet_lock': 'Wallet Lock'};
+            const listName = listNames[listType] || listType;
             showToast(`${symbol} ${actionText} ${listName}`, 'success');
             
             loadStatus();

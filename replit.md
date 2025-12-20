@@ -110,6 +110,7 @@ To add a new exchange:
 - `SESSION_SECRET` - Flask session secret key
 
 ## Recent Changes
+- Added Wallet Lock feature - lock button only appears when item is whitelisted
 - Added total USDT column to orderbook modals (cumulative value)
 - Sorted Compare column by price (highest at top, lowest at bottom)
 - Added FameEX exchange adapter (15th exchange)

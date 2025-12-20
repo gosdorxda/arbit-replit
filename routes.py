@@ -459,8 +459,10 @@ def get_tickers():
     
     blacklist_entries = MarketList.query.filter_by(list_type='blacklist').all()
     whitelist_entries = MarketList.query.filter_by(list_type='whitelist').all()
+    walletlock_entries = MarketList.query.filter_by(list_type='wallet_lock').all()
     blacklist_set = {(e.exchange, e.symbol) for e in blacklist_entries}
     whitelist_set = {(e.exchange, e.symbol) for e in whitelist_entries}
+    walletlock_set = {(e.exchange, e.symbol) for e in walletlock_entries}
     
     from sqlalchemy import or_, and_, not_, tuple_
     
@@ -534,6 +536,7 @@ def get_tickers():
         ticker_dict['exchange_count'] = len(symbol_map.get(t.symbol, {}))
         ticker_dict['is_blacklisted'] = (t.exchange, t.symbol) in blacklist_set
         ticker_dict['is_whitelisted'] = (t.exchange, t.symbol) in whitelist_set
+        ticker_dict['is_wallet_locked'] = (t.exchange, t.symbol) in walletlock_set
         data.append(ticker_dict)
     
     return jsonify({
@@ -785,8 +788,15 @@ def toggle_market_list():
     if not exchange or not symbol or not list_type:
         return jsonify({'status': 'error', 'message': 'Missing required fields'}), 400
     
-    if list_type not in ['blacklist', 'whitelist']:
+    if list_type not in ['blacklist', 'whitelist', 'wallet_lock']:
         return jsonify({'status': 'error', 'message': 'Invalid list_type'}), 400
+    
+    if list_type == 'wallet_lock':
+        whitelist_entry = MarketList.query.filter_by(
+            exchange=exchange, symbol=symbol, list_type='whitelist'
+        ).first()
+        if not whitelist_entry:
+            return jsonify({'status': 'error', 'message': 'Harus di-whitelist dulu sebelum wallet lock'}), 400
     
     existing = MarketList.query.filter_by(
         exchange=exchange,
@@ -796,6 +806,12 @@ def toggle_market_list():
     
     if existing:
         db.session.delete(existing)
+        if list_type == 'whitelist':
+            walletlock_entry = MarketList.query.filter_by(
+                exchange=exchange, symbol=symbol, list_type='wallet_lock'
+            ).first()
+            if walletlock_entry:
+                db.session.delete(walletlock_entry)
         db.session.commit()
         return jsonify({
             'status': 'success',
@@ -811,6 +827,11 @@ def toggle_market_list():
             ).first()
             if whitelist_entry:
                 db.session.delete(whitelist_entry)
+            walletlock_entry = MarketList.query.filter_by(
+                exchange=exchange, symbol=symbol, list_type='wallet_lock'
+            ).first()
+            if walletlock_entry:
+                db.session.delete(walletlock_entry)
         elif list_type == 'whitelist':
             blacklist_entry = MarketList.query.filter_by(
                 exchange=exchange, symbol=symbol, list_type='blacklist'
