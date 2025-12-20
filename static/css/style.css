@@ -81,6 +81,7 @@
 
 body {
     font-family: var(--font-primary, 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
+    font-size: calc(14px * var(--font-scale, 1));
     background-color: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.6;
@@ -170,6 +171,31 @@ body {
     font-weight: 600;
 }
 
+.fontsize-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-secondary);
+}
+
+.fontsize-toggle:hover {
+    background-color: var(--bg-hover);
+    color: var(--accent-blue);
+    border-color: var(--accent-blue);
+}
+
+.fontsize-icon {
+    font-size: 12px;
+    font-weight: 600;
+}
+
 [data-font="inter"] {
     --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -180,6 +206,18 @@ body {
 
 [data-font="opensans"] {
     --font-primary: 'Open Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+[data-fontsize="small"] {
+    --font-scale: 0.85;
+}
+
+[data-fontsize="medium"] {
+    --font-scale: 1;
+}
+
+[data-fontsize="large"] {
+    --font-scale: 1.15;
 }
 
 .theme-toggle svg {
@@ -623,7 +661,7 @@ body {
 table {
     width: 100%;
     min-width: 900px;
-    font-size: 0.75rem;
+    font-size: calc(0.75rem * var(--font-scale, 1));
 }
 
 #ticker-table.dataTable {
@@ -645,7 +683,7 @@ thead {
 th {
     padding: 8px 10px;
     text-align: left;
-    font-size: 0.6875rem;
+    font-size: calc(0.6875rem * var(--font-scale, 1));
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.03em;
@@ -664,7 +702,7 @@ th {
 
 td {
     padding: 10px 12px;
-    font-size: 0.75rem;
+    font-size: calc(0.75rem * var(--font-scale, 1));
 }
 
 #ticker-table.dataTable tbody td {
@@ -944,7 +982,7 @@ td {
 .td-low {
     text-align: right;
     font-family: var(--font-primary);
-    font-size: 0.6875rem;
+    font-size: calc(0.6875rem * var(--font-scale, 1));
     color: var(--text-primary);
     white-space: nowrap;
 }
@@ -952,7 +990,7 @@ td {
 .td-change {
     text-align: right;
     font-family: var(--font-primary);
-    font-size: 0.6875rem;
+    font-size: calc(0.6875rem * var(--font-scale, 1));
     font-weight: 500;
     white-space: nowrap;
 }

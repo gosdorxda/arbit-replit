@@ -666,6 +666,10 @@ function initTheme() {
     const savedFont = localStorage.getItem('font') || 'inter';
     document.documentElement.setAttribute('data-font', savedFont);
     updateFontIcon(savedFont);
+    
+    const savedFontSize = localStorage.getItem('fontsize') || 'medium';
+    document.documentElement.setAttribute('data-fontsize', savedFontSize);
+    updateFontSizeIcon(savedFontSize);
 }
 
 function toggleTheme() {
@@ -708,6 +712,27 @@ function updateFontIcon(font) {
     const fontIcon = document.querySelector('.font-icon');
     if (fontIcon) {
         fontIcon.textContent = fontNames[font] || 'Aa';
+    }
+}
+
+const fontSizes = ['small', 'medium', 'large'];
+const fontSizeLabels = { 'small': 'S', 'medium': 'M', 'large': 'L' };
+
+function toggleFontSize() {
+    const currentSize = document.documentElement.getAttribute('data-fontsize') || 'medium';
+    const currentIndex = fontSizes.indexOf(currentSize);
+    const nextIndex = (currentIndex + 1) % fontSizes.length;
+    const newSize = fontSizes[nextIndex];
+    
+    document.documentElement.setAttribute('data-fontsize', newSize);
+    localStorage.setItem('fontsize', newSize);
+    updateFontSizeIcon(newSize);
+}
+
+function updateFontSizeIcon(size) {
+    const fontSizeIcon = document.querySelector('.fontsize-icon');
+    if (fontSizeIcon) {
+        fontSizeIcon.textContent = fontSizeLabels[size] || 'M';
     }
 }
 
