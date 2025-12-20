@@ -56,6 +56,8 @@
     --accent-green: #3fb950;
     --accent-red: #f85149;
     --accent-yellow: #d29922;
+    --font-scale: 1;
+    --font-primary: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 [data-theme="light"] {
@@ -196,6 +198,10 @@ body {
     font-weight: 600;
 }
 
+[data-font="dmsans"] {
+    --font-primary: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
 [data-font="inter"] {
     --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -204,8 +210,8 @@ body {
     --font-primary: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-[data-font="opensans"] {
-    --font-primary: 'Open Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+[data-font="poppins"] {
+    --font-primary: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 [data-fontsize="small"] {
