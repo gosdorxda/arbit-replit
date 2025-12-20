@@ -606,118 +606,138 @@ def get_status():
         MarketList.exchange, func.count(MarketList.id)
     ).filter_by(list_type='whitelist').group_by(MarketList.exchange).all())
     
+    walletlock_counts = dict(db.session.query(
+        MarketList.exchange, func.count(MarketList.id)
+    ).filter_by(list_type='wallet_lock').group_by(MarketList.exchange).all())
+    
     return jsonify({
         'lbank': {
             'last_fetch': lbank_log.fetched_at.isoformat() if lbank_log else None,
             'status': lbank_log.status if lbank_log else 'never',
             'pairs_count': lbank_count,
             'blacklist_count': blacklist_counts.get('LBANK', 0),
-            'whitelist_count': whitelist_counts.get('LBANK', 0)
+            'whitelist_count': whitelist_counts.get('LBANK', 0),
+            'walletlock_count': walletlock_counts.get('LBANK', 0)
         },
         'hashkey': {
             'last_fetch': hashkey_log.fetched_at.isoformat() if hashkey_log else None,
             'status': hashkey_log.status if hashkey_log else 'never',
             'pairs_count': hashkey_count,
             'blacklist_count': blacklist_counts.get('HASHKEY', 0),
-            'whitelist_count': whitelist_counts.get('HASHKEY', 0)
+            'whitelist_count': whitelist_counts.get('HASHKEY', 0),
+            'walletlock_count': walletlock_counts.get('HASHKEY', 0)
         },
         'biconomy': {
             'last_fetch': biconomy_log.fetched_at.isoformat() if biconomy_log else None,
             'status': biconomy_log.status if biconomy_log else 'never',
             'pairs_count': biconomy_count,
             'blacklist_count': blacklist_counts.get('BICONOMY', 0),
-            'whitelist_count': whitelist_counts.get('BICONOMY', 0)
+            'whitelist_count': whitelist_counts.get('BICONOMY', 0),
+            'walletlock_count': walletlock_counts.get('BICONOMY', 0)
         },
         'mexc': {
             'last_fetch': mexc_log.fetched_at.isoformat() if mexc_log else None,
             'status': mexc_log.status if mexc_log else 'never',
             'pairs_count': mexc_count,
             'blacklist_count': blacklist_counts.get('MEXC', 0),
-            'whitelist_count': whitelist_counts.get('MEXC', 0)
+            'whitelist_count': whitelist_counts.get('MEXC', 0),
+            'walletlock_count': walletlock_counts.get('MEXC', 0)
         },
         'bitrue': {
             'last_fetch': bitrue_log.fetched_at.isoformat() if bitrue_log else None,
             'status': bitrue_log.status if bitrue_log else 'never',
             'pairs_count': bitrue_count,
             'blacklist_count': blacklist_counts.get('BITRUE', 0),
-            'whitelist_count': whitelist_counts.get('BITRUE', 0)
+            'whitelist_count': whitelist_counts.get('BITRUE', 0),
+            'walletlock_count': walletlock_counts.get('BITRUE', 0)
         },
         'ascendex': {
             'last_fetch': ascendex_log.fetched_at.isoformat() if ascendex_log else None,
             'status': ascendex_log.status if ascendex_log else 'never',
             'pairs_count': ascendex_count,
             'blacklist_count': blacklist_counts.get('ASCENDEX', 0),
-            'whitelist_count': whitelist_counts.get('ASCENDEX', 0)
+            'whitelist_count': whitelist_counts.get('ASCENDEX', 0),
+            'walletlock_count': walletlock_counts.get('ASCENDEX', 0)
         },
         'bitmart': {
             'last_fetch': bitmart_log.fetched_at.isoformat() if bitmart_log else None,
             'status': bitmart_log.status if bitmart_log else 'never',
             'pairs_count': bitmart_count,
             'blacklist_count': blacklist_counts.get('BITMART', 0),
-            'whitelist_count': whitelist_counts.get('BITMART', 0)
+            'whitelist_count': whitelist_counts.get('BITMART', 0),
+            'walletlock_count': walletlock_counts.get('BITMART', 0)
         },
         'dextrade': {
             'last_fetch': dextrade_log.fetched_at.isoformat() if dextrade_log else None,
             'status': dextrade_log.status if dextrade_log else 'never',
             'pairs_count': dextrade_count,
             'blacklist_count': blacklist_counts.get('DEXTRADE', 0),
-            'whitelist_count': whitelist_counts.get('DEXTRADE', 0)
+            'whitelist_count': whitelist_counts.get('DEXTRADE', 0),
+            'walletlock_count': walletlock_counts.get('DEXTRADE', 0)
         },
         'poloniex': {
             'last_fetch': poloniex_log.fetched_at.isoformat() if poloniex_log else None,
             'status': poloniex_log.status if poloniex_log else 'never',
             'pairs_count': poloniex_count,
             'blacklist_count': blacklist_counts.get('POLONIEX', 0),
-            'whitelist_count': whitelist_counts.get('POLONIEX', 0)
+            'whitelist_count': whitelist_counts.get('POLONIEX', 0),
+            'walletlock_count': walletlock_counts.get('POLONIEX', 0)
         },
         'gateio': {
             'last_fetch': gateio_log.fetched_at.isoformat() if gateio_log else None,
             'status': gateio_log.status if gateio_log else 'never',
             'pairs_count': gateio_count,
             'blacklist_count': blacklist_counts.get('GATEIO', 0),
-            'whitelist_count': whitelist_counts.get('GATEIO', 0)
+            'whitelist_count': whitelist_counts.get('GATEIO', 0),
+            'walletlock_count': walletlock_counts.get('GATEIO', 0)
         },
         'niza': {
             'last_fetch': niza_log.fetched_at.isoformat() if niza_log else None,
             'status': niza_log.status if niza_log else 'never',
             'pairs_count': niza_count,
             'blacklist_count': blacklist_counts.get('NIZA', 0),
-            'whitelist_count': whitelist_counts.get('NIZA', 0)
+            'whitelist_count': whitelist_counts.get('NIZA', 0),
+            'walletlock_count': walletlock_counts.get('NIZA', 0)
         },
         'xt': {
             'last_fetch': xt_log.fetched_at.isoformat() if xt_log else None,
             'status': xt_log.status if xt_log else 'never',
             'pairs_count': xt_count,
             'blacklist_count': blacklist_counts.get('XT', 0),
-            'whitelist_count': whitelist_counts.get('XT', 0)
+            'whitelist_count': whitelist_counts.get('XT', 0),
+            'walletlock_count': walletlock_counts.get('XT', 0)
         },
         'coinstore': {
             'last_fetch': coinstore_log.fetched_at.isoformat() if coinstore_log else None,
             'status': coinstore_log.status if coinstore_log else 'never',
             'pairs_count': coinstore_count,
             'blacklist_count': blacklist_counts.get('COINSTORE', 0),
-            'whitelist_count': whitelist_counts.get('COINSTORE', 0)
+            'whitelist_count': whitelist_counts.get('COINSTORE', 0),
+            'walletlock_count': walletlock_counts.get('COINSTORE', 0)
         },
         'vindax': {
             'last_fetch': vindax_log.fetched_at.isoformat() if vindax_log else None,
             'status': vindax_log.status if vindax_log else 'never',
             'pairs_count': vindax_count,
             'blacklist_count': blacklist_counts.get('VINDAX', 0),
-            'whitelist_count': whitelist_counts.get('VINDAX', 0)
+            'whitelist_count': whitelist_counts.get('VINDAX', 0),
+            'walletlock_count': walletlock_counts.get('VINDAX', 0)
         },
         'fameex': {
             'last_fetch': fameex_log.fetched_at.isoformat() if fameex_log else None,
             'status': fameex_log.status if fameex_log else 'never',
             'pairs_count': fameex_count,
             'blacklist_count': blacklist_counts.get('FAMEEX', 0),
-            'whitelist_count': whitelist_counts.get('FAMEEX', 0)
+            'whitelist_count': whitelist_counts.get('FAMEEX', 0),
+            'walletlock_count': walletlock_counts.get('FAMEEX', 0)
         },
         'bigone': {
             'last_fetch': bigone_log.fetched_at.isoformat() if bigone_log else None,
             'status': bigone_log.status if bigone_log else 'never',
             'pairs_count': bigone_count,
             'blacklist_count': blacklist_counts.get('BIGONE', 0),
-            'whitelist_count': whitelist_counts.get('BIGONE', 0)
+            'whitelist_count': whitelist_counts.get('BIGONE', 0),
+            'walletlock_count': walletlock_counts.get('BIGONE', 0)
         }
     })
 

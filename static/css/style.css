@@ -801,6 +801,14 @@ td {
     opacity: 1;
 }
 
+.walletlock-cb:has(input:checked) {
+    opacity: 1;
+}
+
+.walletlock-cb:has(input:checked) .cb-icon {
+    filter: drop-shadow(0 0 4px #60a5fa) drop-shadow(0 0 8px #3b82f6);
+}
+
 .btn-list {
     display: none;
     gap: 4px;
@@ -810,7 +818,8 @@ td {
 }
 
 .btn-list .wl-count,
-.btn-list .bl-count {
+.btn-list .bl-count,
+.btn-list .lk-count {
     display: inline-flex;
     align-items: center;
     gap: 1px;
@@ -820,11 +829,15 @@ td {
 }
 
 .btn-list .wl-count {
-    color: #fcd34d;
+    color: rgba(255, 255, 255, 0.95);
 }
 
 .btn-list .bl-count {
-    color: #fca5a5;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.btn-list .lk-count {
+    color: rgba(255, 255, 255, 0.95);
 }
 
 .td-exchange {

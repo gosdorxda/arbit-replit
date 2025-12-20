@@ -327,8 +327,13 @@ function updateStatusDisplay(exchange, status) {
     if (listEl) {
         const wl = status.whitelist_count || 0;
         const bl = status.blacklist_count || 0;
-        if (wl > 0 || bl > 0) {
-            listEl.innerHTML = `<span class="wl-count" title="Whitelist">⭐${wl}</span> <span class="bl-count" title="Blacklist">⛔${bl}</span>`;
+        const lk = status.walletlock_count || 0;
+        if (wl > 0 || bl > 0 || lk > 0) {
+            let html = '';
+            if (wl > 0) html += `<span class="wl-count" title="Whitelist">⭐${wl}</span>`;
+            if (bl > 0) html += `<span class="bl-count" title="Blacklist">⛔${bl}</span>`;
+            if (lk > 0) html += `<span class="lk-count" title="Wallet Lock">🔒${lk}</span>`;
+            listEl.innerHTML = html;
             listEl.style.display = 'flex';
         } else {
             listEl.style.display = 'none';
