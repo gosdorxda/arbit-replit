@@ -663,7 +663,7 @@ function initTheme() {
     document.documentElement.setAttribute('data-theme', savedTheme);
     updateThemeIcon(savedTheme);
     
-    const savedFont = localStorage.getItem('font') || 'dmsans';
+    const savedFont = localStorage.getItem('font') || 'inter';
     document.documentElement.setAttribute('data-font', savedFont);
     updateFontIcon(savedFont);
     
@@ -694,11 +694,11 @@ function updateThemeIcon(theme) {
     }
 }
 
-const fonts = ['dmsans', 'inter', 'roboto', 'poppins'];
-const fontNames = { 'dmsans': 'DM', 'inter': 'In', 'roboto': 'Ro', 'poppins': 'Po' };
+const fonts = ['inter', 'roboto', 'poppins'];
+const fontNames = { 'inter': 'In', 'roboto': 'Ro', 'poppins': 'Po' };
 
 function toggleFont() {
-    const currentFont = document.documentElement.getAttribute('data-font') || 'dmsans';
+    const currentFont = document.documentElement.getAttribute('data-font') || 'inter';
     const currentIndex = fonts.indexOf(currentFont);
     const nextIndex = (currentIndex + 1) % fonts.length;
     const newFont = fonts[nextIndex];

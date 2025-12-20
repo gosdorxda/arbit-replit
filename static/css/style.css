@@ -56,7 +56,7 @@
     --accent-green: #3fb950;
     --accent-red: #f85149;
     --accent-yellow: #d29922;
-    --font-primary: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 [data-theme="light"] {
@@ -81,7 +81,7 @@
 }
 
 body {
-    font-family: var(--font-primary, 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif);
+    font-family: var(--font-primary, 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
     background-color: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.6;
@@ -169,10 +169,6 @@ body {
 .font-icon {
     font-size: 14px;
     font-weight: 600;
-}
-
-[data-font="dmsans"] {
-    --font-primary: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 [data-font="inter"] {
