@@ -215,15 +215,27 @@ body {
 }
 
 [data-fontsize="small"] {
-    --font-scale: 0.85;
+    font-size: 12px !important;
+}
+
+[data-fontsize="small"] table,
+[data-fontsize="small"] td,
+[data-fontsize="small"] th {
+    font-size: 0.65rem !important;
 }
 
 [data-fontsize="medium"] {
-    --font-scale: 1;
+    font-size: 14px;
 }
 
 [data-fontsize="large"] {
-    --font-scale: 1.15;
+    font-size: 16px !important;
+}
+
+[data-fontsize="large"] table,
+[data-fontsize="large"] td,
+[data-fontsize="large"] th {
+    font-size: 0.85rem !important;
 }
 
 .theme-toggle svg {
