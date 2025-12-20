@@ -522,7 +522,7 @@ body {
 
 .status-count {
     color: var(--text-muted);
-    font-family: var(--font-primary);
+    font-family: 'JetBrains Mono', monospace;
     font-size: 0.625rem;
 }
 
@@ -607,7 +607,7 @@ body {
     font-size: 0.75rem;
     font-weight: 600;
     color: var(--accent-blue);
-    font-family: var(--font-primary);
+    font-family: 'JetBrains Mono', monospace;
 }
 
 .table-section {
@@ -944,7 +944,7 @@ td {
 .td-high,
 .td-low {
     text-align: right;
-    font-family: var(--font-primary);
+    font-family: 'JetBrains Mono', monospace;
     font-size: 0.6875rem;
     color: var(--text-primary);
     white-space: nowrap;
@@ -952,7 +952,7 @@ td {
 
 .td-change {
     text-align: right;
-    font-family: var(--font-primary);
+    font-family: 'JetBrains Mono', monospace;
     font-size: 0.6875rem;
     font-weight: 500;
     white-space: nowrap;
@@ -980,7 +980,7 @@ td {
 }
 
 .price-value {
-    font-family: var(--font-primary);
+    font-family: 'JetBrains Mono', monospace;
     font-weight: 500;
 }
 
@@ -1167,12 +1167,12 @@ a.peer-exchange:hover {
 }
 
 .volume-own {
-    font-family: var(--font-primary);
+    font-family: 'JetBrains Mono', monospace;
     font-size: 0.6875rem;
 }
 
 .volume-total {
-    font-family: var(--font-primary);
+    font-family: 'JetBrains Mono', monospace;
     font-size: 0.625rem;
     color: var(--accent-blue);
     cursor: help;
@@ -1304,7 +1304,7 @@ a.peer-exchange:hover {
 }
 
 .peer-price {
-    font-family: var(--font-primary);
+    font-family: 'JetBrains Mono', monospace;
     font-size: 0.75rem;
     color: var(--text-primary);
     text-align: right;
@@ -1331,7 +1331,7 @@ a.peer-exchange:hover {
 }
 
 .peer-volume {
-    font-family: var(--font-primary);
+    font-family: 'JetBrains Mono', monospace;
     font-size: 0.625rem;
     color: var(--text-secondary);
     text-align: right;
@@ -1505,7 +1505,7 @@ a.peer-exchange:hover {
     display: flex;
     justify-content: space-between;
     padding: 3px 12px;
-    font-family: var(--font-primary);
+    font-family: 'JetBrains Mono', monospace;
     font-size: 0.6875rem;
     position: relative;
 }
