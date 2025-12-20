@@ -1305,7 +1305,6 @@ a.peer-exchange:hover {
 .peer-price {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.75rem;
-    font-weight: 600;
     color: var(--text-primary);
     text-align: right;
     white-space: nowrap;
