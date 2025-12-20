@@ -56,7 +56,6 @@
     --accent-green: #3fb950;
     --accent-red: #f85149;
     --accent-yellow: #d29922;
-    --font-scale: 1;
     --font-primary: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
@@ -82,8 +81,7 @@
 }
 
 body {
-    font-family: var(--font-primary, 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
-    font-size: calc(14px * var(--font-scale, 1));
+    font-family: var(--font-primary, 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif);
     background-color: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.6;
@@ -173,31 +171,6 @@ body {
     font-weight: 600;
 }
 
-.fontsize-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    background-color: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: var(--text-secondary);
-}
-
-.fontsize-toggle:hover {
-    background-color: var(--bg-hover);
-    color: var(--accent-blue);
-    border-color: var(--accent-blue);
-}
-
-.fontsize-icon {
-    font-size: 12px;
-    font-weight: 600;
-}
-
 [data-font="dmsans"] {
     --font-primary: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -212,30 +185,6 @@ body {
 
 [data-font="poppins"] {
     --font-primary: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
-}
-
-[data-fontsize="small"] {
-    font-size: 12px !important;
-}
-
-[data-fontsize="small"] table,
-[data-fontsize="small"] td,
-[data-fontsize="small"] th {
-    font-size: 0.65rem !important;
-}
-
-[data-fontsize="medium"] {
-    font-size: 14px;
-}
-
-[data-fontsize="large"] {
-    font-size: 16px !important;
-}
-
-[data-fontsize="large"] table,
-[data-fontsize="large"] td,
-[data-fontsize="large"] th {
-    font-size: 0.85rem !important;
 }
 
 .theme-toggle svg {
@@ -679,7 +628,7 @@ body {
 table {
     width: 100%;
     min-width: 900px;
-    font-size: calc(0.75rem * var(--font-scale, 1));
+    font-size: 0.75rem;
 }
 
 #ticker-table.dataTable {
@@ -701,7 +650,7 @@ thead {
 th {
     padding: 8px 10px;
     text-align: left;
-    font-size: calc(0.6875rem * var(--font-scale, 1));
+    font-size: 0.6875rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.03em;
@@ -720,7 +669,7 @@ th {
 
 td {
     padding: 10px 12px;
-    font-size: calc(0.75rem * var(--font-scale, 1));
+    font-size: 0.75rem;
 }
 
 #ticker-table.dataTable tbody td {
@@ -1000,7 +949,7 @@ td {
 .td-low {
     text-align: right;
     font-family: var(--font-primary);
-    font-size: calc(0.6875rem * var(--font-scale, 1));
+    font-size: 0.6875rem;
     color: var(--text-primary);
     white-space: nowrap;
 }
@@ -1008,7 +957,7 @@ td {
 .td-change {
     text-align: right;
     font-family: var(--font-primary);
-    font-size: calc(0.6875rem * var(--font-scale, 1));
+    font-size: 0.6875rem;
     font-weight: 500;
     white-space: nowrap;
 }
