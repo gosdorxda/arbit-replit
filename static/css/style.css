@@ -521,7 +521,7 @@ body {
 
 .status-count {
     color: var(--text-muted);
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-primary);
     font-size: 0.625rem;
 }
 
@@ -606,7 +606,7 @@ body {
     font-size: 0.75rem;
     font-weight: 600;
     color: var(--accent-blue);
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-primary);
 }
 
 .table-section {
@@ -943,7 +943,7 @@ td {
 .td-high,
 .td-low {
     text-align: right;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-primary);
     font-size: 0.6875rem;
     color: var(--text-primary);
     white-space: nowrap;
@@ -951,7 +951,7 @@ td {
 
 .td-change {
     text-align: right;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-primary);
     font-size: 0.6875rem;
     font-weight: 500;
     white-space: nowrap;
@@ -979,7 +979,7 @@ td {
 }
 
 .price-value {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-primary);
     font-weight: 500;
 }
 
@@ -1166,12 +1166,12 @@ a.peer-exchange:hover {
 }
 
 .volume-own {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-primary);
     font-size: 0.6875rem;
 }
 
 .volume-total {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-primary);
     font-size: 0.625rem;
     color: var(--accent-blue);
     cursor: help;
@@ -1303,7 +1303,7 @@ a.peer-exchange:hover {
 }
 
 .peer-price {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-primary);
     font-size: 0.75rem;
     color: var(--text-primary);
     text-align: right;
@@ -1330,7 +1330,7 @@ a.peer-exchange:hover {
 }
 
 .peer-volume {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-primary);
     font-size: 0.625rem;
     color: var(--text-secondary);
     text-align: right;
@@ -1504,7 +1504,7 @@ a.peer-exchange:hover {
     display: flex;
     justify-content: space-between;
     padding: 3px 12px;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-primary);
     font-size: 0.6875rem;
     position: relative;
 }
