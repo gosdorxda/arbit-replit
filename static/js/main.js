@@ -182,7 +182,7 @@ function initDataTable() {
                                     </svg>
                                 </button>
                                 <span class="peer-volume">${peerVolume}</span>
-                                <span class="depth-box" onclick="loadDepth('${peer.exchange}', '${peer.symbol}', '${peerId}')" title="Click for depth">
+                                <span class="depth-box" data-exchange="${peer.exchange}" data-symbol="${peer.symbol}" onclick="loadDepth('${peer.exchange}', '${peer.symbol}', '${peerId}')" title="Click for depth">
                                     <span class="db-row db-ask"><span class="db-label">Ask:</span><span class="db-price">−</span><span class="db-vol">−</span></span>
                                     <span class="db-row db-bid"><span class="db-label">Bid:</span><span class="db-price">−</span><span class="db-vol">−</span></span>
                                 </span>
@@ -810,10 +810,9 @@ function initDepthAutoLoader() {
             if (entry.isIntersecting) {
                 const depthBox = entry.target;
                 const peerId = depthBox.closest('.peer-data')?.id;
-                if (peerId && !loadedDepthIds.has(peerId)) {
-                    const parts = peerId.replace('depth-', '').split('-');
-                    const exchange = parts[0].toUpperCase();
-                    const symbol = parts.slice(1).join('/').replace(/-/g, '/').toUpperCase();
+                const exchange = depthBox.dataset.exchange;
+                const symbol = depthBox.dataset.symbol;
+                if (peerId && exchange && symbol && !loadedDepthIds.has(peerId)) {
                     queueDepthLoad(exchange, symbol, peerId);
                 }
             }
