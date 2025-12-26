@@ -224,7 +224,7 @@ function initDataTable() {
             }
         ],
         order: [[1, 'asc']],
-        pageLength: 50,
+        pageLength: 25,
         lengthMenu: [[25, 50, 100, 200], [25, 50, 100, 200]],
         language: {
             processing: '<div class="dt-loading">Loading...</div>',
