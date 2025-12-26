@@ -182,9 +182,9 @@ function initDataTable() {
                                     </svg>
                                 </button>
                                 <span class="peer-volume">${peerVolume}</span>
-                                <span class="depth-mini" onclick="loadDepth('${peer.exchange}', '${peer.symbol}', '${peerId}')" title="Click for depth">
-                                    <span class="dm-ask">−</span>
-                                    <span class="dm-bid">−</span>
+                                <span class="depth-box" onclick="loadDepth('${peer.exchange}', '${peer.symbol}', '${peerId}')" title="Click for depth">
+                                    <span class="db-row db-ask"><span class="db-label">Ask:</span><span class="db-price">−</span><span class="db-vol">−</span></span>
+                                    <span class="db-row db-bid"><span class="db-label">Bid:</span><span class="db-price">−</span><span class="db-vol">−</span></span>
                                 </span>
                                 <a href="${peerUrl}" target="_blank" rel="noopener noreferrer" class="peer-exchange ${peerExchangeClass}">${peer.exchange}</a>
                             </div>
@@ -819,12 +819,18 @@ async function loadDepth(exchange, symbol, elementId) {
     const container = document.getElementById(elementId);
     if (!container) return;
     
-    const depthMini = container.querySelector('.depth-mini');
-    const askSpan = container.querySelector('.dm-ask');
-    const bidSpan = container.querySelector('.dm-bid');
+    const depthBox = container.querySelector('.depth-box');
+    const askRow = container.querySelector('.db-ask');
+    const bidRow = container.querySelector('.db-bid');
+    const askPrice = askRow.querySelector('.db-price');
+    const askVol = askRow.querySelector('.db-vol');
+    const bidPrice = bidRow.querySelector('.db-price');
+    const bidVol = bidRow.querySelector('.db-vol');
     
-    askSpan.textContent = '..';
-    bidSpan.textContent = '..';
+    askPrice.textContent = '...';
+    askVol.textContent = '...';
+    bidPrice.textContent = '...';
+    bidVol.textContent = '...';
     
     try {
         const response = await fetch(`/api/depth/${exchange}/${encodeURIComponent(symbol)}`);
@@ -834,22 +840,22 @@ async function loadDepth(exchange, symbol, elementId) {
             const askDepthClass = getDepthColor(data.ask_depth);
             const bidDepthClass = getDepthColor(data.bid_depth);
             
-            askSpan.className = `dm-ask ${askDepthClass}`;
-            askSpan.textContent = formatDepthValue(data.ask_depth);
-            askSpan.title = `Ask: ${formatPrice(data.best_ask)} | Depth: $${formatDepthValue(data.ask_depth)}`;
+            askPrice.textContent = formatPrice(data.best_ask);
+            askVol.textContent = formatDepthValue(data.ask_depth);
+            askVol.className = `db-vol ${askDepthClass}`;
             
-            bidSpan.className = `dm-bid ${bidDepthClass}`;
-            bidSpan.textContent = formatDepthValue(data.bid_depth);
-            bidSpan.title = `Bid: ${formatPrice(data.best_bid)} | Depth: $${formatDepthValue(data.bid_depth)}`;
+            bidPrice.textContent = formatPrice(data.best_bid);
+            bidVol.textContent = formatDepthValue(data.bid_depth);
+            bidVol.className = `db-vol ${bidDepthClass}`;
             
-            depthMini.classList.add('loaded');
-            depthMini.title = `Spread: ${data.spread.toFixed(2)}%`;
+            depthBox.classList.add('loaded');
+            depthBox.title = `Spread: ${data.spread.toFixed(2)}%`;
         } else {
-            askSpan.textContent = '!';
-            bidSpan.textContent = '!';
+            askPrice.textContent = 'Err';
+            bidPrice.textContent = 'Err';
         }
     } catch (e) {
-        askSpan.textContent = '!';
-        bidSpan.textContent = '!';
+        askPrice.textContent = 'Err';
+        bidPrice.textContent = 'Err';
     }
 }
