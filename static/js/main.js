@@ -525,11 +525,11 @@ function updateDepthIndicator(btnElement, bestAsk, bestBid, asks, bids, spread) 
     const askDepthClass = getDepthColor(askDepth);
     const bidDepthClass = getDepthColor(bidDepth);
     
-    askPrice.textContent = formatPrice(bestAsk);
+    askPrice.innerHTML = formatPrice(bestAsk);
     askVol.textContent = formatDepthValue(askDepth);
     askVol.className = `db-vol ${askDepthClass}`;
     
-    bidPrice.textContent = formatPrice(bestBid);
+    bidPrice.innerHTML = formatPrice(bestBid);
     bidVol.textContent = formatDepthValue(bidDepth);
     bidVol.className = `db-vol ${bidDepthClass}`;
     
@@ -893,11 +893,11 @@ async function loadDepthForBox(exchange, symbol, depthBox) {
             const askDepthClass = getDepthColor(data.ask_depth);
             const bidDepthClass = getDepthColor(data.bid_depth);
             
-            askPrice.textContent = formatPrice(data.best_ask);
+            askPrice.innerHTML = formatPrice(data.best_ask);
             askVol.textContent = formatDepthValue(data.ask_depth);
             askVol.className = `db-vol ${askDepthClass}`;
             
-            bidPrice.textContent = formatPrice(data.best_bid);
+            bidPrice.innerHTML = formatPrice(data.best_bid);
             bidVol.textContent = formatDepthValue(data.bid_depth);
             bidVol.className = `db-vol ${bidDepthClass}`;
             
@@ -950,11 +950,11 @@ async function loadDepth(exchange, symbol, elementId) {
             const askDepthClass = getDepthColor(data.ask_depth);
             const bidDepthClass = getDepthColor(data.bid_depth);
             
-            askPrice.textContent = formatPrice(data.best_ask);
+            askPrice.innerHTML = formatPrice(data.best_ask);
             askVol.textContent = formatDepthValue(data.ask_depth);
             askVol.className = `db-vol ${askDepthClass}`;
             
-            bidPrice.textContent = formatPrice(data.best_bid);
+            bidPrice.innerHTML = formatPrice(data.best_bid);
             bidVol.textContent = formatDepthValue(data.bid_depth);
             bidVol.className = `db-vol ${bidDepthClass}`;
             

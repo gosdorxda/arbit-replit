@@ -1530,7 +1530,7 @@ a.peer-exchange:hover {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.8125rem;
     color: var(--text-primary);
-    text-align: right;
+    text-align: left;
     white-space: nowrap;
 }
 
