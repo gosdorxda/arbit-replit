@@ -15,5 +15,6 @@ from .coinstore import CoinstoreAdapter
 from .vindax import VindaxAdapter
 from .fameex import FameEXAdapter
 from .bigone import BigOneAdapter
+from .p2pb2b import P2PB2BAdapter
 
-__all__ = ['BaseAdapter', 'LBankAdapter', 'HashKeyAdapter', 'BiconomyAdapter', 'MEXCAdapter', 'BitrueAdapter', 'AscendEXAdapter', 'BitMartAdapter', 'DexTradeAdapter', 'PoloniexAdapter', 'GateIOAdapter', 'NizaAdapter', 'XTAdapter', 'CoinstoreAdapter', 'VindaxAdapter', 'FameEXAdapter', 'BigOneAdapter']
+__all__ = ['BaseAdapter', 'LBankAdapter', 'HashKeyAdapter', 'BiconomyAdapter', 'MEXCAdapter', 'BitrueAdapter', 'AscendEXAdapter', 'BitMartAdapter', 'DexTradeAdapter', 'PoloniexAdapter', 'GateIOAdapter', 'NizaAdapter', 'XTAdapter', 'CoinstoreAdapter', 'VindaxAdapter', 'FameEXAdapter', 'BigOneAdapter', 'P2PB2BAdapter']

@@ -38,6 +38,8 @@ function getExchangeUrl(exchange, symbol) {
             return `https://www.fameex.com/en-US/trade/${base.toLowerCase()}-usdt`;
         case 'BIGONE':
             return `https://big.one/en/trade/${base}-USDT`;
+        case 'P2PB2B':
+            return `https://p2pb2b.com/trade/${base}_USDT`;
         default:
             return '#';
     }
@@ -284,9 +286,10 @@ async function loadStatus() {
         updateStatusDisplay('vindax', data.vindax);
         updateStatusDisplay('fameex', data.fameex);
         updateStatusDisplay('bigone', data.bigone);
+        updateStatusDisplay('p2pb2b', data.p2pb2b);
         
         let totalMarkets = 0;
-        const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt', 'coinstore', 'vindax', 'fameex', 'bigone'];
+        const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt', 'coinstore', 'vindax', 'fameex', 'bigone', 'p2pb2b'];
         exchanges.forEach(ex => {
             if (data[ex] && data[ex].pairs_count) {
                 totalMarkets += data[ex].pairs_count;

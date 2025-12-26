@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import render_template, jsonify, request
 from app import app, db
 from models import SpotTicker, FetchLog, MarketList
-from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter, VindaxAdapter, FameEXAdapter, BigOneAdapter
+from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter, VindaxAdapter, FameEXAdapter, BigOneAdapter, P2PB2BAdapter
 
 
 def save_tickers(tickers, exchange_name):
@@ -412,6 +412,29 @@ def fetch_bigone():
         }), 500
 
 
+@app.route('/api/fetch/p2pb2b', methods=['POST'])
+def fetch_p2pb2b():
+    try:
+        adapter = P2PB2BAdapter()
+        tickers = adapter.fetch_usdt_tickers()
+        save_tickers(tickers, adapter.exchange_name)
+        log_fetch(adapter.exchange_name, 'success', len(tickers))
+        
+        return jsonify({
+            'status': 'success',
+            'exchange': adapter.exchange_name,
+            'pairs_count': len(tickers),
+            'message': f'Successfully fetched {len(tickers)} USDT pairs from P2PB2B'
+        })
+    except Exception as e:
+        log_fetch('P2PB2B', 'error', error_message=str(e))
+        return jsonify({
+            'status': 'error',
+            'exchange': 'P2PB2B',
+            'message': str(e)
+        }), 500
+
+
 @app.route('/api/tickers')
 def get_tickers():
     draw = request.args.get('draw', 1, type=int)
@@ -575,6 +598,7 @@ def get_status():
     vindax_log = FetchLog.query.filter_by(exchange='VINDAX').order_by(FetchLog.fetched_at.desc()).first()
     fameex_log = FetchLog.query.filter_by(exchange='FAMEEX').order_by(FetchLog.fetched_at.desc()).first()
     bigone_log = FetchLog.query.filter_by(exchange='BIGONE').order_by(FetchLog.fetched_at.desc()).first()
+    p2pb2b_log = FetchLog.query.filter_by(exchange='P2PB2B').order_by(FetchLog.fetched_at.desc()).first()
     
     lbank_count = SpotTicker.query.filter_by(exchange='LBANK').count()
     hashkey_count = SpotTicker.query.filter_by(exchange='HASHKEY').count()
@@ -592,10 +616,11 @@ def get_status():
     vindax_count = SpotTicker.query.filter_by(exchange='VINDAX').count()
     fameex_count = SpotTicker.query.filter_by(exchange='FAMEEX').count()
     bigone_count = SpotTicker.query.filter_by(exchange='BIGONE').count()
+    p2pb2b_count = SpotTicker.query.filter_by(exchange='P2PB2B').count()
     
     exchanges = ['LBANK', 'HASHKEY', 'BICONOMY', 'MEXC', 'BITRUE', 'ASCENDEX', 
                  'BITMART', 'DEXTRADE', 'POLONIEX', 'GATEIO', 'NIZA', 'XT', 
-                 'COINSTORE', 'VINDAX', 'FAMEEX', 'BIGONE']
+                 'COINSTORE', 'VINDAX', 'FAMEEX', 'BIGONE', 'P2PB2B']
     
     from sqlalchemy import func
     blacklist_counts = dict(db.session.query(
@@ -738,6 +763,14 @@ def get_status():
             'blacklist_count': blacklist_counts.get('BIGONE', 0),
             'whitelist_count': whitelist_counts.get('BIGONE', 0),
             'walletlock_count': walletlock_counts.get('BIGONE', 0)
+        },
+        'p2pb2b': {
+            'last_fetch': p2pb2b_log.fetched_at.isoformat() if p2pb2b_log else None,
+            'status': p2pb2b_log.status if p2pb2b_log else 'never',
+            'pairs_count': p2pb2b_count,
+            'blacklist_count': blacklist_counts.get('P2PB2B', 0),
+            'whitelist_count': whitelist_counts.get('P2PB2B', 0),
+            'walletlock_count': walletlock_counts.get('P2PB2B', 0)
         }
     })
 
@@ -779,6 +812,8 @@ def get_orderbook(exchange, symbol):
             adapter = FameEXAdapter()
         elif exchange.upper() == 'BIGONE':
             adapter = BigOneAdapter()
+        elif exchange.upper() == 'P2PB2B':
+            adapter = P2PB2BAdapter()
         else:
             return jsonify({
                 'status': 'error',
