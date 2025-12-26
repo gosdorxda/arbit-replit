@@ -750,58 +750,58 @@ td {
    ============================================ */
 #ticker-table th.td-exchange,
 #ticker-table td.td-exchange {
-    width: 90px !important;
-    min-width: 80px !important;
-    max-width: 100px !important;
+    width: 70px !important;
+    min-width: 60px !important;
+    max-width: 80px !important;
 }
 
 #ticker-table th.td-symbol,
 #ticker-table td.td-symbol {
-    width: 100px !important;
-    min-width: 90px !important;
-    max-width: 120px !important;
+    width: 75px !important;
+    min-width: 65px !important;
+    max-width: 85px !important;
 }
 
 #ticker-table th.td-price,
 #ticker-table td.td-price {
-    width: 110px !important;
-    min-width: 100px !important;
-    max-width: 130px !important;
+    width: 80px !important;
+    min-width: 70px !important;
+    max-width: 90px !important;
 }
 
 #ticker-table th.td-volume,
 #ticker-table td.td-volume {
-    width: 120px !important;
-    min-width: 100px !important;
-    max-width: 140px !important;
+    width: 85px !important;
+    min-width: 75px !important;
+    max-width: 95px !important;
 }
 
 #ticker-table th.td-change,
 #ticker-table td.td-change {
-    width: 80px !important;
-    min-width: 70px !important;
-    max-width: 100px !important;
+    width: 60px !important;
+    min-width: 50px !important;
+    max-width: 70px !important;
 }
 
 #ticker-table th.td-action,
 #ticker-table td.td-action {
-    width: 70px !important;
-    min-width: 60px !important;
-    max-width: 80px !important;
+    width: 55px !important;
+    min-width: 45px !important;
+    max-width: 65px !important;
 }
 
 #ticker-table th.td-peer,
 #ticker-table td.td-peer {
-    width: 220px !important;
-    min-width: 200px !important;
-    max-width: 280px !important;
+    width: 350px !important;
+    min-width: 320px !important;
+    max-width: 400px !important;
 }
 
 #ticker-table th.td-list,
 #ticker-table td.td-list {
-    width: 70px !important;
-    min-width: 60px !important;
-    max-width: 80px !important;
+    width: 60px !important;
+    min-width: 50px !important;
+    max-width: 70px !important;
 }
 /* ============================================ */
 
@@ -1214,9 +1214,9 @@ a.peer-exchange:hover {
 
 .peer-data {
     display: grid;
-    grid-template-columns: 70px 24px 55px 70px;
+    grid-template-columns: 70px 24px 55px 90px auto;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     padding-bottom: 4px;
     margin-bottom: 4px;
     border-bottom: 1px solid var(--border-color);
