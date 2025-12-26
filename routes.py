@@ -926,11 +926,31 @@ def get_depth(exchange, symbol):
         
         orderbook = adapter.fetch_orderbook(symbol, limit=5)
         
-        bid_depth = sum(b['price'] * b['amount'] for b in orderbook.bids[:5])
-        ask_depth = sum(a['price'] * a['amount'] for a in orderbook.asks[:5])
+        def get_price_amount(entry):
+            if isinstance(entry, dict):
+                price = entry.get('price', 0)
+                amount = entry.get('amount', entry.get('quantity', 0))
+            elif isinstance(entry, (list, tuple)) and len(entry) >= 2:
+                price, amount = entry[0], entry[1]
+            else:
+                price, amount = 0, 0
+            return float(price), float(amount)
         
-        best_bid = orderbook.bids[0]['price'] if orderbook.bids else 0
-        best_ask = orderbook.asks[0]['price'] if orderbook.asks else 0
+        bid_depth = 0
+        best_bid = 0
+        for b in orderbook.bids[:5]:
+            price, amount = get_price_amount(b)
+            bid_depth += price * amount
+            if best_bid == 0 and price > 0:
+                best_bid = price
+        
+        ask_depth = 0
+        best_ask = 0
+        for a in orderbook.asks[:5]:
+            price, amount = get_price_amount(a)
+            ask_depth += price * amount
+            if best_ask == 0 and price > 0:
+                best_ask = price
         
         return jsonify({
             'status': 'success',
