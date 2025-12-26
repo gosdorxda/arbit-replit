@@ -1243,9 +1243,9 @@ a.peer-exchange:hover {
 
 .peer-data {
     display: grid;
-    grid-template-columns: 75px 60px 120px 70px;
+    grid-template-columns: 75px 60px 145px 70px;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     padding: 6px 0;
     margin-bottom: 4px;
     border-bottom: 1px solid var(--border-color);
@@ -1437,9 +1437,9 @@ a.peer-exchange:hover {
     border-radius: 4px;
     background: rgba(255, 255, 255, 0.03);
     border: 1px dashed var(--border-color);
-    width: 120px;
-    min-width: 120px;
-    max-width: 120px;
+    width: 145px;
+    min-width: 145px;
+    max-width: 145px;
     box-sizing: border-box;
 }
 
