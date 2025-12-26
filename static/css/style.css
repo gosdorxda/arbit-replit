@@ -23,6 +23,7 @@
     --fameex-color: #e11d48;       /* Rose */
     --bigone-color: #0ea5e9;       /* Sky */
     --p2pb2b-color: #8b5cf6;       /* Violet */
+    --digifinex-color: #00d4aa;    /* Teal */
     
     /* ---- EXCHANGE HOVER COLORS (darker shade for hover) ---- */
     --lbank-hover: #1e4dd8;
@@ -42,6 +43,7 @@
     --gateio-hover: #a32e27;
     --niza-hover: #4338ca;
     --p2pb2b-hover: #7c3aed;
+    --digifinex-hover: #00b894;
 }
 
 :root,
@@ -482,6 +484,16 @@ body {
 
 .p2pb2b-btn:hover:not(:disabled) {
     background-color: var(--p2pb2b-hover);
+    transform: translateY(-1px);
+}
+
+.digifinex-btn {
+    background-color: var(--digifinex-color);
+    color: white;
+}
+
+.digifinex-btn:hover:not(:disabled) {
+    background-color: var(--digifinex-hover);
     transform: translateY(-1px);
 }
 
@@ -950,6 +962,11 @@ td {
     color: var(--p2pb2b-color);
 }
 
+.exchange-badge.digifinex {
+    background-color: rgba(0, 212, 170, 0.2);
+    color: var(--digifinex-color);
+}
+
 .td-symbol {
     font-weight: 600;
     color: var(--text-primary);
@@ -1323,6 +1340,11 @@ a.peer-exchange:hover {
 .peer-exchange.p2pb2b {
     background-color: rgba(139, 92, 246, 0.3);
     color: var(--p2pb2b-color);
+}
+
+.peer-exchange.digifinex {
+    background-color: rgba(0, 212, 170, 0.3);
+    color: var(--digifinex-color);
 }
 
 .peer-price {
