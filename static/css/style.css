@@ -1312,7 +1312,7 @@ a.peer-exchange:hover {
 .peer-exchange {
     font-size: 0.625rem;
     font-weight: 700;
-    padding: 8px 5px;
+    padding: 6px 5px;
     border-radius: 4px;
     text-transform: uppercase;
     text-align: center;
@@ -1323,7 +1323,6 @@ a.peer-exchange:hover {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 34px;
     box-sizing: border-box;
 }
 
@@ -1434,7 +1433,7 @@ a.peer-exchange:hover {
     font-size: 0.6rem;
     font-family: 'JetBrains Mono', monospace;
     cursor: pointer;
-    padding: 3px 5px;
+    padding: 2px 4px;
     border-radius: 4px;
     background: rgba(255, 255, 255, 0.03);
     border: 1px dashed var(--border-color);
@@ -1442,7 +1441,6 @@ a.peer-exchange:hover {
     min-width: 120px;
     max-width: 120px;
     box-sizing: border-box;
-    height: 34px;
 }
 
 .depth-box.loaded {
@@ -1458,7 +1456,8 @@ a.peer-exchange:hover {
     display: grid;
     grid-template-columns: 22px minmax(0, 1fr) minmax(0, 1fr);
     align-items: center;
-    gap: 3px;
+    gap: 2px;
+    line-height: 1.1;
 }
 
 .db-ask {
