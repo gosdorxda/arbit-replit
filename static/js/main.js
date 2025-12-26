@@ -175,11 +175,6 @@ function initDataTable() {
                         
                         html += `
                             <div class="peer-data" id="${peerId}">
-                                <div class="depth-indicator" title="Click to load depth">
-                                    <span class="depth-ask" onclick="loadDepth('${peer.exchange}', '${peer.symbol}', '${peerId}')">−</span>
-                                    <span class="depth-spread">−</span>
-                                    <span class="depth-bid" onclick="loadDepth('${peer.exchange}', '${peer.symbol}', '${peerId}')">−</span>
-                                </div>
                                 <span class="peer-price">${formatPrice(peer.price)}</span>
                                 <button class="orderbook-btn-sm" onclick="showOrderbook2('${peer.exchange}', '${peer.symbol}', this)">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -187,6 +182,10 @@ function initDataTable() {
                                     </svg>
                                 </button>
                                 <span class="peer-volume">${peerVolume}</span>
+                                <span class="depth-mini" onclick="loadDepth('${peer.exchange}', '${peer.symbol}', '${peerId}')" title="Click for depth">
+                                    <span class="dm-ask">−</span>
+                                    <span class="dm-bid">−</span>
+                                </span>
                                 <a href="${peerUrl}" target="_blank" rel="noopener noreferrer" class="peer-exchange ${peerExchangeClass}">${peer.exchange}</a>
                             </div>
                         `;
@@ -820,14 +819,12 @@ async function loadDepth(exchange, symbol, elementId) {
     const container = document.getElementById(elementId);
     if (!container) return;
     
-    const depthIndicator = container.querySelector('.depth-indicator');
-    const askSpan = container.querySelector('.depth-ask');
-    const bidSpan = container.querySelector('.depth-bid');
-    const spreadSpan = container.querySelector('.depth-spread');
+    const depthMini = container.querySelector('.depth-mini');
+    const askSpan = container.querySelector('.dm-ask');
+    const bidSpan = container.querySelector('.dm-bid');
     
-    askSpan.textContent = '...';
-    bidSpan.textContent = '...';
-    spreadSpan.textContent = '...';
+    askSpan.textContent = '..';
+    bidSpan.textContent = '..';
     
     try {
         const response = await fetch(`/api/depth/${exchange}/${encodeURIComponent(symbol)}`);
@@ -837,20 +834,22 @@ async function loadDepth(exchange, symbol, elementId) {
             const askDepthClass = getDepthColor(data.ask_depth);
             const bidDepthClass = getDepthColor(data.bid_depth);
             
-            askSpan.innerHTML = `<span class="depth-price">${formatPrice(data.best_ask)}</span><span class="depth-vol ${askDepthClass}">${formatDepthValue(data.ask_depth)}</span>`;
-            bidSpan.innerHTML = `<span class="depth-vol ${bidDepthClass}">${formatDepthValue(data.bid_depth)}</span><span class="depth-price">${formatPrice(data.best_bid)}</span>`;
-            spreadSpan.textContent = data.spread.toFixed(2) + '%';
-            spreadSpan.className = 'depth-spread ' + (data.spread > 1 ? 'spread-high' : data.spread > 0.5 ? 'spread-medium' : 'spread-low');
+            askSpan.className = `dm-ask ${askDepthClass}`;
+            askSpan.textContent = formatDepthValue(data.ask_depth);
+            askSpan.title = `Ask: ${formatPrice(data.best_ask)} | Depth: $${formatDepthValue(data.ask_depth)}`;
             
-            depthIndicator.classList.add('loaded');
+            bidSpan.className = `dm-bid ${bidDepthClass}`;
+            bidSpan.textContent = formatDepthValue(data.bid_depth);
+            bidSpan.title = `Bid: ${formatPrice(data.best_bid)} | Depth: $${formatDepthValue(data.bid_depth)}`;
+            
+            depthMini.classList.add('loaded');
+            depthMini.title = `Spread: ${data.spread.toFixed(2)}%`;
         } else {
-            askSpan.textContent = 'Err';
-            bidSpan.textContent = 'Err';
-            spreadSpan.textContent = '−';
+            askSpan.textContent = '!';
+            bidSpan.textContent = '!';
         }
     } catch (e) {
-        askSpan.textContent = 'Err';
-        bidSpan.textContent = 'Err';
-        spreadSpan.textContent = '−';
+        askSpan.textContent = '!';
+        bidSpan.textContent = '!';
     }
 }

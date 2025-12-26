@@ -1391,92 +1391,61 @@ a.peer-exchange:hover {
     color: var(--latoken-color);
 }
 
-.depth-indicator {
-    display: flex;
+.depth-mini {
+    display: inline-flex;
     align-items: center;
-    gap: 4px;
-    font-size: 0.7rem;
+    gap: 2px;
+    font-size: 0.65rem;
     font-family: 'JetBrains Mono', monospace;
     cursor: pointer;
     padding: 2px 4px;
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px dashed var(--border-color);
-    min-width: 120px;
-    justify-content: space-between;
-}
-
-.depth-indicator.loaded {
-    border-style: solid;
+    border-radius: 3px;
     background: rgba(255, 255, 255, 0.05);
+    border: 1px dashed var(--border-color);
 }
 
-.depth-indicator:hover {
-    background: rgba(255, 255, 255, 0.08);
+.depth-mini.loaded {
+    border-style: solid;
 }
 
-.depth-ask, .depth-bid {
-    display: flex;
-    align-items: center;
-    gap: 2px;
+.depth-mini:hover {
+    background: rgba(255, 255, 255, 0.1);
 }
 
-.depth-ask {
-    color: #ef4444;
-}
-
-.depth-bid {
-    color: #22c55e;
-}
-
-.depth-price {
-    font-size: 0.65rem;
-    opacity: 0.8;
-}
-
-.depth-vol {
-    font-size: 0.65rem;
+.dm-ask, .dm-bid {
     padding: 1px 3px;
     border-radius: 2px;
     font-weight: 600;
+    font-size: 0.6rem;
 }
 
-.depth-vol.depth-high {
+.dm-ask {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.15);
+}
+
+.dm-bid {
+    color: #22c55e;
+    background: rgba(34, 197, 94, 0.15);
+}
+
+.dm-ask.depth-high, .dm-bid.depth-high {
     background: rgba(34, 197, 94, 0.3);
     color: #22c55e;
 }
 
-.depth-vol.depth-medium {
+.dm-ask.depth-medium, .dm-bid.depth-medium {
     background: rgba(234, 179, 8, 0.3);
     color: #eab308;
 }
 
-.depth-vol.depth-low {
+.dm-ask.depth-low, .dm-bid.depth-low {
     background: rgba(249, 115, 22, 0.3);
     color: #f97316;
 }
 
-.depth-vol.depth-minimal {
+.dm-ask.depth-minimal, .dm-bid.depth-minimal {
     background: rgba(239, 68, 68, 0.3);
-    color: #ef4444;
-}
-
-.depth-spread {
-    font-size: 0.6rem;
-    padding: 1px 3px;
-    border-radius: 2px;
-    background: var(--bg-tertiary);
-}
-
-.depth-spread.spread-low {
-    color: #22c55e;
-}
-
-.depth-spread.spread-medium {
-    color: #eab308;
-}
-
-.depth-spread.spread-high {
     color: #ef4444;
 }
 
