@@ -821,9 +821,9 @@ td {
 
 #ticker-table th.td-peer,
 #ticker-table td.td-peer {
-    width: 350px !important;
-    min-width: 320px !important;
-    max-width: 400px !important;
+    width: 380px !important;
+    min-width: 360px !important;
+    max-width: 420px !important;
 }
 
 #ticker-table th.td-list,
@@ -1243,10 +1243,10 @@ a.peer-exchange:hover {
 
 .peer-data {
     display: grid;
-    grid-template-columns: 70px 55px 115px 65px;
+    grid-template-columns: 75px 60px 120px 70px;
     align-items: center;
-    gap: 6px;
-    padding-bottom: 4px;
+    gap: 12px;
+    padding: 6px 0;
     margin-bottom: 4px;
     border-bottom: 1px solid var(--border-color);
 }
@@ -1312,15 +1312,19 @@ a.peer-exchange:hover {
 .peer-exchange {
     font-size: 0.625rem;
     font-weight: 700;
-    padding: 2px 5px;
-    border-radius: 3px;
+    padding: 8px 5px;
+    border-radius: 4px;
     text-transform: uppercase;
     text-align: center;
     white-space: nowrap;
     text-decoration: none;
-    width: 65px;
-    min-width: 65px;
-    display: inline-block;
+    width: 70px;
+    min-width: 70px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 34px;
+    box-sizing: border-box;
 }
 
 .peer-exchange.lbank {
@@ -1434,10 +1438,11 @@ a.peer-exchange:hover {
     border-radius: 4px;
     background: rgba(255, 255, 255, 0.03);
     border: 1px dashed var(--border-color);
-    width: 115px;
-    min-width: 115px;
-    max-width: 115px;
+    width: 120px;
+    min-width: 120px;
+    max-width: 120px;
     box-sizing: border-box;
+    height: 34px;
 }
 
 .depth-box.loaded {
