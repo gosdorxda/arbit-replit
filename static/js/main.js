@@ -797,7 +797,111 @@ function makeDraggable(modalId) {
 document.addEventListener('DOMContentLoaded', function() {
     makeDraggable('orderbook-modal');
     makeDraggable('orderbook-modal2');
+    initDepthAutoLoader();
 });
+
+const loadedDepthIds = new Set();
+const depthLoadQueue = [];
+let isProcessingQueue = false;
+
+function initDepthAutoLoader() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const depthBox = entry.target;
+                const peerId = depthBox.closest('.peer-data')?.id;
+                if (peerId && !loadedDepthIds.has(peerId)) {
+                    const parts = peerId.replace('depth-', '').split('-');
+                    const exchange = parts[0].toUpperCase();
+                    const symbol = parts.slice(1).join('/').replace(/-/g, '/').toUpperCase();
+                    queueDepthLoad(exchange, symbol, peerId);
+                }
+            }
+        });
+    }, {
+        root: null,
+        rootMargin: '50px',
+        threshold: 0.1
+    });
+    
+    const tableBody = document.querySelector('#ticker-table tbody');
+    if (tableBody) {
+        const mutationObserver = new MutationObserver(() => {
+            document.querySelectorAll('.depth-box:not(.observed)').forEach(box => {
+                box.classList.add('observed');
+                observer.observe(box);
+            });
+        });
+        mutationObserver.observe(tableBody, { childList: true, subtree: true });
+    }
+    
+    document.querySelectorAll('.depth-box').forEach(box => {
+        box.classList.add('observed');
+        observer.observe(box);
+    });
+}
+
+function queueDepthLoad(exchange, symbol, elementId) {
+    if (loadedDepthIds.has(elementId)) return;
+    loadedDepthIds.add(elementId);
+    depthLoadQueue.push({ exchange, symbol, elementId });
+    processDepthQueue();
+}
+
+async function processDepthQueue() {
+    if (isProcessingQueue || depthLoadQueue.length === 0) return;
+    isProcessingQueue = true;
+    
+    while (depthLoadQueue.length > 0) {
+        const batch = depthLoadQueue.splice(0, 3);
+        await Promise.all(batch.map(item => 
+            loadDepthSilent(item.exchange, item.symbol, item.elementId)
+        ));
+        if (depthLoadQueue.length > 0) {
+            await new Promise(resolve => setTimeout(resolve, 200));
+        }
+    }
+    
+    isProcessingQueue = false;
+}
+
+async function loadDepthSilent(exchange, symbol, elementId) {
+    const container = document.getElementById(elementId);
+    if (!container) return;
+    
+    const depthBox = container.querySelector('.depth-box');
+    const askRow = container.querySelector('.db-ask');
+    const bidRow = container.querySelector('.db-bid');
+    if (!askRow || !bidRow) return;
+    
+    const askPrice = askRow.querySelector('.db-price');
+    const askVol = askRow.querySelector('.db-vol');
+    const bidPrice = bidRow.querySelector('.db-price');
+    const bidVol = bidRow.querySelector('.db-vol');
+    
+    try {
+        const response = await fetch(`/api/depth/${exchange}/${encodeURIComponent(symbol)}`);
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            const askDepthClass = getDepthColor(data.ask_depth);
+            const bidDepthClass = getDepthColor(data.bid_depth);
+            
+            askPrice.textContent = formatPrice(data.best_ask);
+            askVol.textContent = formatDepthValue(data.ask_depth);
+            askVol.className = `db-vol ${askDepthClass}`;
+            
+            bidPrice.textContent = formatPrice(data.best_bid);
+            bidVol.textContent = formatDepthValue(data.bid_depth);
+            bidVol.className = `db-vol ${bidDepthClass}`;
+            
+            depthBox.classList.add('loaded');
+            depthBox.title = `Spread: ${data.spread.toFixed(2)}%`;
+        }
+    } catch (e) {
+        // Silent fail for auto-load
+    }
+}
 
 function formatDepthValue(value) {
     if (value >= 1000000) {
