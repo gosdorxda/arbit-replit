@@ -486,6 +486,9 @@ async function showOrderbook(exchange, symbol, btnElement) {
                 const highestBid = allBids[0].price;
                 const spread = ((lowestAsk - highestBid) / lowestAsk * 100).toFixed(4);
                 spreadDivider.textContent = `Spread: ${spread}%`;
+                
+                // Update depth indicator
+                updateDepthIndicator(btnElement, lowestAsk, highestBid, allAsks.slice(0, 5), allBids.slice(0, 5), spread);
             }
         } else {
             asksList.innerHTML = `<div class="orderbook-error">${data.message}</div>`;
@@ -493,6 +496,41 @@ async function showOrderbook(exchange, symbol, btnElement) {
     } catch (error) {
         asksList.innerHTML = `<div class="orderbook-error">Failed to load orderbook</div>`;
     }
+}
+
+function updateDepthIndicator(btnElement, bestAsk, bestBid, asks, bids, spread) {
+    if (!btnElement) return;
+    
+    const depthBox = btnElement.classList.contains('depth-box') ? btnElement : btnElement.querySelector('.depth-box');
+    if (!depthBox) return;
+    
+    const askRow = depthBox.querySelector('.db-ask');
+    const bidRow = depthBox.querySelector('.db-bid');
+    if (!askRow || !bidRow) return;
+    
+    const askPrice = askRow.querySelector('.db-price');
+    const askVol = askRow.querySelector('.db-vol');
+    const bidPrice = bidRow.querySelector('.db-price');
+    const bidVol = bidRow.querySelector('.db-vol');
+    
+    // Calculate depth from top 5 entries
+    let askDepth = 0, bidDepth = 0;
+    asks.forEach(a => { askDepth += a.price * a.amount; });
+    bids.forEach(b => { bidDepth += b.price * b.amount; });
+    
+    const askDepthClass = getDepthColor(askDepth);
+    const bidDepthClass = getDepthColor(bidDepth);
+    
+    askPrice.textContent = formatPrice(bestAsk);
+    askVol.textContent = formatDepthValue(askDepth);
+    askVol.className = `db-vol ${askDepthClass}`;
+    
+    bidPrice.textContent = formatPrice(bestBid);
+    bidVol.textContent = formatDepthValue(bidDepth);
+    bidVol.className = `db-vol ${bidDepthClass}`;
+    
+    depthBox.classList.add('loaded');
+    depthBox.title = `Spread: ${spread}%`;
 }
 
 function closeOrderbookModal() {
@@ -578,6 +616,9 @@ async function showOrderbook2(exchange, symbol, btnElement) {
                 const highestBid = allBids[0].price;
                 const spread = ((lowestAsk - highestBid) / lowestAsk * 100).toFixed(4);
                 spreadDivider.textContent = `Spread: ${spread}%`;
+                
+                // Update depth indicator
+                updateDepthIndicator(btnElement, lowestAsk, highestBid, allAsks.slice(0, 5), allBids.slice(0, 5), spread);
             }
         } else {
             asksList.innerHTML = `<div class="orderbook-error">${data.message}</div>`;
