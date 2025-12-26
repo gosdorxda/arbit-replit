@@ -62,10 +62,14 @@ class AzbitAdapter(BaseAdapter):
     def fetch_orderbook(self, symbol: str, limit: int = 20) -> NormalizedOrderbook:
         try:
             base = symbol.replace('/USDT', '').replace('/', '')
-            api_symbol = f"{base}_USDT"
+            ticker_id = f"{base}_USDT"
             
             response = requests.get(
-                f"{self.BASE_URL}/orderbook/{api_symbol}",
+                f"{self.BASE_URL}/marketdata/coingecko/orderbook",
+                params={
+                    "ticker_id": ticker_id,
+                    "depth": limit
+                },
                 timeout=10
             )
             response.raise_for_status()
@@ -73,15 +77,15 @@ class AzbitAdapter(BaseAdapter):
             
             asks = []
             for ask in data.get('asks', [])[:limit]:
-                price = self._safe_float(ask.get('price'))
-                amount = self._safe_float(ask.get('quantity'))
+                price = self._safe_float(ask[0] if isinstance(ask, list) else ask.get('price'))
+                amount = self._safe_float(ask[1] if isinstance(ask, list) else ask.get('quantity'))
                 if price and amount:
                     asks.append({'price': price, 'amount': amount})
             
             bids = []
             for bid in data.get('bids', [])[:limit]:
-                price = self._safe_float(bid.get('price'))
-                amount = self._safe_float(bid.get('quantity'))
+                price = self._safe_float(bid[0] if isinstance(bid, list) else bid.get('price'))
+                amount = self._safe_float(bid[1] if isinstance(bid, list) else bid.get('quantity'))
                 if price and amount:
                     bids.append({'price': price, 'amount': amount})
             
