@@ -23,7 +23,7 @@ class LatokenAdapter(BaseAdapter):
             response = requests.get(f"{self.BASE_URL}/currency", timeout=30)
             response.raise_for_status()
             for curr in response.json():
-                self._currencies[curr.get('id')] = curr.get('symbol', '')
+                self._currencies[curr.get('id')] = curr.get('tag', '')
     
     def _load_pairs(self):
         if not self._pairs:
