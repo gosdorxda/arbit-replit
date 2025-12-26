@@ -1455,9 +1455,10 @@ a.peer-exchange:hover {
 }
 
 .db-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) minmax(0, 1fr);
     align-items: center;
-    gap: 4px;
+    gap: 3px;
 }
 
 .db-ask {
@@ -1476,7 +1477,10 @@ a.peer-exchange:hover {
 
 .db-price {
     font-size: 0.6rem;
-    min-width: 45px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .db-vol {
@@ -1485,6 +1489,11 @@ a.peer-exchange:hover {
     border-radius: 2px;
     font-weight: 600;
     background: rgba(255, 255, 255, 0.1);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
 }
 
 .db-vol.depth-high {
