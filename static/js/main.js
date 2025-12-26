@@ -138,12 +138,11 @@ function initDataTable() {
                 data: null,
                 className: 'td-action',
                 render: function(data) {
-                    return `<button class="orderbook-btn" onclick="showOrderbook('${data.exchange}', '${data.symbol}', this)">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 6h16M4 12h16M4 18h16"/>
-                        </svg>
-                        View
-                    </button>`;
+                    const mainDepthId = `main-depth-${data.exchange}-${data.symbol.replace('/', '-')}`.toLowerCase();
+                    return `<span class="depth-box main-depth" id="${mainDepthId}" data-exchange="${data.exchange}" data-symbol="${data.symbol}" onclick="showOrderbook('${data.exchange}', '${data.symbol}', this)" title="Click for orderbook">
+                        <span class="db-row db-ask"><span class="db-label">Ask:</span><span class="db-price">−</span><span class="db-vol">−</span></span>
+                        <span class="db-row db-bid"><span class="db-label">Bid:</span><span class="db-price">−</span><span class="db-vol">−</span></span>
+                    </span>`;
                 },
                 orderable: false
             },
@@ -804,11 +803,11 @@ function initDepthAutoLoader() {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const depthBox = entry.target;
-                const peerId = depthBox.closest('.peer-data')?.id;
+                const depthId = depthBox.classList.contains('main-depth') ? depthBox.id : depthBox.closest('.peer-data')?.id;
                 const exchange = depthBox.dataset.exchange;
                 const symbol = depthBox.dataset.symbol;
-                if (peerId && exchange && symbol && !loadedDepthIds.has(peerId)) {
-                    queueDepthLoad(exchange, symbol, peerId);
+                if (depthId && exchange && symbol && !loadedDepthIds.has(depthId)) {
+                    queueDepthLoad(exchange, symbol, depthId, depthBox.classList.contains('main-depth'));
                 }
             }
         });
@@ -835,10 +834,17 @@ function initDepthAutoLoader() {
     });
 }
 
-function queueDepthLoad(exchange, symbol, elementId) {
+function getDepthIdFromElement(el) {
+    if (el.classList.contains('main-depth')) {
+        return el.id;
+    }
+    return el.closest('.peer-data')?.id;
+}
+
+function queueDepthLoad(exchange, symbol, elementId, isMainDepth = false) {
     if (loadedDepthIds.has(elementId)) return;
     loadedDepthIds.add(elementId);
-    depthLoadQueue.push({ exchange, symbol, elementId });
+    depthLoadQueue.push({ exchange, symbol, elementId, isMainDepth });
     processDepthQueue();
 }
 
@@ -849,7 +855,7 @@ async function processDepthQueue() {
     while (depthLoadQueue.length > 0) {
         const batch = depthLoadQueue.splice(0, 3);
         await Promise.all(batch.map(item => 
-            loadDepthSilent(item.exchange, item.symbol, item.elementId)
+            loadDepthSilent(item.exchange, item.symbol, item.elementId, item.isMainDepth)
         ));
         if (depthLoadQueue.length > 0) {
             await new Promise(resolve => setTimeout(resolve, 200));
@@ -859,13 +865,20 @@ async function processDepthQueue() {
     isProcessingQueue = false;
 }
 
-async function loadDepthSilent(exchange, symbol, elementId) {
+async function loadDepthSilent(exchange, symbol, elementId, isMainDepth = false) {
     const container = document.getElementById(elementId);
     if (!container) return;
     
-    const depthBox = container.querySelector('.depth-box');
-    const askRow = container.querySelector('.db-ask');
-    const bidRow = container.querySelector('.db-bid');
+    let depthBox, askRow, bidRow;
+    if (isMainDepth) {
+        depthBox = container;
+        askRow = container.querySelector('.db-ask');
+        bidRow = container.querySelector('.db-bid');
+    } else {
+        depthBox = container.querySelector('.depth-box');
+        askRow = container.querySelector('.db-ask');
+        bidRow = container.querySelector('.db-bid');
+    }
     if (!askRow || !bidRow) return;
     
     const askPrice = askRow.querySelector('.db-price');

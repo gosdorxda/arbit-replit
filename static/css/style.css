@@ -785,9 +785,9 @@ td {
 
 #ticker-table th.td-action,
 #ticker-table td.td-action {
-    width: 55px !important;
-    min-width: 45px !important;
-    max-width: 65px !important;
+    width: 120px !important;
+    min-width: 115px !important;
+    max-width: 130px !important;
 }
 
 #ticker-table th.td-peer,
