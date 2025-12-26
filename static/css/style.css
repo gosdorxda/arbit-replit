@@ -24,6 +24,7 @@
     --bigone-color: #0ea5e9;       /* Sky */
     --p2pb2b-color: #8b5cf6;       /* Violet */
     --digifinex-color: #00d4aa;    /* Teal */
+    --azbit-color: #f97316;        /* Orange */
     
     /* ---- EXCHANGE HOVER COLORS (darker shade for hover) ---- */
     --lbank-hover: #1e4dd8;
@@ -44,6 +45,7 @@
     --niza-hover: #4338ca;
     --p2pb2b-hover: #7c3aed;
     --digifinex-hover: #00b894;
+    --azbit-hover: #ea580c;
 }
 
 :root,
@@ -494,6 +496,16 @@ body {
 
 .digifinex-btn:hover:not(:disabled) {
     background-color: var(--digifinex-hover);
+    transform: translateY(-1px);
+}
+
+.azbit-btn {
+    background-color: var(--azbit-color);
+    color: white;
+}
+
+.azbit-btn:hover:not(:disabled) {
+    background-color: var(--azbit-hover);
     transform: translateY(-1px);
 }
 
@@ -967,6 +979,11 @@ td {
     color: var(--digifinex-color);
 }
 
+.exchange-badge.azbit {
+    background-color: rgba(249, 115, 22, 0.2);
+    color: var(--azbit-color);
+}
+
 .td-symbol {
     font-weight: 600;
     color: var(--text-primary);
@@ -1345,6 +1362,11 @@ a.peer-exchange:hover {
 .peer-exchange.digifinex {
     background-color: rgba(0, 212, 170, 0.3);
     color: var(--digifinex-color);
+}
+
+.peer-exchange.azbit {
+    background-color: rgba(249, 115, 22, 0.3);
+    color: var(--azbit-color);
 }
 
 .peer-price {

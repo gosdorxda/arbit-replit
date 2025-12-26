@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import render_template, jsonify, request
 from app import app, db
 from models import SpotTicker, FetchLog, MarketList
-from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter, VindaxAdapter, FameEXAdapter, BigOneAdapter, P2PB2BAdapter, DigiFinexAdapter
+from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter, VindaxAdapter, FameEXAdapter, BigOneAdapter, P2PB2BAdapter, DigiFinexAdapter, AzbitAdapter
 
 
 def save_tickers(tickers, exchange_name):
@@ -458,6 +458,29 @@ def fetch_digifinex():
         }), 500
 
 
+@app.route('/api/fetch/azbit', methods=['POST'])
+def fetch_azbit():
+    try:
+        adapter = AzbitAdapter()
+        tickers = adapter.fetch_usdt_tickers()
+        save_tickers(tickers, adapter.exchange_name)
+        log_fetch(adapter.exchange_name, 'success', len(tickers))
+        
+        return jsonify({
+            'status': 'success',
+            'exchange': adapter.exchange_name,
+            'pairs_count': len(tickers),
+            'message': f'Successfully fetched {len(tickers)} USDT pairs from Azbit'
+        })
+    except Exception as e:
+        log_fetch('AZBIT', 'error', error_message=str(e))
+        return jsonify({
+            'status': 'error',
+            'exchange': 'AZBIT',
+            'message': str(e)
+        }), 500
+
+
 @app.route('/api/tickers')
 def get_tickers():
     draw = request.args.get('draw', 1, type=int)
@@ -623,6 +646,7 @@ def get_status():
     bigone_log = FetchLog.query.filter_by(exchange='BIGONE').order_by(FetchLog.fetched_at.desc()).first()
     p2pb2b_log = FetchLog.query.filter_by(exchange='P2PB2B').order_by(FetchLog.fetched_at.desc()).first()
     digifinex_log = FetchLog.query.filter_by(exchange='DIGIFINEX').order_by(FetchLog.fetched_at.desc()).first()
+    azbit_log = FetchLog.query.filter_by(exchange='AZBIT').order_by(FetchLog.fetched_at.desc()).first()
     
     lbank_count = SpotTicker.query.filter_by(exchange='LBANK').count()
     hashkey_count = SpotTicker.query.filter_by(exchange='HASHKEY').count()
@@ -642,10 +666,11 @@ def get_status():
     bigone_count = SpotTicker.query.filter_by(exchange='BIGONE').count()
     p2pb2b_count = SpotTicker.query.filter_by(exchange='P2PB2B').count()
     digifinex_count = SpotTicker.query.filter_by(exchange='DIGIFINEX').count()
+    azbit_count = SpotTicker.query.filter_by(exchange='AZBIT').count()
     
     exchanges = ['LBANK', 'HASHKEY', 'BICONOMY', 'MEXC', 'BITRUE', 'ASCENDEX', 
                  'BITMART', 'DEXTRADE', 'POLONIEX', 'GATEIO', 'NIZA', 'XT', 
-                 'COINSTORE', 'VINDAX', 'FAMEEX', 'BIGONE', 'P2PB2B', 'DIGIFINEX']
+                 'COINSTORE', 'VINDAX', 'FAMEEX', 'BIGONE', 'P2PB2B', 'DIGIFINEX', 'AZBIT']
     
     from sqlalchemy import func
     blacklist_counts = dict(db.session.query(
@@ -804,6 +829,14 @@ def get_status():
             'blacklist_count': blacklist_counts.get('DIGIFINEX', 0),
             'whitelist_count': whitelist_counts.get('DIGIFINEX', 0),
             'walletlock_count': walletlock_counts.get('DIGIFINEX', 0)
+        },
+        'azbit': {
+            'last_fetch': azbit_log.fetched_at.isoformat() if azbit_log else None,
+            'status': azbit_log.status if azbit_log else 'never',
+            'pairs_count': azbit_count,
+            'blacklist_count': blacklist_counts.get('AZBIT', 0),
+            'whitelist_count': whitelist_counts.get('AZBIT', 0),
+            'walletlock_count': walletlock_counts.get('AZBIT', 0)
         }
     })
 
@@ -849,6 +882,8 @@ def get_orderbook(exchange, symbol):
             adapter = P2PB2BAdapter()
         elif exchange.upper() == 'DIGIFINEX':
             adapter = DigiFinexAdapter()
+        elif exchange.upper() == 'AZBIT':
+            adapter = AzbitAdapter()
         else:
             return jsonify({
                 'status': 'error',

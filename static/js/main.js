@@ -42,6 +42,8 @@ function getExchangeUrl(exchange, symbol) {
             return `https://p2pb2b.com/trade/${base}_USDT`;
         case 'DIGIFINEX':
             return `https://www.digifinex.com/en-ww/trade/USDT/${base}`;
+        case 'AZBIT':
+            return `https://azbit.com/exchange/${base}_USDT`;
         default:
             return '#';
     }
@@ -290,9 +292,10 @@ async function loadStatus() {
         updateStatusDisplay('bigone', data.bigone);
         updateStatusDisplay('p2pb2b', data.p2pb2b);
         updateStatusDisplay('digifinex', data.digifinex);
+        updateStatusDisplay('azbit', data.azbit);
         
         let totalMarkets = 0;
-        const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt', 'coinstore', 'vindax', 'fameex', 'bigone', 'p2pb2b', 'digifinex'];
+        const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt', 'coinstore', 'vindax', 'fameex', 'bigone', 'p2pb2b', 'digifinex', 'azbit'];
         exchanges.forEach(ex => {
             if (data[ex] && data[ex].pairs_count) {
                 totalMarkets += data[ex].pairs_count;

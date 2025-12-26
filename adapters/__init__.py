@@ -17,5 +17,6 @@ from .fameex import FameEXAdapter
 from .bigone import BigOneAdapter
 from .p2pb2b import P2PB2BAdapter
 from .digifinex import DigiFinexAdapter
+from .azbit import AzbitAdapter
 
-__all__ = ['BaseAdapter', 'LBankAdapter', 'HashKeyAdapter', 'BiconomyAdapter', 'MEXCAdapter', 'BitrueAdapter', 'AscendEXAdapter', 'BitMartAdapter', 'DexTradeAdapter', 'PoloniexAdapter', 'GateIOAdapter', 'NizaAdapter', 'XTAdapter', 'CoinstoreAdapter', 'VindaxAdapter', 'FameEXAdapter', 'BigOneAdapter', 'P2PB2BAdapter', 'DigiFinexAdapter']
+__all__ = ['BaseAdapter', 'LBankAdapter', 'HashKeyAdapter', 'BiconomyAdapter', 'MEXCAdapter', 'BitrueAdapter', 'AscendEXAdapter', 'BitMartAdapter', 'DexTradeAdapter', 'PoloniexAdapter', 'GateIOAdapter', 'NizaAdapter', 'XTAdapter', 'CoinstoreAdapter', 'VindaxAdapter', 'FameEXAdapter', 'BigOneAdapter', 'P2PB2BAdapter', 'DigiFinexAdapter', 'AzbitAdapter']
