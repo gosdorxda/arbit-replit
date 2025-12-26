@@ -1081,6 +1081,16 @@ td {
     font-weight: 500;
 }
 
+.price-value sub,
+.peer-price sub,
+.db-price sub {
+    font-size: 0.7em;
+    color: var(--text-muted);
+    vertical-align: baseline;
+    position: relative;
+    bottom: -0.15em;
+}
+
 .symbol-link {
     color: var(--accent-blue);
     text-decoration: none;

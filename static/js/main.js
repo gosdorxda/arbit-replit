@@ -378,6 +378,10 @@ function formatPrice(price) {
         const match = str.match(/^0\.(0*)([1-9]\d*)/);
         if (match) {
             const leadingZeros = match[1].length;
+            if (leadingZeros >= 5) {
+                const significantPart = match[2].substring(0, 6).replace(/0+$/, '');
+                return `0.<sub>${leadingZeros}</sub>${significantPart}`;
+            }
             const significantDigits = Math.min(8, match[2].length);
             return price.toFixed(leadingZeros + significantDigits);
         }
