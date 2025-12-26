@@ -832,94 +832,48 @@ function makeDraggable(modalId) {
 document.addEventListener('DOMContentLoaded', function() {
     makeDraggable('orderbook-modal');
     makeDraggable('orderbook-modal2');
-    initDepthAutoLoader();
 });
 
 const loadedDepthIds = new Set();
-const depthLoadQueue = [];
-let isProcessingQueue = false;
+let isLoadingDepth = false;
 
-function initDepthAutoLoader() {
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const depthBox = entry.target;
-                const depthId = depthBox.classList.contains('main-depth') ? depthBox.id : depthBox.closest('.peer-data')?.id;
-                const exchange = depthBox.dataset.exchange;
-                const symbol = depthBox.dataset.symbol;
-                if (depthId && exchange && symbol && !loadedDepthIds.has(depthId)) {
-                    queueDepthLoad(exchange, symbol, depthId, depthBox.classList.contains('main-depth'));
-                }
-            }
-        });
-    }, {
-        root: null,
-        rootMargin: '50px',
-        threshold: 0.1
+async function loadAllDepth() {
+    if (isLoadingDepth) return;
+    
+    const btn = document.getElementById('btn-load-depth');
+    btn.disabled = true;
+    btn.classList.add('loading');
+    isLoadingDepth = true;
+    
+    // Collect all visible depth boxes
+    const depthBoxes = document.querySelectorAll('.depth-box:not(.loaded)');
+    const items = [];
+    
+    depthBoxes.forEach(box => {
+        const exchange = box.dataset.exchange;
+        const symbol = box.dataset.symbol;
+        if (exchange && symbol) {
+            items.push({ exchange, symbol, box });
+        }
     });
     
-    const tableBody = document.querySelector('#ticker-table tbody');
-    if (tableBody) {
-        const mutationObserver = new MutationObserver(() => {
-            document.querySelectorAll('.depth-box:not(.observed)').forEach(box => {
-                box.classList.add('observed');
-                observer.observe(box);
-            });
-        });
-        mutationObserver.observe(tableBody, { childList: true, subtree: true });
-    }
-    
-    document.querySelectorAll('.depth-box').forEach(box => {
-        box.classList.add('observed');
-        observer.observe(box);
-    });
-}
-
-function getDepthIdFromElement(el) {
-    if (el.classList.contains('main-depth')) {
-        return el.id;
-    }
-    return el.closest('.peer-data')?.id;
-}
-
-function queueDepthLoad(exchange, symbol, elementId, isMainDepth = false) {
-    if (loadedDepthIds.has(elementId)) return;
-    loadedDepthIds.add(elementId);
-    depthLoadQueue.push({ exchange, symbol, elementId, isMainDepth });
-    processDepthQueue();
-}
-
-async function processDepthQueue() {
-    if (isProcessingQueue || depthLoadQueue.length === 0) return;
-    isProcessingQueue = true;
-    
-    while (depthLoadQueue.length > 0) {
-        const batch = depthLoadQueue.splice(0, 3);
-        await Promise.all(batch.map(item => 
-            loadDepthSilent(item.exchange, item.symbol, item.elementId, item.isMainDepth)
-        ));
-        if (depthLoadQueue.length > 0) {
-            await new Promise(resolve => setTimeout(resolve, 200));
+    // Process in batches of 5
+    for (let i = 0; i < items.length; i += 5) {
+        const batch = items.slice(i, i + 5);
+        await Promise.all(batch.map(item => loadDepthForBox(item.exchange, item.symbol, item.box)));
+        if (i + 5 < items.length) {
+            await new Promise(resolve => setTimeout(resolve, 150));
         }
     }
     
-    isProcessingQueue = false;
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    isLoadingDepth = false;
 }
 
-async function loadDepthSilent(exchange, symbol, elementId, isMainDepth = false) {
-    const container = document.getElementById(elementId);
-    if (!container) return;
-    
-    let depthBox, askRow, bidRow;
-    if (isMainDepth) {
-        depthBox = container;
-        askRow = container.querySelector('.db-ask');
-        bidRow = container.querySelector('.db-bid');
-    } else {
-        depthBox = container.querySelector('.depth-box');
-        askRow = container.querySelector('.db-ask');
-        bidRow = container.querySelector('.db-bid');
-    }
+async function loadDepthForBox(exchange, symbol, depthBox) {
+    const askRow = depthBox.querySelector('.db-ask');
+    const bidRow = depthBox.querySelector('.db-bid');
     if (!askRow || !bidRow) return;
     
     const askPrice = askRow.querySelector('.db-price');
@@ -947,7 +901,7 @@ async function loadDepthSilent(exchange, symbol, elementId, isMainDepth = false)
             depthBox.title = `Spread: ${data.spread.toFixed(2)}%`;
         }
     } catch (e) {
-        // Silent fail for auto-load
+        // Silent fail
     }
 }
 

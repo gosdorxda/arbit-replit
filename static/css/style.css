@@ -629,6 +629,35 @@ body {
     color: var(--text-muted);
 }
 
+.load-depth-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.load-depth-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    transform: translateY(-1px);
+}
+
+.load-depth-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.load-depth-btn.loading svg {
+    animation: spin 1s linear infinite;
+}
+
 .stats-info {
     display: flex;
     gap: 16px;
