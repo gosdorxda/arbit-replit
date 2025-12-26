@@ -1214,7 +1214,7 @@ a.peer-exchange:hover {
 
 .peer-data {
     display: grid;
-    grid-template-columns: 70px 24px 55px 115px 65px;
+    grid-template-columns: 70px 55px 115px 65px;
     align-items: center;
     gap: 6px;
     padding-bottom: 4px;

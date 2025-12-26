@@ -176,13 +176,8 @@ function initDataTable() {
                         html += `
                             <div class="peer-data" id="${peerId}">
                                 <span class="peer-price">${formatPrice(peer.price)}</span>
-                                <button class="orderbook-btn-sm" onclick="showOrderbook2('${peer.exchange}', '${peer.symbol}', this)">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M4 6h16M4 12h16M4 18h16"/>
-                                    </svg>
-                                </button>
                                 <span class="peer-volume">${peerVolume}</span>
-                                <span class="depth-box" data-exchange="${peer.exchange}" data-symbol="${peer.symbol}" onclick="loadDepth('${peer.exchange}', '${peer.symbol}', '${peerId}')" title="Click for depth">
+                                <span class="depth-box" data-exchange="${peer.exchange}" data-symbol="${peer.symbol}" onclick="showOrderbook2('${peer.exchange}', '${peer.symbol}', this)" title="Click for orderbook">
                                     <span class="db-row db-ask"><span class="db-label">Ask:</span><span class="db-price">−</span><span class="db-vol">−</span></span>
                                     <span class="db-row db-bid"><span class="db-label">Bid:</span><span class="db-price">−</span><span class="db-vol">−</span></span>
                                 </span>
