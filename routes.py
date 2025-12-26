@@ -874,6 +874,84 @@ def get_status():
     })
 
 
+@app.route('/api/depth/<exchange>/<path:symbol>')
+def get_depth(exchange, symbol):
+    """Get mini orderbook depth (top 5 bids/asks with total USDT)"""
+    try:
+        if exchange.upper() == 'LBANK':
+            adapter = LBankAdapter()
+        elif exchange.upper() == 'HASHKEY':
+            adapter = HashKeyAdapter()
+        elif exchange.upper() == 'BICONOMY':
+            adapter = BiconomyAdapter()
+        elif exchange.upper() == 'MEXC':
+            adapter = MEXCAdapter()
+        elif exchange.upper() == 'BITRUE':
+            adapter = BitrueAdapter()
+        elif exchange.upper() == 'ASCENDEX':
+            adapter = AscendEXAdapter()
+        elif exchange.upper() == 'BITMART':
+            adapter = BitMartAdapter()
+        elif exchange.upper() == 'DEXTRADE':
+            adapter = DexTradeAdapter()
+        elif exchange.upper() == 'POLONIEX':
+            adapter = PoloniexAdapter()
+        elif exchange.upper() == 'GATEIO':
+            adapter = GateIOAdapter()
+        elif exchange.upper() == 'NIZA':
+            adapter = NizaAdapter()
+        elif exchange.upper() == 'XT':
+            adapter = XTAdapter()
+        elif exchange.upper() == 'COINSTORE':
+            adapter = CoinstoreAdapter()
+        elif exchange.upper() == 'VINDAX':
+            adapter = VindaxAdapter()
+        elif exchange.upper() == 'FAMEEX':
+            adapter = FameEXAdapter()
+        elif exchange.upper() == 'BIGONE':
+            adapter = BigOneAdapter()
+        elif exchange.upper() == 'P2PB2B':
+            adapter = P2PB2BAdapter()
+        elif exchange.upper() == 'DIGIFINEX':
+            adapter = DigiFinexAdapter()
+        elif exchange.upper() == 'AZBIT':
+            adapter = AzbitAdapter()
+        elif exchange.upper() == 'LATOKEN':
+            adapter = LatokenAdapter()
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': f'Unknown exchange: {exchange}'
+            }), 400
+        
+        orderbook = adapter.fetch_orderbook(symbol, limit=5)
+        
+        bid_depth = sum(b['price'] * b['amount'] for b in orderbook.bids[:5])
+        ask_depth = sum(a['price'] * a['amount'] for a in orderbook.asks[:5])
+        
+        best_bid = orderbook.bids[0]['price'] if orderbook.bids else 0
+        best_ask = orderbook.asks[0]['price'] if orderbook.asks else 0
+        
+        return jsonify({
+            'status': 'success',
+            'exchange': exchange.upper(),
+            'symbol': symbol,
+            'best_bid': best_bid,
+            'best_ask': best_ask,
+            'bid_depth': bid_depth,
+            'ask_depth': ask_depth,
+            'spread': ((best_ask - best_bid) / best_bid * 100) if best_bid > 0 else 0
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'exchange': exchange.upper(),
+            'symbol': symbol,
+            'message': str(e)
+        }), 500
+
+
 @app.route('/api/orderbook/<exchange>/<path:symbol>')
 def get_orderbook(exchange, symbol):
     try:
