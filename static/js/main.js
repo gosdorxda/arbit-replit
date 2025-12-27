@@ -370,22 +370,22 @@ function formatPrice(price) {
     } else if (price >= 1000) {
         return price.toFixed(2);
     } else if (price >= 1) {
-        return price.toFixed(4);
-    } else if (price >= 0.0001) {
-        return price.toFixed(6);
+        return parseFloat(price.toFixed(4)).toString();
+    } else if (price >= 0.01) {
+        return parseFloat(price.toFixed(6)).toString();
     } else {
         const str = price.toFixed(20);
         const match = str.match(/^0\.(0*)([1-9]\d*)/);
         if (match) {
             const leadingZeros = match[1].length;
-            if (leadingZeros >= 5) {
+            if (leadingZeros >= 4) {
                 const significantPart = match[2].substring(0, 6).replace(/0+$/, '');
                 return `0.<sub>${leadingZeros}</sub>${significantPart}`;
             }
-            const significantDigits = Math.min(8, match[2].length);
-            return price.toFixed(leadingZeros + significantDigits);
+            const significantDigits = Math.min(6, match[2].length);
+            return parseFloat(price.toFixed(leadingZeros + significantDigits)).toString();
         }
-        return price.toFixed(10);
+        return parseFloat(price.toFixed(8)).toString();
     }
 }
 
