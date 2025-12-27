@@ -232,8 +232,21 @@ function initDataTable() {
                 $('#current-pairs').text(json.recordsTotal || 0);
                 $('#comparable-pairs').text(json.comparablePairs || 0);
             }
+            updateLoadDepthButton();
         }
     });
+}
+
+function updateLoadDepthButton() {
+    const btn = document.getElementById('btn-load-depth');
+    if (!btn) return;
+    
+    const pendingBoxes = document.querySelectorAll('.depth-box:not(.loaded)');
+    if (pendingBoxes.length > 0) {
+        btn.style.display = 'inline-flex';
+    } else {
+        btn.style.display = 'none';
+    }
 }
 
 function updateExchangeColumnVisibility() {
