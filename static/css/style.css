@@ -1571,6 +1571,7 @@ a.peer-exchange:hover {
     color: var(--text-primary);
     text-align: left;
     white-space: nowrap;
+    justify-self: start;
 }
 
 .peer-diff {
