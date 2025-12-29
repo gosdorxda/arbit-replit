@@ -33,226 +33,306 @@
 
         <section class="control-panel">
             <div class="button-group">
-                <button id="btn-lbank" class="fetch-btn lbank-btn" onclick="fetchData('lbank')">
-                    <div class="btn-main">
-                        <span class="btn-name">LBANK</span>
-                        <span class="spinner"></span>
-                    </div>
-                    <div class="btn-status">
-                        <span class="btn-time">Never fetched</span>
-                        <span class="btn-pairs">0 pairs</span>
-                        <span class="btn-list"></span>
-                    </div>
-                </button>
-                <button id="btn-hashkey" class="fetch-btn hashkey-btn" onclick="fetchData('hashkey')">
-                    <div class="btn-main">
-                        <span class="btn-name">HashKey</span>
-                        <span class="spinner"></span>
-                    </div>
-                    <div class="btn-status">
-                        <span class="btn-time">Never fetched</span>
-                        <span class="btn-pairs">0 pairs</span>
-                        <span class="btn-list"></span>
-                    </div>
-                </button>
-                <button id="btn-biconomy" class="fetch-btn biconomy-btn" onclick="fetchData('biconomy')">
-                    <div class="btn-main">
-                        <span class="btn-name">Biconomy</span>
-                        <span class="spinner"></span>
-                    </div>
-                    <div class="btn-status">
-                        <span class="btn-time">Never fetched</span>
-                        <span class="btn-pairs">0 pairs</span>
-                        <span class="btn-list"></span>
-                    </div>
-                </button>
-                <button id="btn-mexc" class="fetch-btn mexc-btn" onclick="fetchData('mexc')">
-                    <div class="btn-main">
-                        <span class="btn-name">MEXC</span>
-                        <span class="spinner"></span>
-                    </div>
-                    <div class="btn-status">
-                        <span class="btn-time">Never fetched</span>
-                        <span class="btn-pairs">0 pairs</span>
-                        <span class="btn-list"></span>
-                    </div>
-                </button>
-                <button id="btn-bitrue" class="fetch-btn bitrue-btn" onclick="fetchData('bitrue')">
-                    <div class="btn-main">
-                        <span class="btn-name">Bitrue</span>
-                        <span class="spinner"></span>
-                    </div>
-                    <div class="btn-status">
-                        <span class="btn-time">Never fetched</span>
-                        <span class="btn-pairs">0 pairs</span>
-                        <span class="btn-list"></span>
-                    </div>
-                </button>
-                <button id="btn-ascendex" class="fetch-btn ascendex-btn" onclick="fetchData('ascendex')">
-                    <div class="btn-main">
-                        <span class="btn-name">AscendEX</span>
-                        <span class="spinner"></span>
-                    </div>
-                    <div class="btn-status">
-                        <span class="btn-time">Never fetched</span>
-                        <span class="btn-pairs">0 pairs</span>
-                        <span class="btn-list"></span>
-                    </div>
-                </button>
-                <button id="btn-bitmart" class="fetch-btn bitmart-btn" onclick="fetchData('bitmart')">
-                    <div class="btn-main">
-                        <span class="btn-name">BitMart</span>
-                        <span class="spinner"></span>
-                    </div>
-                    <div class="btn-status">
-                        <span class="btn-time">Never fetched</span>
-                        <span class="btn-pairs">0 pairs</span>
-                        <span class="btn-list"></span>
-                    </div>
-                </button>
-                <button id="btn-dextrade" class="fetch-btn dextrade-btn" onclick="fetchData('dextrade')">
-                    <div class="btn-main">
-                        <span class="btn-name">Dex-Trade</span>
-                        <span class="spinner"></span>
-                    </div>
-                    <div class="btn-status">
-                        <span class="btn-time">Never fetched</span>
-                        <span class="btn-pairs">0 pairs</span>
-                        <span class="btn-list"></span>
-                    </div>
-                </button>
-                <button id="btn-poloniex" class="fetch-btn poloniex-btn" onclick="fetchData('poloniex')">
-                    <div class="btn-main">
-                        <span class="btn-name">Poloniex</span>
-                        <span class="spinner"></span>
-                    </div>
-                    <div class="btn-status">
-                        <span class="btn-time">Never fetched</span>
-                        <span class="btn-pairs">0 pairs</span>
-                        <span class="btn-list"></span>
-                    </div>
-                </button>
-                <button id="btn-gateio" class="fetch-btn gateio-btn" onclick="fetchData('gateio')">
-                    <div class="btn-main">
-                        <span class="btn-name">Gate.io</span>
-                        <span class="spinner"></span>
-                    </div>
-                    <div class="btn-status">
-                        <span class="btn-time">Never fetched</span>
-                        <span class="btn-pairs">0 pairs</span>
-                        <span class="btn-list"></span>
-                    </div>
-                </button>
-                <button id="btn-niza" class="fetch-btn niza-btn" onclick="fetchData('niza')">
-                    <div class="btn-main">
-                        <span class="btn-name">Niza</span>
-                        <span class="spinner"></span>
-                    </div>
-                    <div class="btn-status">
-                        <span class="btn-time">Never fetched</span>
-                        <span class="btn-pairs">0 pairs</span>
-                        <span class="btn-list"></span>
-                    </div>
-                </button>
-                <button id="btn-xt" class="fetch-btn xt-btn" onclick="fetchData('xt')">
-                    <div class="btn-main">
-                        <span class="btn-name">XT.com</span>
-                        <span class="spinner"></span>
-                    </div>
-                    <div class="btn-status">
-                        <span class="btn-time">Never fetched</span>
-                        <span class="btn-pairs">0 pairs</span>
-                        <span class="btn-list"></span>
-                    </div>
-                </button>
-                <button id="btn-coinstore" class="fetch-btn coinstore-btn" onclick="fetchData('coinstore')">
-                    <div class="btn-main">
-                        <span class="btn-name">Coinstore</span>
-                        <span class="spinner"></span>
-                    </div>
-                    <div class="btn-status">
-                        <span class="btn-time">Never fetched</span>
-                        <span class="btn-pairs">0 pairs</span>
-                        <span class="btn-list"></span>
-                    </div>
-                </button>
-                <button id="btn-vindax" class="fetch-btn vindax-btn" onclick="fetchData('vindax')">
-                    <div class="btn-main">
-                        <span class="btn-name">Vindax</span>
-                        <span class="spinner"></span>
-                    </div>
-                    <div class="btn-status">
-                        <span class="btn-time">Never fetched</span>
-                        <span class="btn-pairs">0 pairs</span>
-                        <span class="btn-list"></span>
-                    </div>
-                </button>
-                <button id="btn-fameex" class="fetch-btn fameex-btn" onclick="fetchData('fameex')">
-                    <div class="btn-main">
-                        <span class="btn-name">FameEX</span>
-                        <span class="spinner"></span>
-                    </div>
-                    <div class="btn-status">
-                        <span class="btn-time">Never fetched</span>
-                        <span class="btn-pairs">0 pairs</span>
-                        <span class="btn-list"></span>
-                    </div>
-                </button>
-                <button id="btn-bigone" class="fetch-btn bigone-btn" onclick="fetchData('bigone')">
-                    <div class="btn-main">
-                        <span class="btn-name">BigOne</span>
-                        <span class="spinner"></span>
-                    </div>
-                    <div class="btn-status">
-                        <span class="btn-time">Never fetched</span>
-                        <span class="btn-pairs">0 pairs</span>
-                        <span class="btn-list"></span>
-                    </div>
-                </button>
-                <button id="btn-p2pb2b" class="fetch-btn p2pb2b-btn" onclick="fetchData('p2pb2b')">
-                    <div class="btn-main">
-                        <span class="btn-name">P2PB2B</span>
-                        <span class="spinner"></span>
-                    </div>
-                    <div class="btn-status">
-                        <span class="btn-time">Never fetched</span>
-                        <span class="btn-pairs">0 pairs</span>
-                        <span class="btn-list"></span>
-                    </div>
-                </button>
-                <button id="btn-digifinex" class="fetch-btn digifinex-btn" onclick="fetchData('digifinex')">
-                    <div class="btn-main">
-                        <span class="btn-name">DigiFinex</span>
-                        <span class="spinner"></span>
-                    </div>
-                    <div class="btn-status">
-                        <span class="btn-time">Never fetched</span>
-                        <span class="btn-pairs">0 pairs</span>
-                        <span class="btn-list"></span>
-                    </div>
-                </button>
-                <button id="btn-azbit" class="fetch-btn azbit-btn" onclick="fetchData('azbit')">
-                    <div class="btn-main">
-                        <span class="btn-name">Azbit</span>
-                        <span class="spinner"></span>
-                    </div>
-                    <div class="btn-status">
-                        <span class="btn-time">Never fetched</span>
-                        <span class="btn-pairs">0 pairs</span>
-                        <span class="btn-list"></span>
-                    </div>
-                </button>
-                <button id="btn-latoken" class="fetch-btn latoken-btn" onclick="fetchData('latoken')">
-                    <div class="btn-main">
-                        <span class="btn-name">LATOKEN</span>
-                        <span class="spinner"></span>
-                    </div>
-                    <div class="btn-status">
-                        <span class="btn-time">Never fetched</span>
-                        <span class="btn-pairs">0 pairs</span>
-                        <span class="btn-list"></span>
-                    </div>
-                </button>
+                <div class="exchange-card">
+                    <button id="btn-lbank" class="fetch-btn lbank-btn" onclick="fetchData('lbank')">
+                        <div class="btn-main">
+                            <span class="btn-name">LBANK</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                            <span class="btn-visited" style="display:none"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('lbank')" title="Reset visited">✕</button>
+                </div>
+                <div class="exchange-card">
+                    <button id="btn-hashkey" class="fetch-btn hashkey-btn" onclick="fetchData('hashkey')">
+                        <div class="btn-main">
+                            <span class="btn-name">HashKey</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                            <span class="btn-visited" style="display:none"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('hashkey')" title="Reset visited">✕</button>
+                </div>
+                <div class="exchange-card">
+                    <button id="btn-biconomy" class="fetch-btn biconomy-btn" onclick="fetchData('biconomy')">
+                        <div class="btn-main">
+                            <span class="btn-name">Biconomy</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                            <span class="btn-visited" style="display:none"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('biconomy')" title="Reset visited">✕</button>
+                </div>
+                <div class="exchange-card">
+                    <button id="btn-mexc" class="fetch-btn mexc-btn" onclick="fetchData('mexc')">
+                        <div class="btn-main">
+                            <span class="btn-name">MEXC</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                            <span class="btn-visited" style="display:none"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('mexc')" title="Reset visited">✕</button>
+                </div>
+                <div class="exchange-card">
+                    <button id="btn-bitrue" class="fetch-btn bitrue-btn" onclick="fetchData('bitrue')">
+                        <div class="btn-main">
+                            <span class="btn-name">Bitrue</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                            <span class="btn-visited" style="display:none"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('bitrue')" title="Reset visited">✕</button>
+                </div>
+                <div class="exchange-card">
+                    <button id="btn-ascendex" class="fetch-btn ascendex-btn" onclick="fetchData('ascendex')">
+                        <div class="btn-main">
+                            <span class="btn-name">AscendEX</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                            <span class="btn-visited" style="display:none"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('ascendex')" title="Reset visited">✕</button>
+                </div>
+                <div class="exchange-card">
+                    <button id="btn-bitmart" class="fetch-btn bitmart-btn" onclick="fetchData('bitmart')">
+                        <div class="btn-main">
+                            <span class="btn-name">BitMart</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                            <span class="btn-visited" style="display:none"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('bitmart')" title="Reset visited">✕</button>
+                </div>
+                <div class="exchange-card">
+                    <button id="btn-dextrade" class="fetch-btn dextrade-btn" onclick="fetchData('dextrade')">
+                        <div class="btn-main">
+                            <span class="btn-name">Dex-Trade</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                            <span class="btn-visited" style="display:none"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('dextrade')" title="Reset visited">✕</button>
+                </div>
+                <div class="exchange-card">
+                    <button id="btn-poloniex" class="fetch-btn poloniex-btn" onclick="fetchData('poloniex')">
+                        <div class="btn-main">
+                            <span class="btn-name">Poloniex</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                            <span class="btn-visited" style="display:none"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('poloniex')" title="Reset visited">✕</button>
+                </div>
+                <div class="exchange-card">
+                    <button id="btn-gateio" class="fetch-btn gateio-btn" onclick="fetchData('gateio')">
+                        <div class="btn-main">
+                            <span class="btn-name">Gate.io</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                            <span class="btn-visited" style="display:none"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('gateio')" title="Reset visited">✕</button>
+                </div>
+                <div class="exchange-card">
+                    <button id="btn-niza" class="fetch-btn niza-btn" onclick="fetchData('niza')">
+                        <div class="btn-main">
+                            <span class="btn-name">Niza</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                            <span class="btn-visited" style="display:none"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('niza')" title="Reset visited">✕</button>
+                </div>
+                <div class="exchange-card">
+                    <button id="btn-xt" class="fetch-btn xt-btn" onclick="fetchData('xt')">
+                        <div class="btn-main">
+                            <span class="btn-name">XT.com</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                            <span class="btn-visited" style="display:none"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('xt')" title="Reset visited">✕</button>
+                </div>
+                <div class="exchange-card">
+                    <button id="btn-coinstore" class="fetch-btn coinstore-btn" onclick="fetchData('coinstore')">
+                        <div class="btn-main">
+                            <span class="btn-name">Coinstore</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                            <span class="btn-visited" style="display:none"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('coinstore')" title="Reset visited">✕</button>
+                </div>
+                <div class="exchange-card">
+                    <button id="btn-vindax" class="fetch-btn vindax-btn" onclick="fetchData('vindax')">
+                        <div class="btn-main">
+                            <span class="btn-name">Vindax</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                            <span class="btn-visited" style="display:none"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('vindax')" title="Reset visited">✕</button>
+                </div>
+                <div class="exchange-card">
+                    <button id="btn-fameex" class="fetch-btn fameex-btn" onclick="fetchData('fameex')">
+                        <div class="btn-main">
+                            <span class="btn-name">FameEX</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                            <span class="btn-visited" style="display:none"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('fameex')" title="Reset visited">✕</button>
+                </div>
+                <div class="exchange-card">
+                    <button id="btn-bigone" class="fetch-btn bigone-btn" onclick="fetchData('bigone')">
+                        <div class="btn-main">
+                            <span class="btn-name">BigOne</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                            <span class="btn-visited" style="display:none"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('bigone')" title="Reset visited">✕</button>
+                </div>
+                <div class="exchange-card">
+                    <button id="btn-p2pb2b" class="fetch-btn p2pb2b-btn" onclick="fetchData('p2pb2b')">
+                        <div class="btn-main">
+                            <span class="btn-name">P2PB2B</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                            <span class="btn-visited" style="display:none"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('p2pb2b')" title="Reset visited">✕</button>
+                </div>
+                <div class="exchange-card">
+                    <button id="btn-digifinex" class="fetch-btn digifinex-btn" onclick="fetchData('digifinex')">
+                        <div class="btn-main">
+                            <span class="btn-name">DigiFinex</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                            <span class="btn-visited" style="display:none"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('digifinex')" title="Reset visited">✕</button>
+                </div>
+                <div class="exchange-card">
+                    <button id="btn-azbit" class="fetch-btn azbit-btn" onclick="fetchData('azbit')">
+                        <div class="btn-main">
+                            <span class="btn-name">Azbit</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                            <span class="btn-visited" style="display:none"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('azbit')" title="Reset visited">✕</button>
+                </div>
+                <div class="exchange-card">
+                    <button id="btn-latoken" class="fetch-btn latoken-btn" onclick="fetchData('latoken')">
+                        <div class="btn-main">
+                            <span class="btn-name">LATOKEN</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                            <span class="btn-visited" style="display:none"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('latoken')" title="Reset visited">✕</button>
+                </div>
             </div>
         </section>
 

@@ -1,5 +1,58 @@
 let dataTable = null;
 
+function getVisitedKey(exchange) {
+    return `visited_${exchange.toLowerCase()}`;
+}
+
+function getVisitedRows(exchange) {
+    const key = getVisitedKey(exchange);
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : [];
+}
+
+function markAsVisited(exchange, symbol) {
+    const key = getVisitedKey(exchange);
+    let visited = getVisitedRows(exchange);
+    const id = `${exchange}:${symbol}`;
+    if (!visited.includes(id)) {
+        visited.push(id);
+        localStorage.setItem(key, JSON.stringify(visited));
+    }
+    return id;
+}
+
+function isVisited(exchange, symbol) {
+    const visited = getVisitedRows(exchange);
+    return visited.includes(`${exchange}:${symbol}`);
+}
+
+function resetVisitedRows(exchange) {
+    const key = getVisitedKey(exchange);
+    localStorage.removeItem(key);
+    if (dataTable) {
+        dataTable.draw(false);
+    }
+    updateVisitedCount(exchange);
+}
+
+function updateVisitedCount(exchange) {
+    const visited = getVisitedRows(exchange);
+    const countEl = document.querySelector(`#btn-${exchange.toLowerCase()} .btn-visited`);
+    if (countEl) {
+        if (visited.length > 0) {
+            countEl.textContent = `${visited.length} visited`;
+            countEl.style.display = 'inline';
+        } else {
+            countEl.style.display = 'none';
+        }
+    }
+}
+
+function updateAllVisitedCounts() {
+    const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt', 'coinstore', 'vindax', 'fameex', 'bigone', 'p2pb2b', 'digifinex', 'azbit', 'latoken'];
+    exchanges.forEach(ex => updateVisitedCount(ex));
+}
+
 function getExchangeUrl(exchange, symbol) {
     const pair = symbol.replace('/', '_').toLowerCase();
     const pairUpper = symbol.replace('/', '_');
@@ -55,6 +108,7 @@ $(document).ready(function() {
     initTheme();
     initDataTable();
     loadStatus();
+    updateAllVisitedCounts();
     
     $('#exchange-filter').on('change', function() {
         updateExchangeColumnVisibility();
@@ -67,6 +121,28 @@ $(document).ready(function() {
     
     $('#list-filter').on('change', function() {
         dataTable.ajax.reload();
+    });
+    
+    $(document).on('click', '.symbol-link', function() {
+        const row = $(this).closest('tr');
+        const data = dataTable.row(row).data();
+        if (data) {
+            markAsVisited(data.exchange, data.symbol);
+            row.addClass('row-visited');
+            updateVisitedCount(data.exchange);
+        }
+    });
+    
+    $(document).on('click', '.peer-exchange', function() {
+        const peerData = $(this).closest('.peer-data');
+        const depthBox = peerData.find('.depth-box');
+        const exchange = depthBox.attr('data-exchange');
+        const symbol = depthBox.attr('data-symbol');
+        if (exchange && symbol) {
+            markAsVisited(exchange, symbol);
+            peerData.addClass('peer-visited');
+            updateVisitedCount(exchange);
+        }
     });
     
     updateExchangeColumnVisibility();
@@ -238,6 +314,22 @@ function initDataTable() {
                 $('#comparable-pairs').text(json.comparablePairs || 0);
             }
             updateLoadDepthButton();
+            
+            $('#ticker-table tbody tr').removeClass('row-visited').each(function() {
+                const data = dataTable.row(this).data();
+                if (data && isVisited(data.exchange, data.symbol)) {
+                    $(this).addClass('row-visited');
+                }
+            });
+            
+            $('.peer-data').removeClass('peer-visited').each(function() {
+                const depthBox = $(this).find('.depth-box');
+                const exchange = depthBox.attr('data-exchange');
+                const symbol = depthBox.attr('data-symbol');
+                if (exchange && symbol && isVisited(exchange, symbol)) {
+                    $(this).addClass('peer-visited');
+                }
+            });
         }
     });
 }

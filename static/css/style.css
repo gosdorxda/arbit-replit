@@ -65,6 +65,8 @@
     --accent-red: #f85149;
     --accent-yellow: #d29922;
     --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --visited-bg: rgba(88, 166, 255, 0.08);
+    --visited-border: rgba(88, 166, 255, 0.25);
 }
 
 [data-theme="light"] {
@@ -73,6 +75,8 @@
     --bg-tertiary: #f0f3f6;
     --bg-hover: #e8ecf0;
     --text-primary: #1f2328;
+    --visited-bg: rgba(88, 166, 255, 0.1);
+    --visited-border: rgba(88, 166, 255, 0.35);
     --text-secondary: #656d76;
     --text-muted: #8b949e;
     --border-color: #d1d9e0;
@@ -227,6 +231,48 @@ body {
     .button-group {
         gap: 10px;
     }
+}
+
+.exchange-card {
+    position: relative;
+    display: inline-block;
+}
+
+.reset-visited-btn {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: all 0.15s ease;
+    opacity: 0;
+    z-index: 10;
+}
+
+.exchange-card:hover .reset-visited-btn {
+    opacity: 1;
+}
+
+.reset-visited-btn:hover {
+    background: var(--accent-red);
+    border-color: var(--accent-red);
+    color: white;
+}
+
+.btn-visited {
+    color: var(--accent-blue);
+    font-size: 0.6rem;
+    font-weight: 500;
 }
 
 .fetch-btn {
@@ -1337,6 +1383,23 @@ a.peer-exchange:hover {
 .peer-data:last-child {
     border-bottom: none;
     margin-bottom: 0;
+}
+
+.row-visited {
+    background: var(--visited-bg) !important;
+    border-left: 3px solid var(--visited-border);
+}
+
+.row-visited:hover {
+    background: var(--visited-bg) !important;
+}
+
+.peer-visited {
+    background: var(--visited-bg);
+    border-radius: 4px;
+    margin-left: -4px;
+    padding-left: 4px !important;
+    border-left: 2px solid var(--visited-border);
     padding-bottom: 0;
 }
 
