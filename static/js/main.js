@@ -103,21 +103,22 @@ $(document).ready(function() {
         dataTable.ajax.reload();
     });
     
-    $('#ticker-table tbody').on('click', '.symbol-link', function(e) {
-        const link = $(this);
+    $('#ticker-table tbody').on('click', 'tr', function(e) {
+        if ($(e.target).closest('.list-cb, .depth-box').length) return;
+        const row = $(this);
+        const link = row.find('.symbol-link');
         const exchange = link.attr('data-exchange');
         const symbol = link.attr('data-symbol');
-        console.log('Symbol link clicked:', exchange, symbol);
         if (exchange && symbol) {
             markAsVisited(exchange, symbol);
-            const row = link.closest('tr');
             row.addClass('row-visited');
             row.attr('style', 'background: rgba(88, 166, 255, 0.1) !important; border-left: 3px solid rgba(88, 166, 255, 0.5) !important;');
         }
     });
     
-    $(document).on('click', '.peer-exchange', function() {
-        const peerData = $(this).closest('.peer-data');
+    $(document).on('click', '.peer-data', function(e) {
+        if ($(e.target).closest('.peer-blacklist-cb').length) return;
+        const peerData = $(this);
         const depthBox = peerData.find('.depth-box');
         const exchange = depthBox.attr('data-exchange');
         const symbol = depthBox.attr('data-symbol');
