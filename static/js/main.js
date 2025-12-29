@@ -124,12 +124,13 @@ $(document).ready(function() {
     });
     
     $(document).on('click', '.symbol-link', function() {
-        const row = $(this).closest('tr');
-        const data = dataTable.row(row).data();
-        if (data) {
-            markAsVisited(data.exchange, data.symbol);
-            row.addClass('row-visited');
-            updateVisitedCount(data.exchange);
+        const link = $(this);
+        const exchange = link.attr('data-exchange');
+        const symbol = link.attr('data-symbol');
+        if (exchange && symbol) {
+            markAsVisited(exchange, symbol);
+            link.closest('tr').addClass('row-visited');
+            updateVisitedCount(exchange);
         }
     });
     
@@ -176,7 +177,7 @@ function initDataTable() {
                 className: 'td-symbol',
                 render: function(data) {
                     const url = getExchangeUrl(data.exchange, data.symbol);
-                    return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="symbol-link">${data.symbol}</a>`;
+                    return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="symbol-link" data-exchange="${data.exchange}" data-symbol="${data.symbol}">${data.symbol}</a>`;
                 },
                 orderable: true
             },
@@ -316,8 +317,10 @@ function initDataTable() {
             updateLoadDepthButton();
             
             $('#ticker-table tbody tr').removeClass('row-visited').each(function() {
-                const data = dataTable.row(this).data();
-                if (data && isVisited(data.exchange, data.symbol)) {
+                const link = $(this).find('.symbol-link');
+                const exchange = link.attr('data-exchange');
+                const symbol = link.attr('data-symbol');
+                if (exchange && symbol && isVisited(exchange, symbol)) {
                     $(this).addClass('row-visited');
                 }
             });
