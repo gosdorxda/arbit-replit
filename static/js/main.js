@@ -103,7 +103,7 @@ $(document).ready(function() {
         dataTable.ajax.reload();
     });
     
-    $('#ticker-table').on('click', '.symbol-link', function(e) {
+    $('#ticker-table tbody').on('click', '.symbol-link', function(e) {
         const link = $(this);
         const exchange = link.attr('data-exchange');
         const symbol = link.attr('data-symbol');
@@ -112,8 +112,7 @@ $(document).ready(function() {
             markAsVisited(exchange, symbol);
             const row = link.closest('tr');
             row.addClass('row-visited');
-            row.css('background', 'rgba(88, 166, 255, 0.1)');
-            row.css('border-left', '3px solid rgba(88, 166, 255, 0.5)');
+            row.attr('style', 'background: rgba(88, 166, 255, 0.1) !important; border-left: 3px solid rgba(88, 166, 255, 0.5) !important;');
         }
     });
     
@@ -305,12 +304,10 @@ function initDataTable() {
                 const symbol = link.attr('data-symbol');
                 if (exchange && symbol && isVisited(exchange, symbol)) {
                     row.addClass('row-visited');
-                    row.css('background', 'rgba(88, 166, 255, 0.1)');
-                    row.css('border-left', '3px solid rgba(88, 166, 255, 0.5)');
+                    row.attr('style', 'background: rgba(88, 166, 255, 0.1) !important; border-left: 3px solid rgba(88, 166, 255, 0.5) !important;');
                 } else {
                     row.removeClass('row-visited');
-                    row.css('background', '');
-                    row.css('border-left', '');
+                    row.removeAttr('style');
                 }
             });
             
