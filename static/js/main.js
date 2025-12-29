@@ -32,25 +32,6 @@ function resetVisitedRows(exchange) {
     if (dataTable) {
         dataTable.draw(false);
     }
-    updateVisitedCount(exchange);
-}
-
-function updateVisitedCount(exchange) {
-    const visited = getVisitedRows(exchange);
-    const countEl = document.querySelector(`#btn-${exchange.toLowerCase()} .btn-visited`);
-    if (countEl) {
-        if (visited.length > 0) {
-            countEl.textContent = `${visited.length} visited`;
-            countEl.style.display = 'inline';
-        } else {
-            countEl.style.display = 'none';
-        }
-    }
-}
-
-function updateAllVisitedCounts() {
-    const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt', 'coinstore', 'vindax', 'fameex', 'bigone', 'p2pb2b', 'digifinex', 'azbit', 'latoken'];
-    exchanges.forEach(ex => updateVisitedCount(ex));
 }
 
 function getExchangeUrl(exchange, symbol) {
@@ -108,7 +89,6 @@ $(document).ready(function() {
     initTheme();
     initDataTable();
     loadStatus();
-    updateAllVisitedCounts();
     
     $('#exchange-filter').on('change', function() {
         updateExchangeColumnVisibility();
@@ -130,8 +110,10 @@ $(document).ready(function() {
         console.log('Symbol link clicked:', exchange, symbol);
         if (exchange && symbol) {
             markAsVisited(exchange, symbol);
-            link.closest('tr').addClass('row-visited');
-            updateVisitedCount(exchange);
+            const row = link.closest('tr');
+            row.addClass('row-visited');
+            row.css('background', 'rgba(88, 166, 255, 0.1)');
+            row.css('border-left', '3px solid rgba(88, 166, 255, 0.5)');
         }
     });
     
@@ -143,7 +125,6 @@ $(document).ready(function() {
         if (exchange && symbol) {
             markAsVisited(exchange, symbol);
             peerData.addClass('peer-visited');
-            updateVisitedCount(exchange);
         }
     });
     
@@ -317,21 +298,31 @@ function initDataTable() {
             }
             updateLoadDepthButton();
             
-            $('#ticker-table tbody tr').removeClass('row-visited').each(function() {
-                const link = $(this).find('.symbol-link');
+            $('#ticker-table tbody tr').each(function() {
+                const row = $(this);
+                const link = row.find('.symbol-link');
                 const exchange = link.attr('data-exchange');
                 const symbol = link.attr('data-symbol');
                 if (exchange && symbol && isVisited(exchange, symbol)) {
-                    $(this).addClass('row-visited');
+                    row.addClass('row-visited');
+                    row.css('background', 'rgba(88, 166, 255, 0.1)');
+                    row.css('border-left', '3px solid rgba(88, 166, 255, 0.5)');
+                } else {
+                    row.removeClass('row-visited');
+                    row.css('background', '');
+                    row.css('border-left', '');
                 }
             });
             
-            $('.peer-data').removeClass('peer-visited').each(function() {
-                const depthBox = $(this).find('.depth-box');
+            $('.peer-data').each(function() {
+                const peerData = $(this);
+                const depthBox = peerData.find('.depth-box');
                 const exchange = depthBox.attr('data-exchange');
                 const symbol = depthBox.attr('data-symbol');
                 if (exchange && symbol && isVisited(exchange, symbol)) {
-                    $(this).addClass('peer-visited');
+                    peerData.addClass('peer-visited');
+                } else {
+                    peerData.removeClass('peer-visited');
                 }
             });
         }

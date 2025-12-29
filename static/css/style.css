@@ -255,12 +255,7 @@ body {
     justify-content: center;
     padding: 0;
     transition: all 0.15s ease;
-    opacity: 0;
     z-index: 10;
-}
-
-.exchange-card:hover .reset-visited-btn {
-    opacity: 1;
 }
 
 .reset-visited-btn:hover {
