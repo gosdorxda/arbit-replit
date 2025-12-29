@@ -123,10 +123,11 @@ $(document).ready(function() {
         dataTable.ajax.reload();
     });
     
-    $(document).on('click', '.symbol-link', function() {
+    $('#ticker-table').on('click', '.symbol-link', function(e) {
         const link = $(this);
         const exchange = link.attr('data-exchange');
         const symbol = link.attr('data-symbol');
+        console.log('Symbol link clicked:', exchange, symbol);
         if (exchange && symbol) {
             markAsVisited(exchange, symbol);
             link.closest('tr').addClass('row-visited');
