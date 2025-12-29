@@ -614,7 +614,9 @@ def get_tickers():
     for t in all_tickers:
         if t.symbol not in symbol_map:
             symbol_map[t.symbol] = {}
-        symbol_map[t.symbol][t.exchange] = t.to_dict()
+        ticker_data = t.to_dict()
+        ticker_data['is_blacklisted'] = (t.exchange, t.symbol) in blacklist_set
+        symbol_map[t.symbol][t.exchange] = ticker_data
     
     data = []
     for t in tickers:

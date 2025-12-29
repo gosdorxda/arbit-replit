@@ -172,6 +172,7 @@ function initDataTable() {
                         const peerUrl = getExchangeUrl(peer.exchange, peer.symbol);
                         const peerId = `depth-${peer.exchange}-${peer.symbol.replace('/', '-')}`.toLowerCase();
                         
+                        const peerBlacklisted = peer.is_blacklisted ? 'checked' : '';
                         html += `
                             <div class="peer-data" id="${peerId}">
                                 <span class="peer-price">${formatPrice(peer.price)}</span>
@@ -181,6 +182,10 @@ function initDataTable() {
                                     <span class="db-row db-bid"><span class="db-label">Bid:</span><span class="db-price">−</span><span class="db-vol">−</span></span>
                                 </span>
                                 <a href="${peerUrl}" target="_blank" rel="noopener noreferrer" class="peer-exchange ${peerExchangeClass}">${peer.exchange}</a>
+                                <label class="peer-blacklist-cb" title="Blacklist ${peer.exchange} ${peer.symbol}">
+                                    <input type="checkbox" ${peerBlacklisted} onchange="toggleMarketList('${peer.exchange}', '${peer.symbol}', 'blacklist', this)">
+                                    <span class="cb-icon">⛔</span>
+                                </label>
                             </div>
                         `;
                     });

@@ -1292,12 +1292,46 @@ a.peer-exchange:hover {
 
 .peer-data {
     display: grid;
-    grid-template-columns: 75px 60px 145px 70px;
+    grid-template-columns: 75px 60px 145px 70px 28px;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     padding: 6px 0;
     margin-bottom: 4px;
     border-bottom: 1px solid var(--border-color);
+}
+
+.peer-blacklist-cb {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: all 0.15s ease;
+    padding: 3px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.peer-blacklist-cb:hover {
+    opacity: 0.9;
+    border-color: rgba(239, 68, 68, 0.5);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.peer-blacklist-cb:has(input:checked) {
+    opacity: 1;
+    border-color: rgba(239, 68, 68, 0.6);
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.peer-blacklist-cb input {
+    display: none;
+}
+
+.peer-blacklist-cb .cb-icon {
+    font-size: 0.75rem;
+    transition: all 0.15s ease;
 }
 
 .peer-data:last-child {
