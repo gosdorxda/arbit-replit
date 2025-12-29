@@ -105,14 +105,17 @@ $(document).ready(function() {
     
     $('#ticker-table tbody').on('click', 'tr', function(e) {
         if ($(e.target).closest('.list-cb, .depth-box').length) return;
-        const row = $(this);
-        const link = row.find('.symbol-link');
+        const row = this;
+        const link = $(row).find('.symbol-link');
         const exchange = link.attr('data-exchange');
         const symbol = link.attr('data-symbol');
         if (exchange && symbol) {
             markAsVisited(exchange, symbol);
-            row.addClass('row-visited');
-            row.attr('style', 'background: rgba(88, 166, 255, 0.1) !important; border-left: 3px solid rgba(88, 166, 255, 0.5) !important;');
+            row.classList.add('row-visited');
+            row.style.cssText = 'background: rgba(88, 166, 255, 0.15) !important; border-left: 3px solid #58a6ff !important;';
+            $(row).find('td').each(function() {
+                this.style.background = 'transparent';
+            });
         }
     });
     
@@ -299,16 +302,22 @@ function initDataTable() {
             updateLoadDepthButton();
             
             $('#ticker-table tbody tr').each(function() {
-                const row = $(this);
-                const link = row.find('.symbol-link');
+                const row = this;
+                const link = $(row).find('.symbol-link');
                 const exchange = link.attr('data-exchange');
                 const symbol = link.attr('data-symbol');
                 if (exchange && symbol && isVisited(exchange, symbol)) {
-                    row.addClass('row-visited');
-                    row.attr('style', 'background: rgba(88, 166, 255, 0.1) !important; border-left: 3px solid rgba(88, 166, 255, 0.5) !important;');
+                    row.classList.add('row-visited');
+                    row.style.cssText = 'background: rgba(88, 166, 255, 0.15) !important; border-left: 3px solid #58a6ff !important;';
+                    $(row).find('td').each(function() {
+                        this.style.background = 'transparent';
+                    });
                 } else {
-                    row.removeClass('row-visited');
-                    row.removeAttr('style');
+                    row.classList.remove('row-visited');
+                    row.style.cssText = '';
+                    $(row).find('td').each(function() {
+                        this.style.background = '';
+                    });
                 }
             });
             
