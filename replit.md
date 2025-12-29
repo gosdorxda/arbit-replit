@@ -10,6 +10,7 @@ A Flask-based web application that fetches, normalizes, and displays SPOT/USDT m
 - **Interactive Table**: Filtering, sorting, and searching capabilities
 - **Status Tracking**: Fetch logs and status indicators for each exchange
 - **Orderbook Viewing**: Modal popup showing real-time bid/ask depth for any trading pair
+- **Visited Row Tracking**: Click links to highlight visited rows, stored per-exchange in localStorage with reset buttons
 
 ## Project Architecture
 
@@ -110,6 +111,8 @@ To add a new exchange:
 - `SESSION_SECRET` - Flask session secret key
 
 ## Recent Changes
+- Added visited row tracking with per-exchange localStorage and reset buttons
+- Added blacklist toggle button in Compare column for peer exchanges
 - Added Wallet Lock feature - lock button only appears when item is whitelisted
 - Added total USDT column to orderbook modals (cumulative value)
 - Sorted Compare column by price (highest at top, lowest at bottom)
