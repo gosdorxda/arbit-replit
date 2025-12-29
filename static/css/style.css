@@ -1385,12 +1385,16 @@ a.peer-exchange:hover {
     margin-bottom: 0;
 }
 
-.row-visited {
+#ticker-table tbody tr.row-visited,
+#ticker-table tbody tr.row-visited.odd,
+#ticker-table tbody tr.row-visited.even {
     background: var(--visited-bg) !important;
     border-left: 3px solid var(--visited-border);
 }
 
-.row-visited:hover {
+#ticker-table tbody tr.row-visited:hover,
+#ticker-table tbody tr.row-visited.odd:hover,
+#ticker-table tbody tr.row-visited.even:hover {
     background: var(--visited-bg) !important;
 }
 
