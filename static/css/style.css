@@ -26,6 +26,7 @@
     --digifinex-color: #00d4aa;    /* Teal */
     --azbit-color: #f97316;        /* Orange */
     --latoken-color: #3b82f6;      /* Blue */
+    --tapbit-color: #14b8a6;       /* Teal */
     
     /* ---- EXCHANGE HOVER COLORS (darker shade for hover) ---- */
     --lbank-hover: #1e4dd8;
@@ -48,6 +49,7 @@
     --digifinex-hover: #00b894;
     --azbit-hover: #ea580c;
     --latoken-hover: #2563eb;
+    --tapbit-hover: #0d9488;
 }
 
 :root,
@@ -559,6 +561,16 @@ body {
 
 .latoken-btn:hover:not(:disabled) {
     background-color: var(--latoken-hover);
+    transform: translateY(-1px);
+}
+
+.tapbit-btn {
+    background-color: var(--tapbit-color);
+    color: white;
+}
+
+.tapbit-btn:hover:not(:disabled) {
+    background-color: var(--tapbit-hover);
     transform: translateY(-1px);
 }
 
@@ -1110,6 +1122,11 @@ td {
     color: var(--latoken-color);
 }
 
+.exchange-badge.tapbit {
+    background-color: rgba(20, 184, 166, 0.2);
+    color: var(--tapbit-color);
+}
+
 .td-symbol {
     font-weight: 600;
     color: var(--text-primary);
@@ -1567,6 +1584,11 @@ a.peer-exchange:hover {
 .peer-exchange.latoken {
     background-color: rgba(59, 130, 246, 0.3);
     color: var(--latoken-color);
+}
+
+.peer-exchange.tapbit {
+    background-color: rgba(20, 184, 166, 0.3);
+    color: var(--tapbit-color);
 }
 
 .depth-box {

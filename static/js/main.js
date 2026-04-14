@@ -80,6 +80,8 @@ function getExchangeUrl(exchange, symbol) {
             return `https://azbit.com/exchange/${base}_USDT`;
         case 'LATOKEN':
             return `https://latoken.com/exchange/${base}_USDT`;
+        case 'TAPBIT':
+            return `https://www.tapbit.com/spot/trade/${base}_USDT`;
         default:
             return '#';
     }
