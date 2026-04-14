@@ -719,6 +719,8 @@ def get_status():
     digifinex_log = FetchLog.query.filter_by(exchange='DIGIFINEX').order_by(FetchLog.fetched_at.desc()).first()
     azbit_log = FetchLog.query.filter_by(exchange='AZBIT').order_by(FetchLog.fetched_at.desc()).first()
     latoken_log = FetchLog.query.filter_by(exchange='LATOKEN').order_by(FetchLog.fetched_at.desc()).first()
+    tapbit_log = FetchLog.query.filter_by(exchange='TAPBIT').order_by(FetchLog.fetched_at.desc()).first()
+    kraken_log = FetchLog.query.filter_by(exchange='KRAKEN').order_by(FetchLog.fetched_at.desc()).first()
     
     lbank_count = SpotTicker.query.filter_by(exchange='LBANK').count()
     hashkey_count = SpotTicker.query.filter_by(exchange='HASHKEY').count()
@@ -740,6 +742,8 @@ def get_status():
     digifinex_count = SpotTicker.query.filter_by(exchange='DIGIFINEX').count()
     azbit_count = SpotTicker.query.filter_by(exchange='AZBIT').count()
     latoken_count = SpotTicker.query.filter_by(exchange='LATOKEN').count()
+    tapbit_count = SpotTicker.query.filter_by(exchange='TAPBIT').count()
+    kraken_count = SpotTicker.query.filter_by(exchange='KRAKEN').count()
     
     exchanges = ['LBANK', 'HASHKEY', 'BICONOMY', 'MEXC', 'BITRUE', 'ASCENDEX', 
                  'BITMART', 'DEXTRADE', 'POLONIEX', 'GATEIO', 'NIZA', 'XT', 
@@ -918,6 +922,22 @@ def get_status():
             'blacklist_count': blacklist_counts.get('LATOKEN', 0),
             'whitelist_count': whitelist_counts.get('LATOKEN', 0),
             'walletlock_count': walletlock_counts.get('LATOKEN', 0)
+        },
+        'tapbit': {
+            'last_fetch': tapbit_log.fetched_at.isoformat() if tapbit_log else None,
+            'status': tapbit_log.status if tapbit_log else 'never',
+            'pairs_count': tapbit_count,
+            'blacklist_count': blacklist_counts.get('TAPBIT', 0),
+            'whitelist_count': whitelist_counts.get('TAPBIT', 0),
+            'walletlock_count': walletlock_counts.get('TAPBIT', 0)
+        },
+        'kraken': {
+            'last_fetch': kraken_log.fetched_at.isoformat() if kraken_log else None,
+            'status': kraken_log.status if kraken_log else 'never',
+            'pairs_count': kraken_count,
+            'blacklist_count': blacklist_counts.get('KRAKEN', 0),
+            'whitelist_count': whitelist_counts.get('KRAKEN', 0),
+            'walletlock_count': walletlock_counts.get('KRAKEN', 0)
         }
     })
 
