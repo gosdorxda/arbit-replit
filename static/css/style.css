@@ -27,6 +27,7 @@
     --azbit-color: #f97316;        /* Orange */
     --latoken-color: #3b82f6;      /* Blue */
     --tapbit-color: #14b8a6;       /* Teal */
+    --kraken-color: #5841d8;       /* Kraken Purple */
     
     /* ---- EXCHANGE HOVER COLORS (darker shade for hover) ---- */
     --lbank-hover: #1e4dd8;
@@ -50,6 +51,7 @@
     --azbit-hover: #ea580c;
     --latoken-hover: #2563eb;
     --tapbit-hover: #0d9488;
+    --kraken-hover: #4631b8;
 }
 
 :root,
@@ -571,6 +573,16 @@ body {
 
 .tapbit-btn:hover:not(:disabled) {
     background-color: var(--tapbit-hover);
+    transform: translateY(-1px);
+}
+
+.kraken-btn {
+    background-color: var(--kraken-color);
+    color: white;
+}
+
+.kraken-btn:hover:not(:disabled) {
+    background-color: var(--kraken-hover);
     transform: translateY(-1px);
 }
 
@@ -1127,6 +1139,11 @@ td {
     color: var(--tapbit-color);
 }
 
+.exchange-badge.kraken {
+    background-color: rgba(88, 65, 216, 0.2);
+    color: var(--kraken-color);
+}
+
 .td-symbol {
     font-weight: 600;
     color: var(--text-primary);
@@ -1589,6 +1606,11 @@ a.peer-exchange:hover {
 .peer-exchange.tapbit {
     background-color: rgba(20, 184, 166, 0.3);
     color: var(--tapbit-color);
+}
+
+.peer-exchange.kraken {
+    background-color: rgba(88, 65, 216, 0.3);
+    color: var(--kraken-color);
 }
 
 .depth-box {

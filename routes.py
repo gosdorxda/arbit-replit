@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import render_template, jsonify, request
 from app import app, db
 from models import SpotTicker, FetchLog, MarketList
-from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter, VindaxAdapter, FameEXAdapter, BigOneAdapter, P2PB2BAdapter, DigiFinexAdapter, AzbitAdapter, LatokenAdapter, TapbitAdapter
+from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter, VindaxAdapter, FameEXAdapter, BigOneAdapter, P2PB2BAdapter, DigiFinexAdapter, AzbitAdapter, LatokenAdapter, TapbitAdapter, KrakenAdapter
 
 
 def save_tickers(tickers, exchange_name):
@@ -523,6 +523,29 @@ def fetch_tapbit():
         return jsonify({
             'status': 'error',
             'exchange': 'TAPBIT',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/fetch/kraken', methods=['POST'])
+def fetch_kraken():
+    try:
+        adapter = KrakenAdapter()
+        tickers = adapter.fetch_usdt_tickers()
+        save_tickers(tickers, adapter.exchange_name)
+        log_fetch(adapter.exchange_name, 'success', len(tickers))
+
+        return jsonify({
+            'status': 'success',
+            'exchange': adapter.exchange_name,
+            'pairs_count': len(tickers),
+            'message': f'Successfully fetched {len(tickers)} USDT pairs from Kraken'
+        })
+    except Exception as e:
+        log_fetch('KRAKEN', 'error', error_message=str(e))
+        return jsonify({
+            'status': 'error',
+            'exchange': 'KRAKEN',
             'message': str(e)
         }), 500
 

@@ -82,6 +82,8 @@ function getExchangeUrl(exchange, symbol) {
             return `https://latoken.com/exchange/${base}_USDT`;
         case 'TAPBIT':
             return `https://www.tapbit.com/spot/trade/${base}_USDT`;
+        case 'KRAKEN':
+            return `https://pro.kraken.com/app/trade/${base.toLowerCase()}-usdt`;
         default:
             return '#';
     }

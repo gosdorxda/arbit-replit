@@ -346,6 +346,20 @@
                     </button>
                     <button class="reset-visited-btn" onclick="resetVisitedRows('tapbit')" title="Reset visited">✕</button>
                 </div>
+                <div class="exchange-card">
+                    <button id="btn-kraken" class="fetch-btn kraken-btn" onclick="fetchData('kraken')">
+                        <div class="btn-main">
+                            <span class="btn-name">Kraken</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('kraken')" title="Reset visited">✕</button>
+                </div>
             </div>
         </section>
 
@@ -376,6 +390,7 @@
                         <option value="AZBIT">AZBIT</option>
                         <option value="LATOKEN">LATOKEN</option>
                         <option value="TAPBIT">TAPBIT</option>
+                        <option value="KRAKEN">KRAKEN</option>
                     </select>
                 </div>
                 <div class="filter-item">
@@ -408,7 +423,7 @@
                 <div class="filter-item stats-info">
                     <div class="stat-item">
                         <span class="stat-label">Exchanges:</span>
-                        <span class="stat-value" id="total-exchanges">21</span>
+                        <span class="stat-value" id="total-exchanges">22</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Total Markets:</span>
