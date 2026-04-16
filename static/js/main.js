@@ -80,6 +80,8 @@ function getExchangeUrl(exchange, symbol) {
             return `https://azbit.com/exchange/${base}_USDT`;
         case 'LATOKEN':
             return `https://latoken.com/exchange/${base}_USDT`;
+        case 'BINGX':
+            return `https://bingx.com/en/trade/${base}-USDT/`;
         case 'KRAKEN':
             return `https://pro.kraken.com/app/trade/${base}-USD`;
         default:
@@ -409,9 +411,10 @@ async function loadStatus() {
         updateStatusDisplay('azbit', data.azbit);
         updateStatusDisplay('latoken', data.latoken);
         updateStatusDisplay('kraken', data.kraken);
+        updateStatusDisplay('bingx', data.bingx);
         
         let totalMarkets = 0;
-        const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt', 'coinstore', 'vindax', 'fameex', 'bigone', 'p2pb2b', 'digifinex', 'azbit', 'latoken', 'kraken'];
+        const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt', 'coinstore', 'vindax', 'fameex', 'bigone', 'p2pb2b', 'digifinex', 'azbit', 'latoken', 'kraken', 'bingx'];
         exchanges.forEach(ex => {
             if (data[ex] && data[ex].pairs_count) {
                 totalMarkets += data[ex].pairs_count;

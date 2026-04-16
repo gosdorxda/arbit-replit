@@ -27,6 +27,7 @@
     --azbit-color: #f97316;        /* Orange */
     --latoken-color: #3b82f6;      /* Blue */
     --kraken-color: #5841d8;       /* Kraken Purple */
+    --bingx-color: #f0a500;        /* BingX Gold */
     
     /* ---- EXCHANGE HOVER COLORS (darker shade for hover) ---- */
     --lbank-hover: #1e4dd8;
@@ -50,6 +51,7 @@
     --azbit-hover: #ea580c;
     --latoken-hover: #2563eb;
     --kraken-hover: #4631b8;
+    --bingx-hover: #d4920a;
 }
 
 :root,
@@ -564,6 +566,16 @@ body {
     transform: translateY(-1px);
 }
 
+
+.bingx-btn {
+    background-color: var(--bingx-color);
+    color: white;
+}
+
+.bingx-btn:hover:not(:disabled) {
+    background-color: var(--bingx-hover);
+    transform: translateY(-1px);
+}
 
 .kraken-btn {
     background-color: var(--kraken-color);
@@ -1124,6 +1136,11 @@ td {
 }
 
 
+.exchange-badge.bingx {
+    background-color: rgba(240, 165, 0, 0.2);
+    color: var(--bingx-color);
+}
+
 .exchange-badge.kraken {
     background-color: rgba(88, 65, 216, 0.2);
     color: var(--kraken-color);
@@ -1588,6 +1605,11 @@ a.peer-exchange:hover {
     color: var(--latoken-color);
 }
 
+
+.peer-exchange.bingx {
+    background-color: rgba(240, 165, 0, 0.3);
+    color: var(--bingx-color);
+}
 
 .peer-exchange.kraken {
     background-color: rgba(88, 65, 216, 0.3);

@@ -333,6 +333,20 @@
                     <button class="reset-visited-btn" onclick="resetVisitedRows('latoken')" title="Reset visited">✕</button>
                 </div>
                 <div class="exchange-card">
+                    <button id="btn-bingx" class="fetch-btn bingx-btn" onclick="fetchData('bingx')">
+                        <div class="btn-main">
+                            <span class="btn-name">BingX</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('bingx')" title="Reset visited">✕</button>
+                </div>
+                <div class="exchange-card">
                     <button id="btn-kraken" class="fetch-btn kraken-btn" onclick="fetchData('kraken')">
                         <div class="btn-main">
                             <span class="btn-name">Kraken</span>
@@ -375,6 +389,7 @@
                         <option value="DIGIFINEX">DIGIFINEX</option>
                         <option value="AZBIT">AZBIT</option>
                         <option value="LATOKEN">LATOKEN</option>
+                        <option value="BINGX">BINGX</option>
                         <option value="KRAKEN">KRAKEN</option>
                     </select>
                 </div>

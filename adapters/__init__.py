@@ -20,5 +20,6 @@ from .digifinex import DigiFinexAdapter
 from .azbit import AzbitAdapter
 from .latoken import LatokenAdapter
 from .kraken import KrakenAdapter
+from .bingx import BingXAdapter
 
-__all__ = ['BaseAdapter', 'LBankAdapter', 'HashKeyAdapter', 'BiconomyAdapter', 'MEXCAdapter', 'BitrueAdapter', 'AscendEXAdapter', 'BitMartAdapter', 'DexTradeAdapter', 'PoloniexAdapter', 'GateIOAdapter', 'NizaAdapter', 'XTAdapter', 'CoinstoreAdapter', 'VindaxAdapter', 'FameEXAdapter', 'BigOneAdapter', 'P2PB2BAdapter', 'DigiFinexAdapter', 'AzbitAdapter', 'LatokenAdapter', 'KrakenAdapter']
+__all__ = ['BaseAdapter', 'LBankAdapter', 'HashKeyAdapter', 'BiconomyAdapter', 'MEXCAdapter', 'BitrueAdapter', 'AscendEXAdapter', 'BitMartAdapter', 'DexTradeAdapter', 'PoloniexAdapter', 'GateIOAdapter', 'NizaAdapter', 'XTAdapter', 'CoinstoreAdapter', 'VindaxAdapter', 'FameEXAdapter', 'BigOneAdapter', 'P2PB2BAdapter', 'DigiFinexAdapter', 'AzbitAdapter', 'LatokenAdapter', 'KrakenAdapter', 'BingXAdapter']
