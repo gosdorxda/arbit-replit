@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import render_template, jsonify, request
 from app import app, db
 from models import SpotTicker, FetchLog, MarketList
-from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter, VindaxAdapter, FameEXAdapter, BigOneAdapter, P2PB2BAdapter, DigiFinexAdapter, AzbitAdapter, LatokenAdapter, TapbitAdapter, KrakenAdapter
+from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter, VindaxAdapter, FameEXAdapter, BigOneAdapter, P2PB2BAdapter, DigiFinexAdapter, AzbitAdapter, LatokenAdapter, KrakenAdapter
 
 
 def save_tickers(tickers, exchange_name):
@@ -504,28 +504,6 @@ def fetch_latoken():
         }), 500
 
 
-@app.route('/api/fetch/tapbit', methods=['POST'])
-def fetch_tapbit():
-    try:
-        adapter = TapbitAdapter()
-        tickers = adapter.fetch_usdt_tickers()
-        save_tickers(tickers, adapter.exchange_name)
-        log_fetch(adapter.exchange_name, 'success', len(tickers))
-        
-        return jsonify({
-            'status': 'success',
-            'exchange': adapter.exchange_name,
-            'pairs_count': len(tickers),
-            'message': f'Successfully fetched {len(tickers)} USDT pairs from Tapbit'
-        })
-    except Exception as e:
-        log_fetch('TAPBIT', 'error', error_message=str(e))
-        return jsonify({
-            'status': 'error',
-            'exchange': 'TAPBIT',
-            'message': str(e)
-        }), 500
-
 
 @app.route('/api/fetch/kraken', methods=['POST'])
 def fetch_kraken():
@@ -719,7 +697,6 @@ def get_status():
     digifinex_log = FetchLog.query.filter_by(exchange='DIGIFINEX').order_by(FetchLog.fetched_at.desc()).first()
     azbit_log = FetchLog.query.filter_by(exchange='AZBIT').order_by(FetchLog.fetched_at.desc()).first()
     latoken_log = FetchLog.query.filter_by(exchange='LATOKEN').order_by(FetchLog.fetched_at.desc()).first()
-    tapbit_log = FetchLog.query.filter_by(exchange='TAPBIT').order_by(FetchLog.fetched_at.desc()).first()
     kraken_log = FetchLog.query.filter_by(exchange='KRAKEN').order_by(FetchLog.fetched_at.desc()).first()
     
     lbank_count = SpotTicker.query.filter_by(exchange='LBANK').count()
@@ -742,7 +719,6 @@ def get_status():
     digifinex_count = SpotTicker.query.filter_by(exchange='DIGIFINEX').count()
     azbit_count = SpotTicker.query.filter_by(exchange='AZBIT').count()
     latoken_count = SpotTicker.query.filter_by(exchange='LATOKEN').count()
-    tapbit_count = SpotTicker.query.filter_by(exchange='TAPBIT').count()
     kraken_count = SpotTicker.query.filter_by(exchange='KRAKEN').count()
     
     exchanges = ['LBANK', 'HASHKEY', 'BICONOMY', 'MEXC', 'BITRUE', 'ASCENDEX', 
@@ -923,14 +899,6 @@ def get_status():
             'whitelist_count': whitelist_counts.get('LATOKEN', 0),
             'walletlock_count': walletlock_counts.get('LATOKEN', 0)
         },
-        'tapbit': {
-            'last_fetch': tapbit_log.fetched_at.isoformat() if tapbit_log else None,
-            'status': tapbit_log.status if tapbit_log else 'never',
-            'pairs_count': tapbit_count,
-            'blacklist_count': blacklist_counts.get('TAPBIT', 0),
-            'whitelist_count': whitelist_counts.get('TAPBIT', 0),
-            'walletlock_count': walletlock_counts.get('TAPBIT', 0)
-        },
         'kraken': {
             'last_fetch': kraken_log.fetched_at.isoformat() if kraken_log else None,
             'status': kraken_log.status if kraken_log else 'never',
@@ -986,8 +954,6 @@ def get_depth(exchange, symbol):
             adapter = AzbitAdapter()
         elif exchange.upper() == 'LATOKEN':
             adapter = LatokenAdapter()
-        elif exchange.upper() == 'TAPBIT':
-            adapter = TapbitAdapter()
         elif exchange.upper() == 'KRAKEN':
             adapter = KrakenAdapter()
         else:
@@ -1089,8 +1055,6 @@ def get_orderbook(exchange, symbol):
             adapter = AzbitAdapter()
         elif exchange.upper() == 'LATOKEN':
             adapter = LatokenAdapter()
-        elif exchange.upper() == 'TAPBIT':
-            adapter = TapbitAdapter()
         elif exchange.upper() == 'KRAKEN':
             adapter = KrakenAdapter()
         else:
