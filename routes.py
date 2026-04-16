@@ -986,6 +986,10 @@ def get_depth(exchange, symbol):
             adapter = AzbitAdapter()
         elif exchange.upper() == 'LATOKEN':
             adapter = LatokenAdapter()
+        elif exchange.upper() == 'TAPBIT':
+            adapter = TapbitAdapter()
+        elif exchange.upper() == 'KRAKEN':
+            adapter = KrakenAdapter()
         else:
             return jsonify({
                 'status': 'error',
@@ -1085,6 +1089,10 @@ def get_orderbook(exchange, symbol):
             adapter = AzbitAdapter()
         elif exchange.upper() == 'LATOKEN':
             adapter = LatokenAdapter()
+        elif exchange.upper() == 'TAPBIT':
+            adapter = TapbitAdapter()
+        elif exchange.upper() == 'KRAKEN':
+            adapter = KrakenAdapter()
         else:
             return jsonify({
                 'status': 'error',

@@ -18,6 +18,17 @@ BASE_RENAME = {
     'XXMR': 'XMR',
 }
 
+DISPLAY_TO_KRAKEN = {
+    'BTC': 'XBT',
+    'DOGE': 'XDG',
+    'ETH': 'ETH',
+    'XRP': 'XRP',
+    'LTC': 'LTC',
+    'XLM': 'XLM',
+    'ZEC': 'ZEC',
+    'XMR': 'XMR',
+}
+
 BATCH_SIZE = 100
 
 
@@ -125,19 +136,11 @@ class KrakenAdapter(BaseAdapter):
     def fetch_orderbook(self, symbol: str, limit: int = 20) -> NormalizedOrderbook:
         try:
             base = symbol.replace('/USDT', '')
-            kraken_base = {v: k for k, v in BASE_RENAME.items()}.get(base, base)
+            kraken_base = DISPLAY_TO_KRAKEN.get(base, base)
 
-            pair_key = f"{kraken_base}USDT"
-            response = requests.get(
-                f"{self.BASE_URL}/Depth",
-                params={'pair': pair_key, 'count': limit},
-                timeout=10,
-            )
-            response.raise_for_status()
-            data = response.json()
-
-            if data.get('error') and data['error']:
-                pair_key = f"{kraken_base}USD"
+            data = None
+            for quote in ('USDT', 'USD'):
+                pair_key = f"{kraken_base}{quote}"
                 response = requests.get(
                     f"{self.BASE_URL}/Depth",
                     params={'pair': pair_key, 'count': limit},
@@ -145,6 +148,8 @@ class KrakenAdapter(BaseAdapter):
                 )
                 response.raise_for_status()
                 data = response.json()
+                if not (data.get('error') and data['error']):
+                    break
 
             result = data.get('result', {})
             book = list(result.values())[0] if result else {}
