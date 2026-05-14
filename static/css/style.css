@@ -1187,6 +1187,16 @@ td {
     color: var(--btse-color);
 }
 
+.exchange-badge.whitebit {
+    background-color: rgba(0, 149, 255, 0.2);
+    color: var(--whitebit-color);
+}
+
+.exchange-badge.htx {
+    background-color: rgba(2, 164, 211, 0.2);
+    color: var(--htx-color);
+}
+
 .td-symbol {
     font-weight: 600;
     color: var(--text-primary);
@@ -1660,6 +1670,16 @@ a.peer-exchange:hover {
 .peer-exchange.btse {
     background-color: rgba(26, 86, 219, 0.3);
     color: var(--btse-color);
+}
+
+.peer-exchange.whitebit {
+    background-color: rgba(0, 149, 255, 0.3);
+    color: var(--whitebit-color);
+}
+
+.peer-exchange.htx {
+    background-color: rgba(2, 164, 211, 0.3);
+    color: var(--htx-color);
 }
 
 .depth-box {
