@@ -70,6 +70,14 @@
                     <label for="max-spread">Max Spread %:</label>
                     <input type="number" id="max-spread" value="500" min="0" step="1" placeholder="500">
                 </div>
+                <div class="min-spread-filter">
+                    <label for="min-volume">Min Vol (USD):</label>
+                    <input type="number" id="min-volume" value="0" min="0" step="1000" placeholder="0" style="width:90px;">
+                </div>
+                <div class="min-spread-filter">
+                    <label for="max-volume">Max Vol (USD):</label>
+                    <input type="number" id="max-volume" value="" min="0" step="1000" placeholder="Tak terbatas" style="width:90px;">
+                </div>
                 <label class="min-spread-filter" style="gap:6px; cursor:pointer; user-select:none;">
                     <input type="checkbox" id="exclude-leveraged" style="accent-color:var(--accent-blue); width:15px; height:15px;">
                     Sembunyikan Token Leveraged (3L/3S)
@@ -386,8 +394,13 @@
         const maxSpread = parseFloat(document.getElementById('max-spread').value);
         const maxSpreadLimit = isNaN(maxSpread) ? Infinity : maxSpread;
         const minExchanges = parseInt(document.getElementById('min-exchanges').value) || 2;
+        const minVolume = parseFloat(document.getElementById('min-volume').value) || 0;
+        const maxVolume = parseFloat(document.getElementById('max-volume').value);
+        const maxVolumeLimit = isNaN(maxVolume) || document.getElementById('max-volume').value === '' ? Infinity : maxVolume;
         const listFilter = document.getElementById('arb-list-filter').value;
         localStorage.setItem('arb_list_filter', listFilter);
+        localStorage.setItem('arb_min_volume', document.getElementById('min-volume').value);
+        localStorage.setItem('arb_max_volume', document.getElementById('max-volume').value);
 
         const excludedSet = getExcludedExchanges();
 
@@ -412,6 +425,8 @@
 
         const filtered = processed.filter(d => {
             if (d.spread_pct < minSpread || d.spread_pct > maxSpreadLimit || d.exchange_count < minExchanges) return false;
+            const vol = d.total_turnover || 0;
+            if (vol < minVolume || vol > maxVolumeLimit) return false;
             if (listFilter === 'hide_blacklist' && d.is_blacklisted) return false;
             if (listFilter === 'only_blacklist' && !d.is_blacklisted) return false;
             return true;
@@ -569,9 +584,16 @@
         initTable();
         loadArbitrageData();
 
+        const savedMinVol = localStorage.getItem('arb_min_volume');
+        if (savedMinVol !== null) document.getElementById('min-volume').value = savedMinVol;
+        const savedMaxVol = localStorage.getItem('arb_max_volume');
+        if (savedMaxVol !== null) document.getElementById('max-volume').value = savedMaxVol;
+
         document.getElementById('min-spread').addEventListener('input', applyFilters);
         document.getElementById('max-spread').addEventListener('input', applyFilters);
         document.getElementById('min-exchanges').addEventListener('input', applyFilters);
+        document.getElementById('min-volume').addEventListener('input', applyFilters);
+        document.getElementById('max-volume').addEventListener('input', applyFilters);
         document.getElementById('exclude-leveraged').addEventListener('change', loadArbitrageData);
         document.getElementById('arb-list-filter').addEventListener('change', applyFilters);
         document.querySelectorAll('.exclude-exch-cb').forEach(cb => {
