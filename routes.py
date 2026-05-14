@@ -1260,53 +1260,33 @@ def get_arbitrage():
 
     results = []
     for symbol, entries in grouped.items():
-        raw_prices = [(e.price, e.exchange, e.turnover_24h, e.change_24h) for e in entries if e.price and e.price > 0]
-        if len(raw_prices) < 2:
+        valid_entries = [e for e in entries if e.price and e.price > 0]
+        if len(valid_entries) < 2:
             continue
 
-        # Data quality filter: iteratively remove extreme outliers (>50x ratio)
-        sorted_prices = sorted(raw_prices, key=lambda x: x[0])
-        while len(sorted_prices) >= 2:
-            lo = sorted_prices[0][0]
-            hi = sorted_prices[-1][0]
-            if hi / lo <= 50:
-                break
-            # Remove whichever extreme is further from the median
-            mid = len(sorted_prices) // 2
-            median = sorted_prices[mid][0]
-            if (hi / median) >= (median / lo):
-                sorted_prices = sorted_prices[:-1]
-            else:
-                sorted_prices = sorted_prices[1:]
+        exchange_count = len(valid_entries)
+        max_entry = max(valid_entries, key=lambda e: e.price)
+        min_entry = min(valid_entries, key=lambda e: e.price)
 
-        if len(sorted_prices) < 2:
-            continue
-        prices = sorted_prices
+        spread_pct = ((max_entry.price - min_entry.price) / min_entry.price) * 100
 
-        max_entry = max(prices, key=lambda x: x[0])
-        min_entry = min(prices, key=lambda x: x[0])
-        max_price, max_exchange = max_entry[0], max_entry[1]
-        min_price, min_exchange = min_entry[0], min_entry[1]
-
-        spread_pct = ((max_price - min_price) / min_price) * 100 if min_price > 0 else 0
-
-        total_turnover = sum(e.turnover_24h for e in entries if e.turnover_24h)
+        total_turnover = sum(e.turnover_24h for e in valid_entries if e.turnover_24h)
 
         exchange_list = sorted([{
-            'exchange': p[1],
-            'price': p[0],
-            'turnover_24h': p[2],
-            'change_24h': p[3]
-        } for p in prices], key=lambda x: x['price'], reverse=True)
+            'exchange': e.exchange,
+            'price': e.price,
+            'turnover_24h': e.turnover_24h,
+            'change_24h': e.change_24h
+        } for e in valid_entries], key=lambda x: x['price'], reverse=True)
 
         results.append({
             'symbol': symbol,
-            'base_currency': entries[0].base_currency,
-            'exchange_count': len(prices),
-            'max_price': max_price,
-            'max_exchange': max_exchange,
-            'min_price': min_price,
-            'min_exchange': min_exchange,
+            'base_currency': valid_entries[0].base_currency,
+            'exchange_count': exchange_count,
+            'max_price': max_entry.price,
+            'max_exchange': max_entry.exchange,
+            'min_price': min_entry.price,
+            'min_exchange': min_entry.exchange,
             'spread_pct': round(spread_pct, 4),
             'total_turnover': total_turnover,
             'exchanges': exchange_list
