@@ -93,6 +93,7 @@ function getExchangeUrl(exchange, symbol) {
 
 $(document).ready(function() {
     initTheme();
+
     initDataTable();
     loadStatus();
     
