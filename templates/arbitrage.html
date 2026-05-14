@@ -70,6 +70,10 @@
                     <label for="max-spread">Max Spread %:</label>
                     <input type="number" id="max-spread" value="500" min="0" step="1" placeholder="500">
                 </div>
+                <label class="min-spread-filter" style="gap:6px; cursor:pointer; user-select:none;">
+                    <input type="checkbox" id="exclude-leveraged" style="accent-color:var(--accent-blue); width:15px; height:15px;">
+                    Sembunyikan Token Leveraged (3L/3S)
+                </label>
                 <button class="load-depth-btn" onclick="loadArbitrageData()" id="btn-refresh">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                         <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -296,8 +300,12 @@
         btn.disabled = true;
         indicator.style.display = 'inline';
 
+        const excludeLeveraged = document.getElementById('exclude-leveraged').checked;
+        localStorage.setItem('arb_exclude_leveraged', excludeLeveraged ? '1' : '0');
+        const url = `/api/arbitrage?exclude_leveraged=${excludeLeveraged}`;
+
         try {
-            const resp = await fetch('/api/arbitrage');
+            const resp = await fetch(url);
             const json = await resp.json();
 
             if (json.status === 'success') {
@@ -315,12 +323,17 @@
     // ---- Init ----
     $(document).ready(function() {
         initTheme();
+
+        const savedExclude = localStorage.getItem('arb_exclude_leveraged');
+        document.getElementById('exclude-leveraged').checked = savedExclude !== '0';
+
         initTable();
         loadArbitrageData();
 
         document.getElementById('min-spread').addEventListener('input', applyFilters);
         document.getElementById('max-spread').addEventListener('input', applyFilters);
         document.getElementById('min-exchanges').addEventListener('input', applyFilters);
+        document.getElementById('exclude-leveraged').addEventListener('change', loadArbitrageData);
     });
     </script>
 </body>

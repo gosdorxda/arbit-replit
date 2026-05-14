@@ -1233,7 +1233,11 @@ def arbitrage():
 
 @app.route('/api/arbitrage')
 def get_arbitrage():
+    import re
     from sqlalchemy import func
+
+    exclude_leveraged = request.args.get('exclude_leveraged', 'true') == 'true'
+    leveraged_pattern = re.compile(r'\d+[LSls]$')
 
     subq = db.session.query(
         SpotTicker.symbol,
@@ -1254,6 +1258,8 @@ def get_arbitrage():
 
     grouped = {}
     for t in tickers:
+        if exclude_leveraged and leveraged_pattern.search(t.base_currency):
+            continue
         if t.symbol not in grouped:
             grouped[t.symbol] = []
         grouped[t.symbol].append(t)
