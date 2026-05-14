@@ -82,6 +82,26 @@
                         <option value="only_blacklist">Hanya Blacklist</option>
                     </select>
                 </label>
+                <div class="min-spread-filter" style="position:relative;">
+                    <label>Kecualikan Exchange:</label>
+                    <details id="exclude-exch-details">
+                        <summary id="exclude-exch-summary" class="exclude-exch-summary">Tidak ada</summary>
+                        <div class="exclude-exch-panel">
+                            <div style="display:flex; gap:6px; margin-bottom:6px;">
+                                <button type="button" class="exclude-exch-btn-sm" onclick="setAllExchangeExclusion(true)">Semua</button>
+                                <button type="button" class="exclude-exch-btn-sm" onclick="setAllExchangeExclusion(false)">Hapus</button>
+                            </div>
+                            <div class="exclude-exch-grid">
+                                {% for exch in ['LBANK','HASHKEY','BICONOMY','MEXC','BITRUE','ASCENDEX','BITMART','DEXTRADE','POLONIEX','GATEIO','NIZA','XT','COINSTORE','VINDAX','FAMEEX','BIGONE','P2PB2B','DIGIFINEX','AZBIT','LATOKEN','KRAKEN','BINGX','BTSE','WHITEBIT','HTX'] %}
+                                <label class="exclude-exch-item">
+                                    <input type="checkbox" class="exclude-exch-cb" value="{{ exch }}" style="accent-color:var(--accent-blue);">
+                                    {{ exch }}
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </details>
+                </div>
                 <button class="load-depth-btn" onclick="loadArbitrageData()" id="btn-refresh">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                         <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -331,6 +351,36 @@
         });
     }
 
+    // ---- Excluded exchanges filter ----
+    function getExcludedExchanges() {
+        const checked = document.querySelectorAll('.exclude-exch-cb:checked');
+        return new Set([...checked].map(cb => cb.value.toUpperCase()));
+    }
+
+    function updateExcludeExchangeSummary() {
+        const excluded = getExcludedExchanges();
+        const summary = document.getElementById('exclude-exch-summary');
+        summary.textContent = excluded.size === 0 ? 'Tidak ada' : excluded.size + ' dikecualikan';
+        localStorage.setItem('arb_exclude_exchanges', JSON.stringify([...excluded]));
+        applyFilters();
+    }
+
+    function restoreExcludedExchanges() {
+        try {
+            const saved = JSON.parse(localStorage.getItem('arb_exclude_exchanges') || '[]');
+            document.querySelectorAll('.exclude-exch-cb').forEach(cb => {
+                cb.checked = saved.includes(cb.value);
+            });
+            const summary = document.getElementById('exclude-exch-summary');
+            summary.textContent = saved.length === 0 ? 'Tidak ada' : saved.length + ' dikecualikan';
+        } catch(e) {}
+    }
+
+    function setAllExchangeExclusion(state) {
+        document.querySelectorAll('.exclude-exch-cb').forEach(cb => cb.checked = state);
+        updateExcludeExchangeSummary();
+    }
+
     function applyFilters() {
         const minSpread = parseFloat(document.getElementById('min-spread').value) || 0;
         const maxSpread = parseFloat(document.getElementById('max-spread').value);
@@ -339,7 +389,28 @@
         const listFilter = document.getElementById('arb-list-filter').value;
         localStorage.setItem('arb_list_filter', listFilter);
 
-        const filtered = allData.filter(d => {
+        const excludedSet = getExcludedExchanges();
+
+        const processed = excludedSet.size === 0 ? allData : allData.map(d => {
+            const exs = d.exchanges.filter(e => !excludedSet.has(e.exchange.toUpperCase()));
+            if (exs.length < 2) return null;
+            const maxEx = exs.reduce((a, b) => a.price > b.price ? a : b);
+            const minEx = exs.reduce((a, b) => a.price < b.price ? a : b);
+            const spread = minEx.price > 0 ? ((maxEx.price - minEx.price) / minEx.price) * 100 : 0;
+            return {
+                ...d,
+                exchanges: exs,
+                exchange_count: exs.length,
+                max_price: maxEx.price,
+                max_exchange: maxEx.exchange,
+                min_price: minEx.price,
+                min_exchange: minEx.exchange,
+                spread_pct: Math.round(spread * 10000) / 10000,
+                total_turnover: exs.reduce((s, e) => s + (e.turnover_24h || 0), 0)
+            };
+        }).filter(d => d !== null);
+
+        const filtered = processed.filter(d => {
             if (d.spread_pct < minSpread || d.spread_pct > maxSpreadLimit || d.exchange_count < minExchanges) return false;
             if (listFilter === 'hide_blacklist' && d.is_blacklisted) return false;
             if (listFilter === 'only_blacklist' && !d.is_blacklisted) return false;
@@ -493,6 +564,8 @@
         const savedListFilter = localStorage.getItem('arb_list_filter') || 'hide_blacklist';
         document.getElementById('arb-list-filter').value = savedListFilter;
 
+        restoreExcludedExchanges();
+
         initTable();
         loadArbitrageData();
 
@@ -501,6 +574,9 @@
         document.getElementById('min-exchanges').addEventListener('input', applyFilters);
         document.getElementById('exclude-leveraged').addEventListener('change', loadArbitrageData);
         document.getElementById('arb-list-filter').addEventListener('change', applyFilters);
+        document.querySelectorAll('.exclude-exch-cb').forEach(cb => {
+            cb.addEventListener('change', updateExcludeExchangeSummary);
+        });
 
         document.getElementById('arb-ob-modal').addEventListener('click', function(e) {
             if (e.target === this) closeArbOrderbook();
