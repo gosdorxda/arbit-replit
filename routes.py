@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import render_template, jsonify, request
 from app import app, db
 from models import SpotTicker, FetchLog, MarketList
-from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter, VindaxAdapter, FameEXAdapter, BigOneAdapter, P2PB2BAdapter, DigiFinexAdapter, AzbitAdapter, LatokenAdapter, KrakenAdapter, BingXAdapter, BTSEAdapter, WhiteBitAdapter
+from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter, VindaxAdapter, FameEXAdapter, BigOneAdapter, P2PB2BAdapter, DigiFinexAdapter, AzbitAdapter, LatokenAdapter, KrakenAdapter, BingXAdapter, BTSEAdapter, WhiteBitAdapter, HTXAdapter
 
 
 def save_tickers(tickers, exchange_name):
@@ -734,6 +734,7 @@ def get_status():
     bingx_log = FetchLog.query.filter_by(exchange='BINGX').order_by(FetchLog.fetched_at.desc()).first()
     btse_log = FetchLog.query.filter_by(exchange='BTSE').order_by(FetchLog.fetched_at.desc()).first()
     whitebit_log = FetchLog.query.filter_by(exchange='WHITEBIT').order_by(FetchLog.fetched_at.desc()).first()
+    htx_log = FetchLog.query.filter_by(exchange='HTX').order_by(FetchLog.fetched_at.desc()).first()
     
     lbank_count = SpotTicker.query.filter_by(exchange='LBANK').count()
     hashkey_count = SpotTicker.query.filter_by(exchange='HASHKEY').count()
@@ -759,10 +760,11 @@ def get_status():
     bingx_count = SpotTicker.query.filter_by(exchange='BINGX').count()
     btse_count = SpotTicker.query.filter_by(exchange='BTSE').count()
     whitebit_count = SpotTicker.query.filter_by(exchange='WHITEBIT').count()
+    htx_count = SpotTicker.query.filter_by(exchange='HTX').count()
     
     exchanges = ['LBANK', 'HASHKEY', 'BICONOMY', 'MEXC', 'BITRUE', 'ASCENDEX', 
                  'BITMART', 'DEXTRADE', 'POLONIEX', 'GATEIO', 'NIZA', 'XT', 
-                 'COINSTORE', 'VINDAX', 'FAMEEX', 'BIGONE', 'P2PB2B', 'DIGIFINEX', 'AZBIT', 'LATOKEN', 'KRAKEN', 'BINGX', 'BTSE', 'WHITEBIT']
+                 'COINSTORE', 'VINDAX', 'FAMEEX', 'BIGONE', 'P2PB2B', 'DIGIFINEX', 'AZBIT', 'LATOKEN', 'KRAKEN', 'BINGX', 'BTSE', 'WHITEBIT', 'HTX']
     
     from sqlalchemy import func
     blacklist_counts = dict(db.session.query(
@@ -969,6 +971,14 @@ def get_status():
             'blacklist_count': blacklist_counts.get('WHITEBIT', 0),
             'whitelist_count': whitelist_counts.get('WHITEBIT', 0),
             'walletlock_count': walletlock_counts.get('WHITEBIT', 0)
+        },
+        'htx': {
+            'last_fetch': htx_log.fetched_at.isoformat() if htx_log else None,
+            'status': htx_log.status if htx_log else 'never',
+            'pairs_count': htx_count,
+            'blacklist_count': blacklist_counts.get('HTX', 0),
+            'whitelist_count': whitelist_counts.get('HTX', 0),
+            'walletlock_count': walletlock_counts.get('HTX', 0)
         }
     })
 
@@ -1025,6 +1035,8 @@ def get_depth(exchange, symbol):
             adapter = BTSEAdapter()
         elif exchange.upper() == 'WHITEBIT':
             adapter = WhiteBitAdapter()
+        elif exchange.upper() == 'HTX':
+            adapter = HTXAdapter()
         else:
             return jsonify({
                 'status': 'error',
@@ -1132,6 +1144,8 @@ def get_orderbook(exchange, symbol):
             adapter = BTSEAdapter()
         elif exchange.upper() == 'WHITEBIT':
             adapter = WhiteBitAdapter()
+        elif exchange.upper() == 'HTX':
+            adapter = HTXAdapter()
         else:
             return jsonify({
                 'status': 'error',
@@ -1270,6 +1284,29 @@ def fetch_whitebit():
         return jsonify({
             'status': 'error',
             'exchange': 'WHITEBIT',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/fetch/htx', methods=['POST'])
+def fetch_htx():
+    try:
+        adapter = HTXAdapter()
+        tickers = adapter.fetch_usdt_tickers()
+        save_tickers(tickers, adapter.exchange_name)
+        log_fetch(adapter.exchange_name, 'success', len(tickers))
+
+        return jsonify({
+            'status': 'success',
+            'exchange': adapter.exchange_name,
+            'pairs_count': len(tickers),
+            'message': f'Successfully fetched {len(tickers)} USDT pairs from HTX'
+        })
+    except Exception as e:
+        log_fetch('HTX', 'error', error_message=str(e))
+        return jsonify({
+            'status': 'error',
+            'exchange': 'HTX',
             'message': str(e)
         }), 500
 

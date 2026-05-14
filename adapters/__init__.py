@@ -23,5 +23,6 @@ from .kraken import KrakenAdapter
 from .bingx import BingXAdapter
 from .btse import BTSEAdapter
 from .whitebit import WhiteBitAdapter
+from .htx import HTXAdapter
 
-__all__ = ['BaseAdapter', 'LBankAdapter', 'HashKeyAdapter', 'BiconomyAdapter', 'MEXCAdapter', 'BitrueAdapter', 'AscendEXAdapter', 'BitMartAdapter', 'DexTradeAdapter', 'PoloniexAdapter', 'GateIOAdapter', 'NizaAdapter', 'XTAdapter', 'CoinstoreAdapter', 'VindaxAdapter', 'FameEXAdapter', 'BigOneAdapter', 'P2PB2BAdapter', 'DigiFinexAdapter', 'AzbitAdapter', 'LatokenAdapter', 'KrakenAdapter', 'BingXAdapter', 'BTSEAdapter', 'WhiteBitAdapter']
+__all__ = ['BaseAdapter', 'LBankAdapter', 'HashKeyAdapter', 'BiconomyAdapter', 'MEXCAdapter', 'BitrueAdapter', 'AscendEXAdapter', 'BitMartAdapter', 'DexTradeAdapter', 'PoloniexAdapter', 'GateIOAdapter', 'NizaAdapter', 'XTAdapter', 'CoinstoreAdapter', 'VindaxAdapter', 'FameEXAdapter', 'BigOneAdapter', 'P2PB2BAdapter', 'DigiFinexAdapter', 'AzbitAdapter', 'LatokenAdapter', 'KrakenAdapter', 'BingXAdapter', 'BTSEAdapter', 'WhiteBitAdapter', 'HTXAdapter']

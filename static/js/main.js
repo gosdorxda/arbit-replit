@@ -88,6 +88,8 @@ function getExchangeUrl(exchange, symbol) {
             return `https://www.btse.com/en/trading/${base}-USDT`;
         case 'WHITEBIT':
             return `https://whitebit.com/trade/${base}_USDT`;
+        case 'HTX':
+            return `https://www.htx.com/trade/${base.toLowerCase()}_usdt/`;
         default:
             return '#';
     }
@@ -429,9 +431,10 @@ async function loadStatus() {
         updateStatusDisplay('bingx', data.bingx);
         updateStatusDisplay('btse', data.btse);
         updateStatusDisplay('whitebit', data.whitebit);
+        updateStatusDisplay('htx', data.htx);
         
         let totalMarkets = 0;
-        const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt', 'coinstore', 'vindax', 'fameex', 'bigone', 'p2pb2b', 'digifinex', 'azbit', 'latoken', 'kraken', 'bingx', 'btse', 'whitebit'];
+        const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt', 'coinstore', 'vindax', 'fameex', 'bigone', 'p2pb2b', 'digifinex', 'azbit', 'latoken', 'kraken', 'bingx', 'btse', 'whitebit', 'htx'];
         exchanges.forEach(ex => {
             if (data[ex] && data[ex].pairs_count) {
                 totalMarkets += data[ex].pairs_count;

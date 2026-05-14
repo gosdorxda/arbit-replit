@@ -30,6 +30,7 @@
     --bingx-color: #f0a500;        /* BingX Gold */
     --btse-color: #1a56db;         /* BTSE Blue */
     --whitebit-color: #0095ff;     /* WhiteBit Blue */
+    --htx-color: #02a4d3;          /* HTX Cyan */
     
     /* ---- EXCHANGE HOVER COLORS (darker shade for hover) ---- */
     --lbank-hover: #1e4dd8;
@@ -56,6 +57,7 @@
     --bingx-hover: #d4920a;
     --btse-hover: #1447c0;
     --whitebit-hover: #007acc;
+    --htx-hover: #0188ae;
 }
 
 :root,
@@ -608,6 +610,16 @@ body {
 
 .whitebit-btn:hover:not(:disabled) {
     background-color: var(--whitebit-hover);
+    transform: translateY(-1px);
+}
+
+.htx-btn {
+    background-color: var(--htx-color);
+    color: white;
+}
+
+.htx-btn:hover:not(:disabled) {
+    background-color: var(--htx-hover);
     transform: translateY(-1px);
 }
 

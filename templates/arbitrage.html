@@ -193,6 +193,7 @@
             case 'KRAKEN': return `https://pro.kraken.com/app/trade/${base}-USD`;
             case 'BTSE': return `https://www.btse.com/en/trading/${base}-USDT`;
             case 'WHITEBIT': return `https://whitebit.com/trade/${base}_USDT`;
+            case 'HTX': return `https://www.htx.com/trade/${base.toLowerCase()}_usdt/`;
             default: return '#';
         }
     }
@@ -204,7 +205,8 @@
         POLONIEX:'#0c9c4e', GATEIO:'#c23b33', NIZA:'#6366f1', XT:'#2563eb',
         COINSTORE:'#f59e0b', VINDAX:'#10b981', FAMEEX:'#e11d48', BIGONE:'#0ea5e9',
         P2PB2B:'#8b5cf6', DIGIFINEX:'#00d4aa', AZBIT:'#f97316', LATOKEN:'#3b82f6',
-        KRAKEN:'#5841d8', BINGX:'#f0a500', BTSE:'#1a56db', WHITEBIT:'#0095ff'
+        KRAKEN:'#5841d8', BINGX:'#f0a500', BTSE:'#1a56db', WHITEBIT:'#0095ff',
+        HTX:'#02a4d3'
     };
 
     function exchangeChip(exchange, symbol) {
