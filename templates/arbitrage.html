@@ -260,7 +260,7 @@
             ).join(' ');
 
             return {
-                symbol_html: `<span style="font-weight:700; font-family:'JetBrains Mono',monospace; color:var(--accent-blue)">${item.symbol}</span>`,
+                symbol_html: `<span style="font-weight:700; font-family:'JetBrains Mono',monospace; color:var(--accent-blue)">${item.base_currency}</span>`,
                 exchange_count: item.exchange_count,
                 max_html: `<div class="arb-exchange-row">
                     ${exchangeChip(item.max_exchange, item.symbol)}

@@ -2231,9 +2231,15 @@ table.dataTable thead .sorting_desc:after {
 }
 
 .arb-exchange-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: 80px 1fr;
     align-items: center;
     gap: 6px;
+}
+
+.arb-exchange-row .arb-exchange-chip {
+    width: 100%;
+    justify-content: center;
 }
 
 .arb-stats-bar {
