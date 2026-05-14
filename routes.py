@@ -733,6 +733,7 @@ def get_status():
     kraken_log = FetchLog.query.filter_by(exchange='KRAKEN').order_by(FetchLog.fetched_at.desc()).first()
     bingx_log = FetchLog.query.filter_by(exchange='BINGX').order_by(FetchLog.fetched_at.desc()).first()
     btse_log = FetchLog.query.filter_by(exchange='BTSE').order_by(FetchLog.fetched_at.desc()).first()
+    whitebit_log = FetchLog.query.filter_by(exchange='WHITEBIT').order_by(FetchLog.fetched_at.desc()).first()
     
     lbank_count = SpotTicker.query.filter_by(exchange='LBANK').count()
     hashkey_count = SpotTicker.query.filter_by(exchange='HASHKEY').count()
@@ -757,10 +758,11 @@ def get_status():
     kraken_count = SpotTicker.query.filter_by(exchange='KRAKEN').count()
     bingx_count = SpotTicker.query.filter_by(exchange='BINGX').count()
     btse_count = SpotTicker.query.filter_by(exchange='BTSE').count()
+    whitebit_count = SpotTicker.query.filter_by(exchange='WHITEBIT').count()
     
     exchanges = ['LBANK', 'HASHKEY', 'BICONOMY', 'MEXC', 'BITRUE', 'ASCENDEX', 
                  'BITMART', 'DEXTRADE', 'POLONIEX', 'GATEIO', 'NIZA', 'XT', 
-                 'COINSTORE', 'VINDAX', 'FAMEEX', 'BIGONE', 'P2PB2B', 'DIGIFINEX', 'AZBIT', 'LATOKEN', 'BTSE']
+                 'COINSTORE', 'VINDAX', 'FAMEEX', 'BIGONE', 'P2PB2B', 'DIGIFINEX', 'AZBIT', 'LATOKEN', 'KRAKEN', 'BINGX', 'BTSE', 'WHITEBIT']
     
     from sqlalchemy import func
     blacklist_counts = dict(db.session.query(
@@ -959,6 +961,14 @@ def get_status():
             'blacklist_count': blacklist_counts.get('BTSE', 0),
             'whitelist_count': whitelist_counts.get('BTSE', 0),
             'walletlock_count': walletlock_counts.get('BTSE', 0)
+        },
+        'whitebit': {
+            'last_fetch': whitebit_log.fetched_at.isoformat() if whitebit_log else None,
+            'status': whitebit_log.status if whitebit_log else 'never',
+            'pairs_count': whitebit_count,
+            'blacklist_count': blacklist_counts.get('WHITEBIT', 0),
+            'whitelist_count': whitelist_counts.get('WHITEBIT', 0),
+            'walletlock_count': walletlock_counts.get('WHITEBIT', 0)
         }
     })
 

@@ -428,9 +428,10 @@ async function loadStatus() {
         updateStatusDisplay('kraken', data.kraken);
         updateStatusDisplay('bingx', data.bingx);
         updateStatusDisplay('btse', data.btse);
+        updateStatusDisplay('whitebit', data.whitebit);
         
         let totalMarkets = 0;
-        const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt', 'coinstore', 'vindax', 'fameex', 'bigone', 'p2pb2b', 'digifinex', 'azbit', 'latoken', 'kraken', 'bingx', 'btse'];
+        const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt', 'coinstore', 'vindax', 'fameex', 'bigone', 'p2pb2b', 'digifinex', 'azbit', 'latoken', 'kraken', 'bingx', 'btse', 'whitebit'];
         exchanges.forEach(ex => {
             if (data[ex] && data[ex].pairs_count) {
                 totalMarkets += data[ex].pairs_count;
