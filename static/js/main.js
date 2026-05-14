@@ -376,6 +376,61 @@ function updateExchangeColumnVisibility() {
     }
 }
 
+async function fetchAll() {
+    const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt', 'coinstore', 'vindax', 'fameex', 'bigone', 'p2pb2b', 'digifinex', 'azbit', 'latoken', 'kraken', 'bingx', 'btse', 'whitebit', 'htx'];
+    const fetchAllBtn = document.getElementById('btn-fetch-all');
+    const progressEl = fetchAllBtn.querySelector('.fetch-all-progress');
+    const labelEl = fetchAllBtn.querySelector('.fetch-all-label');
+
+    fetchAllBtn.disabled = true;
+    fetchAllBtn.classList.add('loading');
+    labelEl.textContent = 'Fetching...';
+
+    let done = 0;
+    const total = exchanges.length;
+
+    try {
+        for (const exchange of exchanges) {
+            progressEl.textContent = `${done}/${total}`;
+
+            const btn = document.getElementById(`btn-${exchange}`);
+            if (btn) {
+                btn.classList.add('loading');
+                btn.disabled = true;
+            }
+
+            try {
+                const response = await fetch(`/api/fetch/${exchange}`, { method: 'POST' });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    showToast(`${exchange.toUpperCase()}: ${data.message}`, 'success');
+                } else {
+                    showToast(`${exchange.toUpperCase()} Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showToast(`${exchange.toUpperCase()} failed: ${error.message}`, 'error');
+            } finally {
+                if (btn) {
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                }
+            }
+
+            done++;
+            progressEl.textContent = `${done}/${total}`;
+            await loadStatus();
+        }
+
+        dataTable.ajax.reload();
+        showToast('All exchanges fetched!', 'success');
+    } finally {
+        fetchAllBtn.disabled = false;
+        fetchAllBtn.classList.remove('loading');
+        labelEl.textContent = 'Fetch All';
+        progressEl.textContent = '';
+    }
+}
+
 async function fetchData(exchange) {
     const btn = document.getElementById(`btn-${exchange}`);
     btn.classList.add('loading');
