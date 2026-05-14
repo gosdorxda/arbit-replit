@@ -1237,7 +1237,7 @@ def get_arbitrage():
     from sqlalchemy import func
 
     exclude_leveraged = request.args.get('exclude_leveraged', 'true') == 'true'
-    leveraged_pattern = re.compile(r'\d+[LSls]$')
+    leveraged_pattern = re.compile(r'\d+[LSls](USDT)?$')
 
     subq = db.session.query(
         SpotTicker.symbol,
