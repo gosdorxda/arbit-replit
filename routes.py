@@ -721,6 +721,7 @@ def get_status():
     latoken_log = FetchLog.query.filter_by(exchange='LATOKEN').order_by(FetchLog.fetched_at.desc()).first()
     kraken_log = FetchLog.query.filter_by(exchange='KRAKEN').order_by(FetchLog.fetched_at.desc()).first()
     bingx_log = FetchLog.query.filter_by(exchange='BINGX').order_by(FetchLog.fetched_at.desc()).first()
+    btse_log = FetchLog.query.filter_by(exchange='BTSE').order_by(FetchLog.fetched_at.desc()).first()
     
     lbank_count = SpotTicker.query.filter_by(exchange='LBANK').count()
     hashkey_count = SpotTicker.query.filter_by(exchange='HASHKEY').count()
@@ -744,10 +745,11 @@ def get_status():
     latoken_count = SpotTicker.query.filter_by(exchange='LATOKEN').count()
     kraken_count = SpotTicker.query.filter_by(exchange='KRAKEN').count()
     bingx_count = SpotTicker.query.filter_by(exchange='BINGX').count()
+    btse_count = SpotTicker.query.filter_by(exchange='BTSE').count()
     
     exchanges = ['LBANK', 'HASHKEY', 'BICONOMY', 'MEXC', 'BITRUE', 'ASCENDEX', 
                  'BITMART', 'DEXTRADE', 'POLONIEX', 'GATEIO', 'NIZA', 'XT', 
-                 'COINSTORE', 'VINDAX', 'FAMEEX', 'BIGONE', 'P2PB2B', 'DIGIFINEX', 'AZBIT', 'LATOKEN']
+                 'COINSTORE', 'VINDAX', 'FAMEEX', 'BIGONE', 'P2PB2B', 'DIGIFINEX', 'AZBIT', 'LATOKEN', 'BTSE']
     
     from sqlalchemy import func
     blacklist_counts = dict(db.session.query(
@@ -938,6 +940,14 @@ def get_status():
             'blacklist_count': blacklist_counts.get('BINGX', 0),
             'whitelist_count': whitelist_counts.get('BINGX', 0),
             'walletlock_count': walletlock_counts.get('BINGX', 0)
+        },
+        'btse': {
+            'last_fetch': btse_log.fetched_at.isoformat() if btse_log else None,
+            'status': btse_log.status if btse_log else 'never',
+            'pairs_count': btse_count,
+            'blacklist_count': blacklist_counts.get('BTSE', 0),
+            'whitelist_count': whitelist_counts.get('BTSE', 0),
+            'walletlock_count': walletlock_counts.get('BTSE', 0)
         }
     })
 
@@ -990,6 +1000,8 @@ def get_depth(exchange, symbol):
             adapter = KrakenAdapter()
         elif exchange.upper() == 'BINGX':
             adapter = BingXAdapter()
+        elif exchange.upper() == 'BTSE':
+            adapter = BTSEAdapter()
         else:
             return jsonify({
                 'status': 'error',
@@ -1093,6 +1105,8 @@ def get_orderbook(exchange, symbol):
             adapter = KrakenAdapter()
         elif exchange.upper() == 'BINGX':
             adapter = BingXAdapter()
+        elif exchange.upper() == 'BTSE':
+            adapter = BTSEAdapter()
         else:
             return jsonify({
                 'status': 'error',
