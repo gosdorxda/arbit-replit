@@ -360,6 +360,20 @@
                     </button>
                     <button class="reset-visited-btn" onclick="resetVisitedRows('kraken')" title="Reset visited">✕</button>
                 </div>
+                <div class="exchange-card">
+                    <button id="btn-btse" class="fetch-btn btse-btn" onclick="fetchData('btse')">
+                        <div class="btn-main">
+                            <span class="btn-name">BTSE</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('btse')" title="Reset visited">✕</button>
+                </div>
             </div>
         </section>
 
@@ -391,6 +405,7 @@
                         <option value="LATOKEN">LATOKEN</option>
                         <option value="BINGX">BINGX</option>
                         <option value="KRAKEN">KRAKEN</option>
+                        <option value="BTSE">BTSE</option>
                     </select>
                 </div>
                 <div class="filter-item">
@@ -423,7 +438,7 @@
                 <div class="filter-item stats-info">
                     <div class="stat-item">
                         <span class="stat-label">Exchanges:</span>
-                        <span class="stat-value" id="total-exchanges">22</span>
+                        <span class="stat-value" id="total-exchanges">23</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Total Markets:</span>
