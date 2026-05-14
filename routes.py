@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import render_template, jsonify, request
 from app import app, db
 from models import SpotTicker, FetchLog, MarketList
-from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter, VindaxAdapter, FameEXAdapter, BigOneAdapter, P2PB2BAdapter, DigiFinexAdapter, AzbitAdapter, LatokenAdapter, KrakenAdapter, BingXAdapter, BTSEAdapter
+from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter, VindaxAdapter, FameEXAdapter, BigOneAdapter, P2PB2BAdapter, DigiFinexAdapter, AzbitAdapter, LatokenAdapter, KrakenAdapter, BingXAdapter, BTSEAdapter, WhiteBitAdapter
 
 
 def save_tickers(tickers, exchange_name):
@@ -1013,6 +1013,8 @@ def get_depth(exchange, symbol):
             adapter = BingXAdapter()
         elif exchange.upper() == 'BTSE':
             adapter = BTSEAdapter()
+        elif exchange.upper() == 'WHITEBIT':
+            adapter = WhiteBitAdapter()
         else:
             return jsonify({
                 'status': 'error',
@@ -1118,6 +1120,8 @@ def get_orderbook(exchange, symbol):
             adapter = BingXAdapter()
         elif exchange.upper() == 'BTSE':
             adapter = BTSEAdapter()
+        elif exchange.upper() == 'WHITEBIT':
+            adapter = WhiteBitAdapter()
         else:
             return jsonify({
                 'status': 'error',
@@ -1233,6 +1237,29 @@ def fetch_btse():
         return jsonify({
             'status': 'error',
             'exchange': 'BTSE',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/fetch/whitebit', methods=['POST'])
+def fetch_whitebit():
+    try:
+        adapter = WhiteBitAdapter()
+        tickers = adapter.fetch_usdt_tickers()
+        save_tickers(tickers, adapter.exchange_name)
+        log_fetch(adapter.exchange_name, 'success', len(tickers))
+
+        return jsonify({
+            'status': 'success',
+            'exchange': adapter.exchange_name,
+            'pairs_count': len(tickers),
+            'message': f'Successfully fetched {len(tickers)} USDT pairs from WhiteBit'
+        })
+    except Exception as e:
+        log_fetch('WHITEBIT', 'error', error_message=str(e))
+        return jsonify({
+            'status': 'error',
+            'exchange': 'WHITEBIT',
             'message': str(e)
         }), 500
 

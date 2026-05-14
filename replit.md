@@ -1,7 +1,7 @@
 # Crypto Exchange Data Aggregator
 
 ## Overview
-A Flask-based web application that fetches, normalizes, and displays SPOT/USDT market data from multiple cryptocurrency exchanges. Currently supports LBANK, HashKey, Biconomy, MEXC, Bitrue, AscendEX, BitMart, Dex-Trade, Poloniex, Gate.io, Niza, XT.com, Coinstore, Vindax, FameEX, and BigOne exchanges.
+A Flask-based web application that fetches, normalizes, and displays SPOT/USDT market data from multiple cryptocurrency exchanges. Currently supports LBANK, HashKey, Biconomy, MEXC, Bitrue, AscendEX, BitMart, Dex-Trade, Poloniex, Gate.io, Niza, XT.com, Coinstore, Vindax, FameEX, BigOne, P2PB2B, DigiFinex, Azbit, LATOKEN, Kraken, BingX, BTSE, and WhiteBit exchanges.
 
 ## Key Features
 - **Manual Data Fetching**: Button-triggered fetching from each exchange
@@ -38,7 +38,15 @@ adapters/
   ├── coinstore.py  - Coinstore exchange adapter
   ├── vindax.py     - Vindax exchange adapter
   ├── fameex.py     - FameEX exchange adapter
-  └── bigone.py     - BigOne exchange adapter
+  ├── bigone.py     - BigOne exchange adapter
+  ├── p2pb2b.py     - P2PB2B exchange adapter
+  ├── digifinex.py  - DigiFinex exchange adapter
+  ├── azbit.py      - Azbit exchange adapter
+  ├── latoken.py    - LATOKEN exchange adapter
+  ├── kraken.py     - Kraken exchange adapter
+  ├── bingx.py      - BingX exchange adapter
+  ├── btse.py       - BTSE exchange adapter
+  └── whitebit.py   - WhiteBit exchange adapter
 ```
 
 ### Frontend
@@ -71,6 +79,14 @@ static/
 | `/api/fetch/vindax` | POST | Trigger Vindax data fetch |
 | `/api/fetch/fameex` | POST | Trigger FameEX data fetch |
 | `/api/fetch/bigone` | POST | Trigger BigOne data fetch |
+| `/api/fetch/p2pb2b` | POST | Trigger P2PB2B data fetch |
+| `/api/fetch/digifinex` | POST | Trigger DigiFinex data fetch |
+| `/api/fetch/azbit` | POST | Trigger Azbit data fetch |
+| `/api/fetch/latoken` | POST | Trigger LATOKEN data fetch |
+| `/api/fetch/kraken` | POST | Trigger Kraken data fetch |
+| `/api/fetch/bingx` | POST | Trigger BingX data fetch |
+| `/api/fetch/btse` | POST | Trigger BTSE data fetch |
+| `/api/fetch/whitebit` | POST | Trigger WhiteBit data fetch |
 | `/api/tickers` | GET | Get all stored ticker data |
 | `/api/status` | GET | Get fetch status for each exchange |
 | `/api/logs` | GET | Get recent fetch logs |

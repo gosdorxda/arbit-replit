@@ -29,6 +29,7 @@
     --kraken-color: #5841d8;       /* Kraken Purple */
     --bingx-color: #f0a500;        /* BingX Gold */
     --btse-color: #1a56db;         /* BTSE Blue */
+    --whitebit-color: #0095ff;     /* WhiteBit Blue */
     
     /* ---- EXCHANGE HOVER COLORS (darker shade for hover) ---- */
     --lbank-hover: #1e4dd8;
@@ -54,6 +55,7 @@
     --kraken-hover: #4631b8;
     --bingx-hover: #d4920a;
     --btse-hover: #1447c0;
+    --whitebit-hover: #007acc;
 }
 
 :root,
@@ -596,6 +598,16 @@ body {
 
 .btse-btn:hover:not(:disabled) {
     background-color: var(--btse-hover);
+    transform: translateY(-1px);
+}
+
+.whitebit-btn {
+    background-color: var(--whitebit-color);
+    color: white;
+}
+
+.whitebit-btn:hover:not(:disabled) {
+    background-color: var(--whitebit-hover);
     transform: translateY(-1px);
 }
 

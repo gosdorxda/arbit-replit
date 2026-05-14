@@ -86,6 +86,8 @@ function getExchangeUrl(exchange, symbol) {
             return `https://pro.kraken.com/app/trade/${base}-USD`;
         case 'BTSE':
             return `https://www.btse.com/en/trading/${base}-USDT`;
+        case 'WHITEBIT':
+            return `https://whitebit.com/trade/${base}_USDT`;
         default:
             return '#';
     }
