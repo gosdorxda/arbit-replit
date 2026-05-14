@@ -1158,6 +1158,11 @@ td {
     color: var(--kraken-color);
 }
 
+.exchange-badge.btse {
+    background-color: rgba(26, 86, 219, 0.2);
+    color: var(--btse-color);
+}
+
 .td-symbol {
     font-weight: 600;
     color: var(--text-primary);
@@ -1626,6 +1631,11 @@ a.peer-exchange:hover {
 .peer-exchange.kraken {
     background-color: rgba(88, 65, 216, 0.3);
     color: var(--kraken-color);
+}
+
+.peer-exchange.btse {
+    background-color: rgba(26, 86, 219, 0.3);
+    color: var(--btse-color);
 }
 
 .depth-box {
