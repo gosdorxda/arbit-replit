@@ -108,6 +108,15 @@ $(document).ready(function() {
     $('#list-filter').on('change', function() {
         dataTable.ajax.reload();
     });
+
+    const savedExcludeLeveraged = localStorage.getItem('main_exclude_leveraged');
+    if (savedExcludeLeveraged === '1') {
+        $('#exclude-leveraged-main').prop('checked', true);
+    }
+    $('#exclude-leveraged-main').on('change', function() {
+        localStorage.setItem('main_exclude_leveraged', this.checked ? '1' : '0');
+        dataTable.ajax.reload();
+    });
     
     $('#ticker-table tbody').on('click', 'tr', function(e) {
         if ($(e.target).closest('.list-cb, .depth-box').length) return;
@@ -151,6 +160,7 @@ function initDataTable() {
                 d.exchange = $('#exchange-filter').val();
                 d.multi_exchange = $('#multi-exchange-filter').is(':checked');
                 d.list_filter = $('#list-filter').val();
+                d.exclude_leveraged = $('#exclude-leveraged-main').is(':checked');
             }
         },
         columns: [
@@ -484,30 +494,22 @@ function formatRelativeTime(date) {
 
 function formatPrice(price) {
     if (price === null || price === undefined) return '−';
-    if (price === 0) return '0.00';
-    
-    if (price >= 100000) {
-        return price.toLocaleString('en-US', { maximumFractionDigits: 2 });
-    } else if (price >= 1000) {
-        return price.toFixed(2);
-    } else if (price >= 1) {
-        return parseFloat(price.toFixed(4)).toString();
-    } else if (price >= 0.01) {
-        return parseFloat(price.toFixed(6)).toString();
-    } else {
-        const str = price.toFixed(20);
-        const match = str.match(/^0\.(0*)([1-9]\d*)/);
-        if (match) {
-            const leadingZeros = match[1].length;
-            if (leadingZeros >= 4) {
-                const significantPart = match[2].substring(0, 6).replace(/0+$/, '');
-                return `0.<sub>${leadingZeros}</sub>${significantPart}`;
-            }
-            const significantDigits = Math.min(6, match[2].length);
-            return parseFloat(price.toFixed(leadingZeros + significantDigits)).toString();
-        }
-        return parseFloat(price.toFixed(8)).toString();
-    }
+    price = parseFloat(price);
+    if (isNaN(price)) return '−';
+    if (price === 0) return '0';
+
+    if (price >= 100000) return price.toLocaleString('en-US', { maximumFractionDigits: 2 });
+    if (price >= 1000) return price.toFixed(2);
+    if (price >= 1) return parseFloat(price.toFixed(4)).toString();
+    if (price >= 0.0001) return parseFloat(price.toFixed(6)).toString();
+
+    // Very small price: compact notation 0.(N)sigfigs
+    const sci = parseFloat(price.toPrecision(5)).toExponential();
+    const [mantissa, expPart] = sci.split('e');
+    const exp = parseInt(expPart);
+    const leadingZeros = -exp - 1;
+    const digits = mantissa.replace('.', '').replace(/0+$/, '') || '0';
+    return `0.(${leadingZeros})${digits}`;
 }
 
 function formatVolume(volume) {

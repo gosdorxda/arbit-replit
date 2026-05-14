@@ -559,6 +559,7 @@ def get_tickers():
     exchange_filter = request.args.get('exchange', '', type=str)
     multi_exchange = request.args.get('multi_exchange', 'false', type=str) == 'true'
     list_filter = request.args.get('list_filter', '', type=str)
+    exclude_leveraged = request.args.get('exclude_leveraged', 'false', type=str) == 'true'
     order_column = request.args.get('order[0][column]', '1', type=str)
     order_dir = request.args.get('order[0][dir]', 'asc', type=str)
     
@@ -577,7 +578,17 @@ def get_tickers():
     
     if exchange_filter:
         query = query.filter(SpotTicker.exchange == exchange_filter)
-    
+
+    if exclude_leveraged:
+        import re as _re
+        _leveraged = _re.compile(r'\d+[LSls](USDT)?$')
+        leveraged_symbols = [
+            t.symbol for t in SpotTicker.query.with_entities(SpotTicker.symbol).distinct()
+            if _leveraged.search(t.symbol.split('/')[0])
+        ]
+        if leveraged_symbols:
+            query = query.filter(SpotTicker.symbol.notin_(leveraged_symbols))
+
     if search_value:
         query = query.filter(
             db.or_(

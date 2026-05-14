@@ -191,11 +191,22 @@
 
     // ---- Format helpers ----
     function formatPrice(p) {
-        if (!p) return '—';
+        if (p === null || p === undefined || p === '') return '—';
+        p = parseFloat(p);
+        if (isNaN(p)) return '—';
+        if (p === 0) return '0';
+
         if (p >= 1000) return p.toLocaleString('en-US', {maximumFractionDigits: 2});
         if (p >= 1) return p.toFixed(4);
         if (p >= 0.0001) return p.toFixed(6);
-        return p.toExponential(4);
+
+        // Very small price: compact notation 0.(N)sigfigs
+        const sci = parseFloat(p.toPrecision(5)).toExponential();
+        const [mantissa, expPart] = sci.split('e');
+        const exp = parseInt(expPart);
+        const leadingZeros = -exp - 1;
+        const digits = mantissa.replace('.', '').replace(/0+$/, '') || '0';
+        return `0.(${leadingZeros})${digits}`;
     }
     function formatVolume(v) {
         if (!v || v === 0) return '—';
