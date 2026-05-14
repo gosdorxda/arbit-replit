@@ -74,6 +74,14 @@
                     <input type="checkbox" id="exclude-leveraged" style="accent-color:var(--accent-blue); width:15px; height:15px;">
                     Sembunyikan Token Leveraged (3L/3S)
                 </label>
+                <label class="min-spread-filter" style="gap:6px;">
+                    <span style="font-size:0.8rem;">Filter:</span>
+                    <select id="arb-list-filter" style="padding:4px 8px; border-radius:4px; background:var(--bg-secondary); color:var(--text-primary); border:1px solid var(--border-color); font-size:0.8rem; cursor:pointer;">
+                        <option value="">Semua Data</option>
+                        <option value="hide_blacklist">Sembunyikan Blacklist</option>
+                        <option value="only_blacklist">Hanya Blacklist</option>
+                    </select>
+                </label>
                 <button class="load-depth-btn" onclick="loadArbitrageData()" id="btn-refresh">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                         <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -96,12 +104,38 @@
                             <th>Spread %</th>
                             <th>Total Vol (USD)</th>
                             <th>Semua Exchange</th>
+                            <th>List</th>
                         </tr>
                     </thead>
                     <tbody id="arb-tbody"></tbody>
                 </table>
             </div>
         </section>
+    </div>
+
+    <div id="arb-ob-modal" class="modal modal-secondary">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="arb-ob-title" style="font-size:1rem;">Orderbook</h2>
+                <button class="modal-close" onclick="closeArbOrderbook()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="orderbook-header">
+                    <span class="ob-col-header">Harga</span>
+                    <span class="ob-col-header">Qty</span>
+                    <span class="ob-col-header">Total USDT</span>
+                </div>
+                <div class="orderbook-container">
+                    <div class="orderbook-side asks">
+                        <div id="arb-ob-asks" class="orderbook-list"></div>
+                    </div>
+                    <div id="arb-ob-spread" class="orderbook-divider">—</div>
+                    <div class="orderbook-side bids">
+                        <div id="arb-ob-bids" class="orderbook-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -180,6 +214,15 @@
             title="${exchange}">${exchange}</a>`;
     }
 
+    function exchangeChipOrderbook(exchange, symbol) {
+        const color = EXCHANGE_COLORS[exchange.toUpperCase()] || '#666';
+        const safeEx = exchange.replace(/'/g, "\\'");
+        const safeSym = symbol.replace(/'/g, "\\'");
+        return `<span class="arb-exchange-chip" style="background-color:${color}; cursor:pointer;"
+            onclick="showArbOrderbook('${safeEx}','${safeSym}')"
+            title="Klik untuk lihat orderbook ${exchange}">${exchange}</span>`;
+    }
+
     // ---- Spread badge ----
     function spreadBadge(pct) {
         let cls = 'spread-low';
@@ -234,7 +277,8 @@
                 { title: 'Total Vol (USD)', data: 'turnover_sort', orderable: true, render: function(data, type, row) {
                     return type === 'display' ? row.turnover_html : data;
                 }},
-                { title: 'Semua Exchange', data: 'all_exchanges_html', orderable: false }
+                { title: 'Semua Exchange', data: 'all_exchanges_html', orderable: false },
+                { title: 'List', data: 'list_html', orderable: false, width: '50px', className: 'dt-center' }
             ],
             order: [[4, 'desc']],
             pageLength: 50,
@@ -256,8 +300,12 @@
     function buildRows(data) {
         return data.map(item => {
             const allChips = item.exchanges.map(e =>
-                exchangeChip(e.exchange, item.symbol)
+                exchangeChipOrderbook(e.exchange, item.symbol)
             ).join(' ');
+
+            const blActive = item.is_blacklisted ? 'arb-bl-active' : '';
+            const blTitle = item.is_blacklisted ? 'Hapus dari blacklist' : 'Tambah ke blacklist';
+            const safeSym = item.symbol.replace(/'/g, "\\'");
 
             return {
                 symbol_html: `<span style="font-weight:700; font-family:'JetBrains Mono',monospace; color:var(--accent-blue)">${item.base_currency}</span>`,
@@ -274,7 +322,8 @@
                 spread_sort: item.spread_pct,
                 turnover_html: `<span style="font-family:'JetBrains Mono',monospace; font-size:0.8rem">${formatVolume(item.total_turnover)}</span>`,
                 turnover_sort: item.total_turnover || 0,
-                all_exchanges_html: `<div class="arb-all-exchanges">${allChips}</div>`
+                all_exchanges_html: `<div class="arb-all-exchanges">${allChips}</div>`,
+                list_html: `<button class="arb-bl-btn ${blActive}" onclick="toggleArbBlacklist('${safeSym}',this)" title="${blTitle}">⛔</button>`
             };
         });
     }
@@ -284,10 +333,15 @@
         const maxSpread = parseFloat(document.getElementById('max-spread').value);
         const maxSpreadLimit = isNaN(maxSpread) ? Infinity : maxSpread;
         const minExchanges = parseInt(document.getElementById('min-exchanges').value) || 2;
+        const listFilter = document.getElementById('arb-list-filter').value;
+        localStorage.setItem('arb_list_filter', listFilter);
 
-        const filtered = allData.filter(d =>
-            d.spread_pct >= minSpread && d.spread_pct <= maxSpreadLimit && d.exchange_count >= minExchanges
-        );
+        const filtered = allData.filter(d => {
+            if (d.spread_pct < minSpread || d.spread_pct > maxSpreadLimit || d.exchange_count < minExchanges) return false;
+            if (listFilter === 'hide_blacklist' && d.is_blacklisted) return false;
+            if (listFilter === 'only_blacklist' && !d.is_blacklisted) return false;
+            return true;
+        });
 
         arbTable.clear();
         arbTable.rows.add(buildRows(filtered));
@@ -331,12 +385,111 @@
         }
     }
 
+    // ---- Arb Blacklist ----
+    async function toggleArbBlacklist(symbol, btn) {
+        try {
+            const resp = await fetch('/api/market-list/toggle', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({exchange: 'ARB', symbol: symbol, list_type: 'blacklist'})
+            });
+            const data = await resp.json();
+            if (data.status === 'success') {
+                const added = data.action === 'added';
+                const item = allData.find(d => d.symbol === symbol);
+                if (item) item.is_blacklisted = added;
+                btn.classList.toggle('arb-bl-active', added);
+                btn.title = added ? 'Hapus dari blacklist' : 'Tambah ke blacklist';
+                const listFilter = document.getElementById('arb-list-filter').value;
+                if (listFilter !== '') applyFilters();
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    // ---- Arb Orderbook ----
+    async function showArbOrderbook(exchange, symbol) {
+        const modal = document.getElementById('arb-ob-modal');
+        const title = document.getElementById('arb-ob-title');
+        const asks = document.getElementById('arb-ob-asks');
+        const bids = document.getElementById('arb-ob-bids');
+        const spread = document.getElementById('arb-ob-spread');
+
+        title.textContent = symbol + ' (' + exchange + ')';
+        asks.innerHTML = '<div style="padding:8px;color:var(--text-muted)">Memuat...</div>';
+        bids.innerHTML = '';
+        spread.textContent = '—';
+        modal.classList.add('show');
+
+        try {
+            const resp = await fetch('/api/orderbook/' + exchange + '/' + encodeURIComponent(symbol));
+            const data = await resp.json();
+
+            if (data.status === 'success') {
+                const ob = data.data;
+                const parseEntry = (item) => Array.isArray(item)
+                    ? {price: parseFloat(item[0]), amount: parseFloat(item[1])}
+                    : {price: parseFloat(item.price), amount: parseFloat(item.amount)};
+
+                const allAsks = ob.asks.map(parseEntry).sort((a, b) => a.price - b.price);
+                const asksToShow = allAsks.slice(0, 15).reverse();
+                let askCum = 0;
+                const askTotals = [];
+                for (let i = asksToShow.length - 1; i >= 0; i--) {
+                    askCum += asksToShow[i].price * asksToShow[i].amount;
+                    askTotals[i] = askCum;
+                }
+                asks.innerHTML = asksToShow.map(({price, amount}, idx) =>
+                    '<div class="orderbook-row ask">' +
+                    '<span class="ob-price">' + formatPrice(price) + '</span>' +
+                    '<span class="ob-qty">' + formatVolume(amount) + '</span>' +
+                    '<span class="ob-total">' + formatVolume(askTotals[idx]) + '</span>' +
+                    '</div>'
+                ).join('');
+                asks.scrollTop = asks.scrollHeight;
+
+                const allBids = ob.bids.map(parseEntry).sort((a, b) => b.price - a.price);
+                const bidsToShow = allBids.slice(0, 15);
+                let bidCum = 0;
+                bids.innerHTML = bidsToShow.map(({price, amount}) => {
+                    bidCum += price * amount;
+                    return '<div class="orderbook-row bid">' +
+                        '<span class="ob-price">' + formatPrice(price) + '</span>' +
+                        '<span class="ob-qty">' + formatVolume(amount) + '</span>' +
+                        '<span class="ob-total">' + formatVolume(bidCum) + '</span>' +
+                        '</div>';
+                }).join('');
+
+                if (allAsks.length > 0 && allBids.length > 0) {
+                    const lowestAsk = allAsks[0].price;
+                    const highestBid = allBids[0].price;
+                    const sp = ((lowestAsk - highestBid) / lowestAsk * 100).toFixed(4);
+                    spread.textContent = 'Spread: ' + sp + '%';
+                }
+            } else {
+                asks.innerHTML = '<div style="padding:8px;color:var(--accent-red)">' + (data.message || 'Error') + '</div>';
+            }
+        } catch(e) {
+            asks.innerHTML = '<div style="padding:8px;color:var(--accent-red)">Gagal memuat orderbook</div>';
+        }
+    }
+
+    function closeArbOrderbook() {
+        document.getElementById('arb-ob-modal').classList.remove('show');
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeArbOrderbook();
+    });
+
     // ---- Init ----
     $(document).ready(function() {
         initTheme();
 
         const savedExclude = localStorage.getItem('arb_exclude_leveraged');
         document.getElementById('exclude-leveraged').checked = savedExclude !== '0';
+
+        const savedListFilter = localStorage.getItem('arb_list_filter') || '';
+        document.getElementById('arb-list-filter').value = savedListFilter;
 
         initTable();
         loadArbitrageData();
@@ -345,6 +498,11 @@
         document.getElementById('max-spread').addEventListener('input', applyFilters);
         document.getElementById('min-exchanges').addEventListener('input', applyFilters);
         document.getElementById('exclude-leveraged').addEventListener('change', loadArbitrageData);
+        document.getElementById('arb-list-filter').addEventListener('change', applyFilters);
+
+        document.getElementById('arb-ob-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeArbOrderbook();
+        });
     });
     </script>
 </body>

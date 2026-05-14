@@ -1250,6 +1250,8 @@ def get_arbitrage():
     exclude_leveraged = request.args.get('exclude_leveraged', 'true') == 'true'
     leveraged_pattern = re.compile(r'\d+[LSls](USDT)?$')
 
+    arb_blacklist = {e.symbol for e in MarketList.query.filter_by(exchange='ARB', list_type='blacklist').all()}
+
     subq = db.session.query(
         SpotTicker.symbol,
         func.count(SpotTicker.exchange).label('exchange_count')
@@ -1306,7 +1308,8 @@ def get_arbitrage():
             'min_exchange': min_entry.exchange,
             'spread_pct': round(spread_pct, 4),
             'total_turnover': total_turnover,
-            'exchanges': exchange_list
+            'exchanges': exchange_list,
+            'is_blacklisted': symbol in arb_blacklist
         })
 
     results.sort(key=lambda x: x['spread_pct'], reverse=True)

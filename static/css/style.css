@@ -2242,6 +2242,24 @@ table.dataTable thead .sorting_desc:after {
     justify-content: center;
 }
 
+.arb-bl-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 2px 6px;
+    cursor: pointer;
+    opacity: 0.3;
+    transition: opacity 0.2s, background 0.2s;
+    font-size: 0.9rem;
+    line-height: 1;
+}
+.arb-bl-btn:hover { opacity: 0.8; }
+.arb-bl-btn.arb-bl-active {
+    opacity: 1;
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
 .arb-stats-bar {
     display: flex;
     gap: 16px;
