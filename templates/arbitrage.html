@@ -77,8 +77,8 @@
                 <label class="min-spread-filter" style="gap:6px;">
                     <span style="font-size:0.8rem;">Filter:</span>
                     <select id="arb-list-filter" style="padding:4px 8px; border-radius:4px; background:var(--bg-secondary); color:var(--text-primary); border:1px solid var(--border-color); font-size:0.8rem; cursor:pointer;">
-                        <option value="">Semua Data</option>
                         <option value="hide_blacklist">Sembunyikan Blacklist</option>
+                        <option value="">Semua Data</option>
                         <option value="only_blacklist">Hanya Blacklist</option>
                     </select>
                 </label>
@@ -400,8 +400,7 @@
                 if (item) item.is_blacklisted = added;
                 btn.classList.toggle('arb-bl-active', added);
                 btn.title = added ? 'Hapus dari blacklist' : 'Tambah ke blacklist';
-                const listFilter = document.getElementById('arb-list-filter').value;
-                if (listFilter !== '') applyFilters();
+                applyFilters();
             }
         } catch(e) { console.error(e); }
     }
@@ -488,7 +487,7 @@
         const savedExclude = localStorage.getItem('arb_exclude_leveraged');
         document.getElementById('exclude-leveraged').checked = savedExclude !== '0';
 
-        const savedListFilter = localStorage.getItem('arb_list_filter') || '';
+        const savedListFilter = localStorage.getItem('arb_list_filter') || 'hide_blacklist';
         document.getElementById('arb-list-filter').value = savedListFilter;
 
         initTable();
