@@ -1226,6 +1226,97 @@ def fetch_btse():
         }), 500
 
 
+@app.route('/arbitrage')
+def arbitrage():
+    return render_template('arbitrage.html')
+
+
+@app.route('/api/arbitrage')
+def get_arbitrage():
+    from sqlalchemy import func
+
+    subq = db.session.query(
+        SpotTicker.symbol,
+        func.count(SpotTicker.exchange).label('exchange_count')
+    ).filter(
+        SpotTicker.price.isnot(None),
+        SpotTicker.price > 0
+    ).group_by(SpotTicker.symbol).having(
+        func.count(SpotTicker.exchange) >= 2
+    ).subquery()
+
+    tickers = db.session.query(SpotTicker).join(
+        subq, SpotTicker.symbol == subq.c.symbol
+    ).filter(
+        SpotTicker.price.isnot(None),
+        SpotTicker.price > 0
+    ).all()
+
+    grouped = {}
+    for t in tickers:
+        if t.symbol not in grouped:
+            grouped[t.symbol] = []
+        grouped[t.symbol].append(t)
+
+    results = []
+    for symbol, entries in grouped.items():
+        raw_prices = [(e.price, e.exchange, e.turnover_24h, e.change_24h) for e in entries if e.price and e.price > 0]
+        if len(raw_prices) < 2:
+            continue
+
+        # Data quality filter: iteratively remove extreme outliers (>50x ratio)
+        sorted_prices = sorted(raw_prices, key=lambda x: x[0])
+        while len(sorted_prices) >= 2:
+            lo = sorted_prices[0][0]
+            hi = sorted_prices[-1][0]
+            if hi / lo <= 50:
+                break
+            # Remove whichever extreme is further from the median
+            mid = len(sorted_prices) // 2
+            median = sorted_prices[mid][0]
+            if (hi / median) >= (median / lo):
+                sorted_prices = sorted_prices[:-1]
+            else:
+                sorted_prices = sorted_prices[1:]
+
+        if len(sorted_prices) < 2:
+            continue
+        prices = sorted_prices
+
+        max_entry = max(prices, key=lambda x: x[0])
+        min_entry = min(prices, key=lambda x: x[0])
+        max_price, max_exchange = max_entry[0], max_entry[1]
+        min_price, min_exchange = min_entry[0], min_entry[1]
+
+        spread_pct = ((max_price - min_price) / min_price) * 100 if min_price > 0 else 0
+
+        total_turnover = sum(e.turnover_24h for e in entries if e.turnover_24h)
+
+        exchange_list = sorted([{
+            'exchange': p[1],
+            'price': p[0],
+            'turnover_24h': p[2],
+            'change_24h': p[3]
+        } for p in prices], key=lambda x: x['price'], reverse=True)
+
+        results.append({
+            'symbol': symbol,
+            'base_currency': entries[0].base_currency,
+            'exchange_count': len(prices),
+            'max_price': max_price,
+            'max_exchange': max_exchange,
+            'min_price': min_price,
+            'min_exchange': min_exchange,
+            'spread_pct': round(spread_pct, 4),
+            'total_turnover': total_turnover,
+            'exchanges': exchange_list
+        })
+
+    results.sort(key=lambda x: x['spread_pct'], reverse=True)
+
+    return jsonify({'status': 'success', 'data': results, 'count': len(results)})
+
+
 @app.route('/api/market-list')
 def get_market_list():
     list_type = request.args.get('type', None)

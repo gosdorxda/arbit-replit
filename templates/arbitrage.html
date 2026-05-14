@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arbitrase Antar Exchange</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Roboto:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <h1 class="title">Arbitrase Antar Exchange</h1>
+                <p class="subtitle">Perbandingan harga SPOT/USDT di berbagai exchange</p>
+            </div>
+            <div class="header-controls">
+                <a href="/" class="nav-link-btn" title="Kembali ke halaman utama">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                    Kembali
+                </a>
+                <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"/>
+                        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                    </svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <section class="control-panel" style="padding: 10px 0;">
+            <div class="arb-stats-bar" id="arb-stats">
+                <div class="arb-stat">
+                    <span class="arb-stat-label">Total Coin</span>
+                    <span class="arb-stat-value" id="stat-total">—</span>
+                </div>
+                <div class="arb-stat">
+                    <span class="arb-stat-label">Spread &gt;5%</span>
+                    <span class="arb-stat-value highlight" id="stat-high">—</span>
+                </div>
+                <div class="arb-stat">
+                    <span class="arb-stat-label">Spread &gt;1%</span>
+                    <span class="arb-stat-value" style="color:var(--accent-yellow)" id="stat-medium">—</span>
+                </div>
+                <div class="arb-stat">
+                    <span class="arb-stat-label">Spread Tertinggi</span>
+                    <span class="arb-stat-value highlight" id="stat-max-spread">—</span>
+                </div>
+                <div class="arb-stat">
+                    <span class="arb-stat-label">Terakhir Diperbarui</span>
+                    <span class="arb-stat-value" style="font-size:0.8rem; color:var(--text-secondary)" id="stat-updated">—</span>
+                </div>
+            </div>
+            <div class="arb-filter-row">
+                <div class="min-spread-filter">
+                    <label for="min-spread">Min Spread %:</label>
+                    <input type="number" id="min-spread" value="0" min="0" step="0.1" placeholder="0">
+                </div>
+                <div class="min-spread-filter">
+                    <label for="min-exchanges">Min Exchange:</label>
+                    <input type="number" id="min-exchanges" value="2" min="2" step="1" placeholder="2">
+                </div>
+                <div class="min-spread-filter">
+                    <label for="max-spread">Max Spread %:</label>
+                    <input type="number" id="max-spread" value="500" min="0" step="1" placeholder="500">
+                </div>
+                <button class="load-depth-btn" onclick="loadArbitrageData()" id="btn-refresh">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                        <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Muat Ulang
+                </button>
+                <span id="loading-indicator" style="display:none; font-size:0.75rem; color:var(--text-muted);">Memuat data…</span>
+            </div>
+        </section>
+
+        <section class="table-section">
+            <div class="table-wrapper">
+                <table id="arb-table" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Exchange</th>
+                            <th>Harga Tertinggi</th>
+                            <th>Harga Terendah</th>
+                            <th>Spread %</th>
+                            <th>Total Vol (USD)</th>
+                            <th>Semua Exchange</th>
+                        </tr>
+                    </thead>
+                    <tbody id="arb-tbody"></tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script>
+    // ---- Theme ----
+    function initTheme() {
+        const saved = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', saved);
+        updateThemeIcons(saved);
+    }
+    function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme') || 'dark';
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+        updateThemeIcons(next);
+    }
+    function updateThemeIcons(theme) {
+        const sun = document.querySelector('.icon-sun');
+        const moon = document.querySelector('.icon-moon');
+        if (sun && moon) {
+            sun.style.display = theme === 'dark' ? 'block' : 'none';
+            moon.style.display = theme === 'dark' ? 'none' : 'block';
+        }
+    }
+
+    // ---- Exchange URL mapping ----
+    function getExchangeUrl(exchange, symbol) {
+        const pair = symbol.replace('/', '_').toLowerCase();
+        const pairUpper = symbol.replace('/', '_');
+        const base = symbol.split('/')[0];
+        switch(exchange.toUpperCase()) {
+            case 'LBANK': return `https://www.lbank.com/trade/${pair}`;
+            case 'HASHKEY': return `https://global.hashkey.com/en-US/spot/${symbol.replace('/', '-')}`;
+            case 'BICONOMY': return `https://www.biconomy.com/exchange/${pairUpper}`;
+            case 'MEXC': return `https://www.mexc.com/exchange/${pairUpper}`;
+            case 'BITRUE': return `https://www.bitrue.com/trade/${pair}`;
+            case 'ASCENDEX': return `https://ascendex.com/en/cashtrade-spottrading/usdt/${base.toLowerCase()}`;
+            case 'BITMART': return `https://www.bitmart.com/trade/en-US?symbol=${pairUpper}`;
+            case 'DEXTRADE': return `https://dex-trade.com/spot/trading/${symbol.replace('/', '')}?interface=classic`;
+            case 'POLONIEX': return `https://poloniex.com/trade/${base}_USDT`;
+            case 'GATEIO': return `https://www.gate.io/trade/${pairUpper}`;
+            case 'NIZA': return `https://niza.io/trade/${pairUpper}`;
+            case 'XT': return `https://www.xt.com/en/trade/${pair}`;
+            case 'COINSTORE': return `https://www.coinstore.com/spot/${base}USDT`;
+            case 'VINDAX': return `https://vindax.com/exchange-base.html?symbol=${base}_USDT`;
+            case 'FAMEEX': return `https://www.fameex.com/en-US/trade/${base.toLowerCase()}-usdt`;
+            case 'BIGONE': return `https://big.one/en/trade/${base}-USDT`;
+            case 'P2PB2B': return `https://p2pb2b.com/trade/${base}_USDT`;
+            case 'DIGIFINEX': return `https://www.digifinex.com/en-ww/trade/USDT/${base}`;
+            case 'AZBIT': return `https://azbit.com/exchange/${base}_USDT`;
+            case 'LATOKEN': return `https://latoken.com/exchange/${base}_USDT`;
+            case 'BINGX': return `https://bingx.com/en/trade/${base}-USDT/`;
+            case 'KRAKEN': return `https://pro.kraken.com/app/trade/${base}-USD`;
+            case 'BTSE': return `https://www.btse.com/en/trading/${base}-USDT`;
+            default: return '#';
+        }
+    }
+
+    // ---- Exchange chip colors ----
+    const EXCHANGE_COLORS = {
+        LBANK:'#2962ff', HASHKEY:'#7c3aed', BICONOMY:'#00b894', MEXC:'#1873e8',
+        BITRUE:'#00c853', ASCENDEX:'#ff6b35', BITMART:'#00b8d4', DEXTRADE:'#9b59b6',
+        POLONIEX:'#0c9c4e', GATEIO:'#c23b33', NIZA:'#6366f1', XT:'#2563eb',
+        COINSTORE:'#f59e0b', VINDAX:'#10b981', FAMEEX:'#e11d48', BIGONE:'#0ea5e9',
+        P2PB2B:'#8b5cf6', DIGIFINEX:'#00d4aa', AZBIT:'#f97316', LATOKEN:'#3b82f6',
+        KRAKEN:'#5841d8', BINGX:'#f0a500', BTSE:'#1a56db'
+    };
+
+    function exchangeChip(exchange, symbol) {
+        const color = EXCHANGE_COLORS[exchange.toUpperCase()] || '#666';
+        const url = getExchangeUrl(exchange, symbol);
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer"
+            class="arb-exchange-chip" style="background-color:${color};"
+            title="${exchange}">${exchange}</a>`;
+    }
+
+    // ---- Spread badge ----
+    function spreadBadge(pct) {
+        let cls = 'spread-low';
+        if (pct >= 5) cls = 'spread-very-high';
+        else if (pct >= 3) cls = 'spread-high';
+        else if (pct >= 1) cls = 'spread-medium';
+        return `<span class="spread-badge ${cls}">${pct.toFixed(2)}%</span>`;
+    }
+
+    // ---- Format helpers ----
+    function formatPrice(p) {
+        if (!p) return '—';
+        if (p >= 1000) return p.toLocaleString('en-US', {maximumFractionDigits: 2});
+        if (p >= 1) return p.toFixed(4);
+        if (p >= 0.0001) return p.toFixed(6);
+        return p.toExponential(4);
+    }
+    function formatVolume(v) {
+        if (!v || v === 0) return '—';
+        if (v >= 1e9) return (v/1e9).toFixed(2) + 'B';
+        if (v >= 1e6) return (v/1e6).toFixed(2) + 'M';
+        if (v >= 1e3) return (v/1e3).toFixed(2) + 'K';
+        return v.toFixed(2);
+    }
+
+    // ---- DataTable instance ----
+    let arbTable = null;
+    let allData = [];
+
+    function initTable() {
+        arbTable = $('#arb-table').DataTable({
+            data: [],
+            columns: [
+                { title: 'Symbol', data: 'symbol_html', orderable: true, width: '100px' },
+                { title: 'Exchange', data: 'exchange_count', orderable: true, width: '60px', className: 'dt-center' },
+                { title: 'Harga Tertinggi', data: 'max_html', orderable: false },
+                { title: 'Harga Terendah', data: 'min_html', orderable: false },
+                { title: 'Spread %', data: 'spread_sort', orderable: true, render: function(data, type, row) {
+                    return type === 'display' ? row.spread_html : data;
+                }},
+                { title: 'Total Vol (USD)', data: 'turnover_sort', orderable: true, render: function(data, type, row) {
+                    return type === 'display' ? row.turnover_html : data;
+                }},
+                { title: 'Semua Exchange', data: 'all_exchanges_html', orderable: false }
+            ],
+            order: [[4, 'desc']],
+            pageLength: 50,
+            lengthMenu: [25, 50, 100, 200],
+            language: {
+                search: 'Cari:',
+                lengthMenu: 'Tampilkan _MENU_ data',
+                info: 'Menampilkan _START_–_END_ dari _TOTAL_ data',
+                infoEmpty: 'Tidak ada data',
+                paginate: { previous: '‹', next: '›' },
+                zeroRecords: 'Tidak ada coin yang memenuhi filter',
+                emptyTable: 'Belum ada data arbitrase. Fetch data exchange terlebih dahulu.'
+            },
+            autoWidth: false,
+            responsive: false
+        });
+    }
+
+    function buildRows(data) {
+        return data.map(item => {
+            const allChips = item.exchanges.map(e =>
+                exchangeChip(e.exchange, item.symbol)
+            ).join(' ');
+
+            return {
+                symbol_html: `<span style="font-weight:700; font-family:'JetBrains Mono',monospace; color:var(--accent-blue)">${item.symbol}</span>`,
+                exchange_count: item.exchange_count,
+                max_html: `<div class="arb-exchange-row">
+                    ${exchangeChip(item.max_exchange, item.symbol)}
+                    <span class="arb-price" style="color:var(--accent-green)">${formatPrice(item.max_price)}</span>
+                </div>`,
+                min_html: `<div class="arb-exchange-row">
+                    ${exchangeChip(item.min_exchange, item.symbol)}
+                    <span class="arb-price" style="color:var(--accent-red)">${formatPrice(item.min_price)}</span>
+                </div>`,
+                spread_html: spreadBadge(item.spread_pct),
+                spread_sort: item.spread_pct,
+                turnover_html: `<span style="font-family:'JetBrains Mono',monospace; font-size:0.8rem">${formatVolume(item.total_turnover)}</span>`,
+                turnover_sort: item.total_turnover || 0,
+                all_exchanges_html: `<div class="arb-all-exchanges">${allChips}</div>`
+            };
+        });
+    }
+
+    function applyFilters() {
+        const minSpread = parseFloat(document.getElementById('min-spread').value) || 0;
+        const maxSpread = parseFloat(document.getElementById('max-spread').value);
+        const maxSpreadLimit = isNaN(maxSpread) ? Infinity : maxSpread;
+        const minExchanges = parseInt(document.getElementById('min-exchanges').value) || 2;
+
+        const filtered = allData.filter(d =>
+            d.spread_pct >= minSpread && d.spread_pct <= maxSpreadLimit && d.exchange_count >= minExchanges
+        );
+
+        arbTable.clear();
+        arbTable.rows.add(buildRows(filtered));
+        arbTable.draw();
+
+        updateStats(filtered);
+    }
+
+    function updateStats(data) {
+        document.getElementById('stat-total').textContent = data.length.toLocaleString();
+        document.getElementById('stat-high').textContent = data.filter(d => d.spread_pct >= 5).length.toLocaleString();
+        document.getElementById('stat-medium').textContent = data.filter(d => d.spread_pct >= 1).length.toLocaleString();
+        const maxSpread = data.length > 0 ? Math.max(...data.map(d => d.spread_pct)) : 0;
+        document.getElementById('stat-max-spread').textContent = maxSpread > 0 ? maxSpread.toFixed(2) + '%' : '—';
+        document.getElementById('stat-updated').textContent = new Date().toLocaleTimeString('id-ID');
+    }
+
+    async function loadArbitrageData() {
+        const btn = document.getElementById('btn-refresh');
+        const indicator = document.getElementById('loading-indicator');
+        btn.disabled = true;
+        indicator.style.display = 'inline';
+
+        try {
+            const resp = await fetch('/api/arbitrage');
+            const json = await resp.json();
+
+            if (json.status === 'success') {
+                allData = json.data;
+                applyFilters();
+            }
+        } catch(e) {
+            console.error('Failed to load arbitrage data', e);
+        } finally {
+            btn.disabled = false;
+            indicator.style.display = 'none';
+        }
+    }
+
+    // ---- Init ----
+    $(document).ready(function() {
+        initTheme();
+        initTable();
+        loadArbitrageData();
+
+        document.getElementById('min-spread').addEventListener('input', applyFilters);
+        document.getElementById('min-exchanges').addEventListener('input', applyFilters);
+    });
+    </script>
+</body>
+</html>
