@@ -7,6 +7,9 @@ logger = logging.getLogger(__name__)
 
 
 class HTXAdapter(BaseAdapter):
+    # Using api.huobi.pro (old Huobi domain) because api.htx.com is
+    # Cloudflare-blocked in many server environments. Both domains serve
+    # the same HTX exchange API.
     BASE_URL = "https://api.huobi.pro"
 
     @property
