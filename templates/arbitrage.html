@@ -91,6 +91,11 @@
                         <input type="checkbox" id="exclude-leveraged" style="accent-color:var(--accent-blue);">
                         <span>Sembunyikan 3L/3S</span>
                     </label>
+                    <div class="arb-filter-vdiv"></div>
+                    <label class="arb-filter-toggle">
+                        <input type="checkbox" id="show-vol-toggle" style="accent-color:var(--accent-blue);">
+                        <span>Tampilkan Volume</span>
+                    </label>
                 </div>
                 <!-- Row 2: pill filters + exchange exclusion + actions -->
                 <div class="arb-filter-row-2">
@@ -363,15 +368,17 @@
             const wlTitle = item.is_wishlisted ? 'Hapus dari wishlist' : 'Tambah ke wishlist';
             const safeSym = item.symbol.replace(/'/g, "\\'");
 
+            const maxVolBadge = item.max_turnover ? `<span class="arb-vol-badge">${formatVolume(item.max_turnover)}</span>` : '';
+            const minVolBadge = item.min_turnover ? `<span class="arb-vol-badge">${formatVolume(item.min_turnover)}</span>` : '';
             return {
                 symbol_html: `<span style="font-weight:700; font-family:'JetBrains Mono',monospace; color:var(--accent-blue)">${item.base_currency}</span>`,
                 exchange_count: item.exchange_count,
                 max_html: `<div class="arb-exchange-row">
-                    ${exchangeChip(item.max_exchange, item.symbol)}
+                    ${exchangeChip(item.max_exchange, item.symbol)}${maxVolBadge}
                     <span class="arb-price" style="color:var(--accent-green)">${formatPrice(item.max_price)}</span>
                 </div>`,
                 min_html: `<div class="arb-exchange-row">
-                    ${exchangeChip(item.min_exchange, item.symbol)}
+                    ${exchangeChip(item.min_exchange, item.symbol)}${minVolBadge}
                     <span class="arb-price" style="color:var(--accent-red)">${formatPrice(item.min_price)}</span>
                 </div>`,
                 spread_html: spreadBadge(item.spread_pct),
@@ -647,6 +654,14 @@
 
         const savedExclude = localStorage.getItem('arb_exclude_leveraged');
         document.getElementById('exclude-leveraged').checked = savedExclude !== '0';
+
+        const savedShowVol = localStorage.getItem('arb_show_vol') === '1';
+        document.getElementById('show-vol-toggle').checked = savedShowVol;
+        if (savedShowVol) document.querySelector('.table-wrapper').classList.add('arb-vol-visible');
+        document.getElementById('show-vol-toggle').addEventListener('change', function() {
+            document.querySelector('.table-wrapper').classList.toggle('arb-vol-visible', this.checked);
+            localStorage.setItem('arb_show_vol', this.checked ? '1' : '0');
+        });
 
         const savedListFilter = localStorage.getItem('arb_list_filter') || 'hide_blacklist';
         document.getElementById('arb-list-filter').value = savedListFilter;
