@@ -273,6 +273,19 @@
             title="${exchange}">${exchange}</a>`;
     }
 
+    function exchangeChipWithVol(exchange, symbol, volume) {
+        const color = EXCHANGE_COLORS[exchange.toUpperCase()] || '#666';
+        const url = getExchangeUrl(exchange, symbol);
+        const volStr = (volume != null && volume > 0) ? formatVolume(volume) : '$0';
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer"
+            class="arb-exchange-chip arb-chip-with-vol" style="background-color:${color}; padding:0;"
+            title="${exchange}">
+            <span class="arb-chip-vol">${volStr}</span>
+            <span class="arb-chip-sep"></span>
+            <span class="arb-chip-name">${exchange}</span>
+        </a>`;
+    }
+
     function exchangeChipOrderbook(exchange, symbol) {
         const color = EXCHANGE_COLORS[exchange.toUpperCase()] || '#666';
         const safeEx = exchange.replace(/'/g, "\\'");
@@ -368,17 +381,15 @@
             const wlTitle = item.is_wishlisted ? 'Hapus dari wishlist' : 'Tambah ke wishlist';
             const safeSym = item.symbol.replace(/'/g, "\\'");
 
-            const maxVolBadge = item.max_turnover ? `<span class="arb-vol-badge">${formatVolume(item.max_turnover)}</span>` : '';
-            const minVolBadge = item.min_turnover ? `<span class="arb-vol-badge">${formatVolume(item.min_turnover)}</span>` : '';
             return {
                 symbol_html: `<span style="font-weight:700; font-family:'JetBrains Mono',monospace; color:var(--accent-blue)">${item.base_currency}</span>`,
                 exchange_count: item.exchange_count,
                 max_html: `<div class="arb-exchange-row">
-                    ${exchangeChip(item.max_exchange, item.symbol)}${maxVolBadge}
+                    ${exchangeChipWithVol(item.max_exchange, item.symbol, item.max_turnover)}
                     <span class="arb-price" style="color:var(--accent-green)">${formatPrice(item.max_price)}</span>
                 </div>`,
                 min_html: `<div class="arb-exchange-row">
-                    ${exchangeChip(item.min_exchange, item.symbol)}${minVolBadge}
+                    ${exchangeChipWithVol(item.min_exchange, item.symbol, item.min_turnover)}
                     <span class="arb-price" style="color:var(--accent-red)">${formatPrice(item.min_price)}</span>
                 </div>`,
                 spread_html: spreadBadge(item.spread_pct),
