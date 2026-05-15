@@ -53,6 +53,10 @@
                     <span class="arb-stat-value highlight" id="stat-max-spread">—</span>
                 </div>
                 <div class="arb-stat">
+                    <span class="arb-stat-label">Wishlist</span>
+                    <span class="arb-stat-value" style="color:var(--accent-yellow)" id="stat-wishlist">—</span>
+                </div>
+                <div class="arb-stat">
                     <span class="arb-stat-label">Terakhir Diperbarui</span>
                     <span class="arb-stat-value" style="font-size:0.8rem; color:var(--text-secondary)" id="stat-updated">—</span>
                 </div>
@@ -454,6 +458,7 @@
         document.getElementById('stat-medium').textContent = data.filter(d => d.spread_pct >= 1).length.toLocaleString();
         const maxSpread = data.length > 0 ? Math.max(...data.map(d => d.spread_pct)) : 0;
         document.getElementById('stat-max-spread').textContent = maxSpread > 0 ? maxSpread.toFixed(2) + '%' : '—';
+        document.getElementById('stat-wishlist').textContent = data.filter(d => d.is_wishlisted).length.toLocaleString();
         document.getElementById('stat-updated').textContent = new Date().toLocaleTimeString('id-ID');
     }
 
