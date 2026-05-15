@@ -277,13 +277,9 @@
         const color = EXCHANGE_COLORS[exchange.toUpperCase()] || '#666';
         const url = getExchangeUrl(exchange, symbol);
         const volStr = formatVolShort(volume);
-        return `<a href="${url}" target="_blank" rel="noopener noreferrer"
-            class="arb-exchange-chip arb-chip-with-vol" style="background-color:${color}; padding:0;"
-            title="${exchange}">
-            <span class="arb-chip-vol">${volStr}</span>
-            <span class="arb-chip-sep"></span>
-            <span class="arb-chip-name">${exchange}</span>
-        </a>`;
+        return `<span class="arb-vol-badge">${volStr}</span><a href="${url}" target="_blank" rel="noopener noreferrer"
+            class="arb-exchange-chip" style="background-color:${color};"
+            title="${exchange}">${exchange}</a>`;
     }
 
     function exchangeChipOrderbook(exchange, symbol) {

@@ -2338,6 +2338,10 @@ table.dataTable thead .sorting_desc:after {
     gap: 6px;
 }
 
+.arb-vol-visible .arb-exchange-row {
+    grid-template-columns: 46px 80px 1fr;
+}
+
 .arb-exchange-row .arb-exchange-chip {
     width: 100%;
     justify-content: center;
@@ -2572,49 +2576,27 @@ table.dataTable thead .sorting_desc:after {
     color: var(--accent-red);
 }
 
-.arb-chip-with-vol {
-    overflow: hidden;
-    align-items: stretch !important;
-    gap: 0 !important;
-}
-
-.arb-chip-vol {
+.arb-vol-badge {
     display: none;
     align-items: center;
-    padding: 0 5px;
+    justify-content: center;
+    width: 46px;
+    padding: 2px 4px;
     font-size: 0.62rem;
     font-family: 'JetBrains Mono', monospace;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.78);
-    background: rgba(0, 0, 0, 0.22);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-muted);
     white-space: nowrap;
-    flex-shrink: 1;
-    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 58px;
+    text-align: center;
 }
 
-.arb-chip-sep {
-    display: none;
-    width: 1px;
-    background: rgba(255, 255, 255, 0.3);
-    flex-shrink: 0;
-}
-
-.arb-chip-name {
-    padding: 2px 8px;
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-}
-
-.arb-vol-visible .arb-chip-vol {
+.arb-vol-visible .arb-vol-badge {
     display: inline-flex;
-}
-
-.arb-vol-visible .arb-chip-sep {
-    display: block;
 }
 
 .arb-exchange-count-badge {
