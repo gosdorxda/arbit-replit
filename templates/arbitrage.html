@@ -276,7 +276,7 @@
     function exchangeChipWithVol(exchange, symbol, volume) {
         const color = EXCHANGE_COLORS[exchange.toUpperCase()] || '#666';
         const url = getExchangeUrl(exchange, symbol);
-        const volStr = (volume != null && volume > 0) ? formatVolume(volume) : '$0';
+        const volStr = formatVolShort(volume);
         return `<a href="${url}" target="_blank" rel="noopener noreferrer"
             class="arb-exchange-chip arb-chip-with-vol" style="background-color:${color}; padding:0;"
             title="${exchange}">
@@ -329,6 +329,14 @@
         if (v >= 1e6) return (v/1e6).toFixed(2) + 'M';
         if (v >= 1e3) return (v/1e3).toFixed(2) + 'K';
         return v.toFixed(2);
+    }
+
+    function formatVolShort(v) {
+        if (!v || v <= 0) return '$0';
+        if (v >= 1e9) return '$' + (v / 1e9).toFixed(1) + 'B';
+        if (v >= 1e6) return '$' + (v / 1e6).toFixed(1) + 'M';
+        if (v >= 1e3) return '$' + (v / 1e3).toFixed(1) + 'K';
+        return '$' + Math.round(v);
     }
 
     // ---- DataTable instance ----
