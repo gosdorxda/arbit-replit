@@ -1325,6 +1325,7 @@ def get_arbitrage():
     leveraged_pattern = re.compile(r'\d+[LSls](USDT)?$')
 
     arb_blacklist = {e.symbol for e in MarketList.query.filter_by(exchange='ARB', list_type='blacklist').all()}
+    arb_wishlist = {e.symbol for e in MarketList.query.filter_by(exchange='ARB', list_type='whitelist').all()}
 
     subq = db.session.query(
         SpotTicker.symbol,
@@ -1383,7 +1384,8 @@ def get_arbitrage():
             'spread_pct': round(spread_pct, 4),
             'total_turnover': total_turnover,
             'exchanges': exchange_list,
-            'is_blacklisted': symbol in arb_blacklist
+            'is_blacklisted': symbol in arb_blacklist,
+            'is_wishlisted': symbol in arb_wishlist
         })
 
     results.sort(key=lambda x: x['spread_pct'], reverse=True)

@@ -88,6 +88,8 @@
                         <option value="hide_blacklist">Sembunyikan Blacklist</option>
                         <option value="">Semua Data</option>
                         <option value="only_blacklist">Hanya Blacklist</option>
+                        <option value="only_wishlist">Hanya Wishlist</option>
+                        <option value="hide_wishlist">Sembunyikan Wishlist</option>
                     </select>
                 </label>
                 <div class="min-spread-filter" style="position:relative;">
@@ -336,6 +338,8 @@
 
             const blActive = item.is_blacklisted ? 'arb-bl-active' : '';
             const blTitle = item.is_blacklisted ? 'Hapus dari blacklist' : 'Tambah ke blacklist';
+            const wlActive = item.is_wishlisted ? 'arb-wl-active' : '';
+            const wlTitle = item.is_wishlisted ? 'Hapus dari wishlist' : 'Tambah ke wishlist';
             const safeSym = item.symbol.replace(/'/g, "\\'");
 
             return {
@@ -354,7 +358,10 @@
                 turnover_html: `<span style="font-family:'JetBrains Mono',monospace; font-size:0.8rem">${formatVolume(item.total_turnover)}</span>`,
                 turnover_sort: item.total_turnover || 0,
                 all_exchanges_html: `<div class="arb-all-exchanges">${allChips}</div>`,
-                list_html: `<button class="arb-bl-btn ${blActive}" onclick="toggleArbBlacklist('${safeSym}',this)" title="${blTitle}">⛔</button>`
+                list_html: `<div style="display:flex;gap:4px;align-items:center;">
+                    <button class="arb-bl-btn ${blActive}" onclick="toggleArbBlacklist('${safeSym}',this)" title="${blTitle}">⛔</button>
+                    <button class="arb-wl-btn ${wlActive}" onclick="toggleArbWishlist('${safeSym}',this)" title="${wlTitle}">⭐</button>
+                </div>`
             };
         });
     }
@@ -429,6 +436,8 @@
             if (vol < minVolume || vol > maxVolumeLimit) return false;
             if (listFilter === 'hide_blacklist' && d.is_blacklisted) return false;
             if (listFilter === 'only_blacklist' && !d.is_blacklisted) return false;
+            if (listFilter === 'only_wishlist' && !d.is_wishlisted) return false;
+            if (listFilter === 'hide_wishlist' && d.is_wishlisted) return false;
             return true;
         });
 
@@ -489,6 +498,26 @@
                 if (item) item.is_blacklisted = added;
                 btn.classList.toggle('arb-bl-active', added);
                 btn.title = added ? 'Hapus dari blacklist' : 'Tambah ke blacklist';
+                applyFilters();
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    // ---- Arb Wishlist ----
+    async function toggleArbWishlist(symbol, btn) {
+        try {
+            const resp = await fetch('/api/market-list/toggle', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({exchange: 'ARB', symbol: symbol, list_type: 'whitelist'})
+            });
+            const data = await resp.json();
+            if (data.status === 'success') {
+                const added = data.action === 'added';
+                const item = allData.find(d => d.symbol === symbol);
+                if (item) item.is_wishlisted = added;
+                btn.classList.toggle('arb-wl-active', added);
+                btn.title = added ? 'Hapus dari wishlist' : 'Tambah ke wishlist';
                 applyFilters();
             }
         } catch(e) { console.error(e); }
