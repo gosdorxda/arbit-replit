@@ -2438,6 +2438,140 @@ table.dataTable thead .sorting_desc:after {
     flex-wrap: wrap;
 }
 
+.arb-filter-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    margin: 8px 0;
+}
+
+.arb-filter-row-1,
+.arb-filter-row-2 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.arb-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.arb-filter-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.arb-filter-vdiv {
+    width: 1px;
+    height: 32px;
+    background: var(--border-color);
+    flex-shrink: 0;
+}
+
+.arb-range-pair {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.arb-range-sep {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.arb-num-input {
+    width: 72px;
+    padding: 5px 7px;
+    font-size: 0.8rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    transition: border-color 0.15s;
+    text-align: center;
+}
+
+.arb-num-input:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.15);
+}
+
+.arb-filter-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.arb-filter-toggle:hover { color: var(--text-primary); }
+
+.arb-pill-group {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.arb-pill {
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.arb-pill:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--text-muted);
+}
+
+.arb-pill.active {
+    background: var(--accent-blue);
+    color: #fff;
+    border-color: var(--accent-blue);
+    font-weight: 600;
+}
+
+.arb-reset-btn {
+    padding: 5px 12px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.arb-reset-btn:hover {
+    background: rgba(248, 81, 73, 0.1);
+    border-color: var(--accent-red);
+    color: var(--accent-red);
+}
+
 .arb-exchange-count-badge {
     display: inline-flex;
     align-items: center;

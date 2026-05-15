@@ -61,68 +61,85 @@
                     <span class="arb-stat-value" style="font-size:0.8rem; color:var(--text-secondary)" id="stat-updated">—</span>
                 </div>
             </div>
-            <div class="arb-filter-row">
-                <div class="min-spread-filter">
-                    <label for="min-spread">Min Spread %:</label>
-                    <input type="number" id="min-spread" value="0" min="0" step="0.1" placeholder="0">
+            <div class="arb-filter-panel">
+                <!-- Row 1: numeric range filters -->
+                <div class="arb-filter-row-1">
+                    <div class="arb-filter-group">
+                        <span class="arb-filter-label">Spread %</span>
+                        <div class="arb-range-pair">
+                            <input type="number" id="min-spread" class="arb-num-input" value="0" min="0" step="0.1" placeholder="Min">
+                            <span class="arb-range-sep">–</span>
+                            <input type="number" id="max-spread" class="arb-num-input" value="500" min="0" step="1" placeholder="Max">
+                        </div>
+                    </div>
+                    <div class="arb-filter-vdiv"></div>
+                    <div class="arb-filter-group">
+                        <span class="arb-filter-label">Total Vol (USD)</span>
+                        <div class="arb-range-pair">
+                            <input type="number" id="min-volume" class="arb-num-input" value="0" min="0" step="1000" placeholder="Min">
+                            <span class="arb-range-sep">–</span>
+                            <input type="number" id="max-volume" class="arb-num-input" value="" min="0" step="1000" placeholder="∞">
+                        </div>
+                    </div>
+                    <div class="arb-filter-vdiv"></div>
+                    <div class="arb-filter-group">
+                        <span class="arb-filter-label">Min Exchange</span>
+                        <input type="number" id="min-exchanges" class="arb-num-input" value="2" min="2" step="1" style="width:54px;">
+                    </div>
+                    <div class="arb-filter-vdiv"></div>
+                    <label class="arb-filter-toggle">
+                        <input type="checkbox" id="exclude-leveraged" style="accent-color:var(--accent-blue);">
+                        <span>Sembunyikan 3L/3S</span>
+                    </label>
                 </div>
-                <div class="min-spread-filter">
-                    <label for="min-exchanges">Min Exchange:</label>
-                    <input type="number" id="min-exchanges" value="2" min="2" step="1" placeholder="2">
-                </div>
-                <div class="min-spread-filter">
-                    <label for="max-spread">Max Spread %:</label>
-                    <input type="number" id="max-spread" value="500" min="0" step="1" placeholder="500">
-                </div>
-                <div class="min-spread-filter">
-                    <label for="min-volume">Min Vol (USD):</label>
-                    <input type="number" id="min-volume" value="0" min="0" step="1000" placeholder="0" style="width:90px;">
-                </div>
-                <div class="min-spread-filter">
-                    <label for="max-volume">Max Vol (USD):</label>
-                    <input type="number" id="max-volume" value="" min="0" step="1000" placeholder="Tak terbatas" style="width:90px;">
-                </div>
-                <label class="min-spread-filter" style="gap:6px; cursor:pointer; user-select:none;">
-                    <input type="checkbox" id="exclude-leveraged" style="accent-color:var(--accent-blue); width:15px; height:15px;">
-                    Sembunyikan Token Leveraged (3L/3S)
-                </label>
-                <label class="min-spread-filter" style="gap:6px;">
-                    <span style="font-size:0.8rem;">Filter:</span>
-                    <select id="arb-list-filter" style="padding:4px 8px; border-radius:4px; background:var(--bg-secondary); color:var(--text-primary); border:1px solid var(--border-color); font-size:0.8rem; cursor:pointer;">
+                <!-- Row 2: pill filters + exchange exclusion + actions -->
+                <div class="arb-filter-row-2">
+                    <select id="arb-list-filter" style="display:none">
                         <option value="hide_blacklist">Sembunyikan Blacklist</option>
                         <option value="">Semua Data</option>
                         <option value="only_blacklist">Hanya Blacklist</option>
                         <option value="only_wishlist">Hanya Wishlist</option>
                         <option value="hide_wishlist">Sembunyikan Wishlist</option>
                     </select>
-                </label>
-                <div class="min-spread-filter" style="position:relative;">
-                    <label>Kecualikan Exchange:</label>
-                    <details id="exclude-exch-details">
-                        <summary id="exclude-exch-summary" class="exclude-exch-summary">Tidak ada</summary>
-                        <div class="exclude-exch-panel">
-                            <div style="display:flex; gap:6px; margin-bottom:6px;">
-                                <button type="button" class="exclude-exch-btn-sm" onclick="setAllExchangeExclusion(true)">Semua</button>
-                                <button type="button" class="exclude-exch-btn-sm" onclick="setAllExchangeExclusion(false)">Hapus</button>
+                    <div class="arb-pill-group" id="arb-filter-pills">
+                        <button type="button" class="arb-pill" data-value="hide_blacklist">Sembunyikan BL ⛔</button>
+                        <button type="button" class="arb-pill" data-value="">Semua Data</button>
+                        <button type="button" class="arb-pill" data-value="only_blacklist">Hanya BL ⛔</button>
+                        <button type="button" class="arb-pill" data-value="only_wishlist">Hanya WL ⭐</button>
+                        <button type="button" class="arb-pill" data-value="hide_wishlist">Sembunyikan WL ⭐</button>
+                    </div>
+                    <div class="arb-filter-vdiv" style="height:20px;"></div>
+                    <div style="position:relative; display:flex; align-items:center; gap:6px;">
+                        <span class="arb-filter-label" style="margin-bottom:0; white-space:nowrap;">Kecualikan:</span>
+                        <details id="exclude-exch-details">
+                            <summary id="exclude-exch-summary" class="exclude-exch-summary">Tidak ada</summary>
+                            <div class="exclude-exch-panel">
+                                <div style="display:flex; gap:6px; margin-bottom:6px;">
+                                    <button type="button" class="exclude-exch-btn-sm" onclick="setAllExchangeExclusion(true)">Semua</button>
+                                    <button type="button" class="exclude-exch-btn-sm" onclick="setAllExchangeExclusion(false)">Hapus</button>
+                                </div>
+                                <div class="exclude-exch-grid">
+                                    {% for exch in ['LBANK','HASHKEY','BICONOMY','MEXC','BITRUE','ASCENDEX','BITMART','DEXTRADE','POLONIEX','GATEIO','NIZA','XT','COINSTORE','VINDAX','FAMEEX','BIGONE','P2PB2B','DIGIFINEX','AZBIT','LATOKEN','KRAKEN','BINGX','BTSE','WHITEBIT','HTX'] %}
+                                    <label class="exclude-exch-item">
+                                        <input type="checkbox" class="exclude-exch-cb" value="{{ exch }}" style="accent-color:var(--accent-blue);">
+                                        {{ exch }}
+                                    </label>
+                                    {% endfor %}
+                                </div>
                             </div>
-                            <div class="exclude-exch-grid">
-                                {% for exch in ['LBANK','HASHKEY','BICONOMY','MEXC','BITRUE','ASCENDEX','BITMART','DEXTRADE','POLONIEX','GATEIO','NIZA','XT','COINSTORE','VINDAX','FAMEEX','BIGONE','P2PB2B','DIGIFINEX','AZBIT','LATOKEN','KRAKEN','BINGX','BTSE','WHITEBIT','HTX'] %}
-                                <label class="exclude-exch-item">
-                                    <input type="checkbox" class="exclude-exch-cb" value="{{ exch }}" style="accent-color:var(--accent-blue);">
-                                    {{ exch }}
-                                </label>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </details>
+                        </details>
+                    </div>
+                    <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+                        <button type="button" class="arb-reset-btn" onclick="resetFilters()" title="Reset semua filter ke default">↺ Reset</button>
+                        <button class="load-depth-btn" onclick="loadArbitrageData()" id="btn-refresh">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            Muat Ulang
+                        </button>
+                        <span id="loading-indicator" style="display:none; font-size:0.75rem; color:var(--text-muted);">Memuat data…</span>
+                    </div>
                 </div>
-                <button class="load-depth-btn" onclick="loadArbitrageData()" id="btn-refresh">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                        <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                    </svg>
-                    Muat Ulang
-                </button>
-                <span id="loading-indicator" style="display:none; font-size:0.75rem; color:var(--text-muted);">Memuat data…</span>
             </div>
         </section>
 
@@ -370,6 +387,27 @@
         });
     }
 
+    // ---- Pill filter buttons ----
+    function setActivePill(value) {
+        document.querySelectorAll('#arb-filter-pills .arb-pill').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.value === value);
+        });
+    }
+
+    function resetFilters() {
+        document.getElementById('min-spread').value = '0';
+        document.getElementById('max-spread').value = '500';
+        document.getElementById('min-exchanges').value = '2';
+        document.getElementById('min-volume').value = '0';
+        document.getElementById('max-volume').value = '';
+        document.getElementById('arb-list-filter').value = 'hide_blacklist';
+        setActivePill('hide_blacklist');
+        setAllExchangeExclusion(false);
+        localStorage.setItem('arb_min_volume', '0');
+        localStorage.setItem('arb_max_volume', '');
+        applyFilters();
+    }
+
     // ---- Excluded exchanges filter ----
     function getExcludedExchanges() {
         const checked = document.querySelectorAll('.exclude-exch-cb:checked');
@@ -612,16 +650,17 @@
 
         const savedListFilter = localStorage.getItem('arb_list_filter') || 'hide_blacklist';
         document.getElementById('arb-list-filter').value = savedListFilter;
+        setActivePill(savedListFilter);
 
         restoreExcludedExchanges();
-
-        initTable();
-        loadArbitrageData();
 
         const savedMinVol = localStorage.getItem('arb_min_volume');
         if (savedMinVol !== null) document.getElementById('min-volume').value = savedMinVol;
         const savedMaxVol = localStorage.getItem('arb_max_volume');
         if (savedMaxVol !== null) document.getElementById('max-volume').value = savedMaxVol;
+
+        initTable();
+        loadArbitrageData();
 
         document.getElementById('min-spread').addEventListener('input', applyFilters);
         document.getElementById('max-spread').addEventListener('input', applyFilters);
@@ -629,7 +668,13 @@
         document.getElementById('min-volume').addEventListener('input', applyFilters);
         document.getElementById('max-volume').addEventListener('input', applyFilters);
         document.getElementById('exclude-leveraged').addEventListener('change', loadArbitrageData);
-        document.getElementById('arb-list-filter').addEventListener('change', applyFilters);
+        document.querySelectorAll('#arb-filter-pills .arb-pill').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById('arb-list-filter').value = btn.dataset.value;
+                setActivePill(btn.dataset.value);
+                applyFilters();
+            });
+        });
         document.querySelectorAll('.exclude-exch-cb').forEach(cb => {
             cb.addEventListener('change', updateExcludeExchangeSummary);
         });
