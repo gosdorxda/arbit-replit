@@ -542,16 +542,17 @@
             .then(r => r.json())
             .then(data => {
                 if (data.status !== 'success') { asksEl.innerHTML = '<div style="color:var(--accent-red);text-align:center;padding:12px">Gagal memuat data</div>'; return; }
-                const asks = data.asks || [];
-                const bids = data.bids || [];
+                const ob = data.data || {};
+                const asks = ob.asks || [];
+                const bids = ob.bids || [];
                 asksEl.innerHTML = asks.slice(0,20).map(([p,q]) => {
                     const total = (parseFloat(p)*parseFloat(q)).toFixed(2);
                     return `<div class="orderbook-row ask-row"><span class="ob-price ask-price">${formatPrice(p)}</span><span class="ob-qty">${parseFloat(q).toFixed(4)}</span><span class="ob-total">${parseFloat(total).toLocaleString('en-US',{maximumFractionDigits:2})}</span></div>`;
-                }).join('');
+                }).join('') || '<div style="color:var(--text-muted);text-align:center;padding:8px">Tidak ada data asks</div>';
                 bidsEl.innerHTML = bids.slice(0,20).map(([p,q]) => {
                     const total = (parseFloat(p)*parseFloat(q)).toFixed(2);
                     return `<div class="orderbook-row bid-row"><span class="ob-price bid-price">${formatPrice(p)}</span><span class="ob-qty">${parseFloat(q).toFixed(4)}</span><span class="ob-total">${parseFloat(total).toLocaleString('en-US',{maximumFractionDigits:2})}</span></div>`;
-                }).join('');
+                }).join('') || '<div style="color:var(--text-muted);text-align:center;padding:8px">Tidak ada data bids</div>';
                 if (asks.length && bids.length) {
                     const bestAsk = parseFloat(asks[0][0]);
                     const bestBid = parseFloat(bids[0][0]);
