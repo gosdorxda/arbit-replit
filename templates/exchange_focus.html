@@ -527,40 +527,70 @@
     });
 
     // ---- Orderbook ----
-    function showEfOrderbook(exchange, symbol) {
+    async function showEfOrderbook(exchange, symbol) {
         const modal = document.getElementById('ef-ob-modal');
         const title = document.getElementById('ef-ob-title');
         const asksEl = document.getElementById('ef-ob-asks');
         const bidsEl = document.getElementById('ef-ob-bids');
         const spreadEl = document.getElementById('ef-ob-spread');
-        title.textContent = `${exchange} — ${symbol}`;
-        asksEl.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:12px">Memuat…</div>';
+
+        title.textContent = exchange + ' — ' + symbol;
+        asksEl.innerHTML = '<div style="padding:8px;color:var(--text-muted)">Memuat...</div>';
         bidsEl.innerHTML = '';
         spreadEl.textContent = '—';
         modal.classList.add('show');
-        fetch(`/api/orderbook/${exchange}/${encodeURIComponent(symbol)}`)
-            .then(r => r.json())
-            .then(data => {
-                if (data.status !== 'success') { asksEl.innerHTML = '<div style="color:var(--accent-red);text-align:center;padding:12px">Gagal memuat data</div>'; return; }
-                const ob = data.data || {};
-                const asks = ob.asks || [];
-                const bids = ob.bids || [];
-                asksEl.innerHTML = asks.slice(0,20).map(([p,q]) => {
-                    const total = (parseFloat(p)*parseFloat(q)).toFixed(2);
-                    return `<div class="orderbook-row ask-row"><span class="ob-price ask-price">${formatPrice(p)}</span><span class="ob-qty">${parseFloat(q).toFixed(4)}</span><span class="ob-total">${parseFloat(total).toLocaleString('en-US',{maximumFractionDigits:2})}</span></div>`;
-                }).join('') || '<div style="color:var(--text-muted);text-align:center;padding:8px">Tidak ada data asks</div>';
-                bidsEl.innerHTML = bids.slice(0,20).map(([p,q]) => {
-                    const total = (parseFloat(p)*parseFloat(q)).toFixed(2);
-                    return `<div class="orderbook-row bid-row"><span class="ob-price bid-price">${formatPrice(p)}</span><span class="ob-qty">${parseFloat(q).toFixed(4)}</span><span class="ob-total">${parseFloat(total).toLocaleString('en-US',{maximumFractionDigits:2})}</span></div>`;
-                }).join('') || '<div style="color:var(--text-muted);text-align:center;padding:8px">Tidak ada data bids</div>';
-                if (asks.length && bids.length) {
-                    const bestAsk = parseFloat(asks[0][0]);
-                    const bestBid = parseFloat(bids[0][0]);
-                    const sp = bestAsk > 0 ? (((bestAsk - bestBid) / bestAsk) * 100).toFixed(3) : '—';
-                    spreadEl.textContent = `Spread: ${sp}%`;
+
+        try {
+            const resp = await fetch('/api/orderbook/' + exchange + '/' + encodeURIComponent(symbol));
+            const data = await resp.json();
+
+            if (data.status === 'success') {
+                const ob = data.data;
+                const parseEntry = (item) => Array.isArray(item)
+                    ? {price: parseFloat(item[0]), amount: parseFloat(item[1])}
+                    : {price: parseFloat(item.price), amount: parseFloat(item.amount)};
+
+                const allAsks = ob.asks.map(parseEntry).sort((a, b) => a.price - b.price);
+                const asksToShow = allAsks.slice(0, 15).reverse();
+                let askCum = 0;
+                const askTotals = [];
+                for (let i = asksToShow.length - 1; i >= 0; i--) {
+                    askCum += asksToShow[i].price * asksToShow[i].amount;
+                    askTotals[i] = askCum;
                 }
-            })
-            .catch(() => { asksEl.innerHTML = '<div style="color:var(--accent-red);text-align:center;padding:12px">Error jaringan</div>'; });
+                asksEl.innerHTML = asksToShow.map(({price, amount}, idx) =>
+                    '<div class="orderbook-row ask">' +
+                    '<span class="ob-price">' + formatPrice(price) + '</span>' +
+                    '<span class="ob-qty">' + formatVolume(amount) + '</span>' +
+                    '<span class="ob-total">' + formatVolume(askTotals[idx]) + '</span>' +
+                    '</div>'
+                ).join('');
+                asksEl.scrollTop = asksEl.scrollHeight;
+
+                const allBids = ob.bids.map(parseEntry).sort((a, b) => b.price - a.price);
+                const bidsToShow = allBids.slice(0, 15);
+                let bidCum = 0;
+                bidsEl.innerHTML = bidsToShow.map(({price, amount}) => {
+                    bidCum += price * amount;
+                    return '<div class="orderbook-row bid">' +
+                        '<span class="ob-price">' + formatPrice(price) + '</span>' +
+                        '<span class="ob-qty">' + formatVolume(amount) + '</span>' +
+                        '<span class="ob-total">' + formatVolume(bidCum) + '</span>' +
+                        '</div>';
+                }).join('');
+
+                if (allAsks.length > 0 && allBids.length > 0) {
+                    const lowestAsk = allAsks[0].price;
+                    const highestBid = allBids[0].price;
+                    const sp = ((lowestAsk - highestBid) / lowestAsk * 100).toFixed(4);
+                    spreadEl.textContent = 'Spread: ' + sp + '%';
+                }
+            } else {
+                asksEl.innerHTML = '<div style="padding:8px;color:var(--accent-red)">' + (data.message || 'Error') + '</div>';
+            }
+        } catch(e) {
+            asksEl.innerHTML = '<div style="padding:8px;color:var(--accent-red)">Gagal memuat orderbook</div>';
+        }
     }
     function closeEfOrderbook() {
         document.getElementById('ef-ob-modal').classList.remove('show');
