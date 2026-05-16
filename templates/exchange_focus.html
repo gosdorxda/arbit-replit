@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exchange Focus</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Roboto:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .ef-anchor-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0 6px;
+            flex-wrap: wrap;
+        }
+        .ef-anchor-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+        .ef-anchor-select {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 6px 12px;
+            cursor: pointer;
+            outline: none;
+            min-width: 160px;
+        }
+        .ef-anchor-select:focus {
+            border-color: var(--accent-blue);
+        }
+        .ef-anchor-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 0.02em;
+        }
+        .ef-other-chip-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            margin: 2px 2px;
+        }
+        .ef-exch-chip {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #fff;
+            cursor: pointer;
+            transition: opacity 0.15s;
+            white-space: nowrap;
+        }
+        .ef-exch-chip:hover {
+            opacity: 0.82;
+        }
+        .ef-diff-tag {
+            display: inline-block;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            white-space: nowrap;
+        }
+        .ef-diff-pos {
+            background: rgba(63,185,80,0.18);
+            color: var(--accent-green);
+        }
+        .ef-diff-neg {
+            background: rgba(248,81,73,0.15);
+            color: var(--accent-red);
+        }
+        .ef-diff-neu {
+            background: rgba(139,148,158,0.15);
+            color: var(--text-secondary);
+        }
+        .ef-other-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            align-items: center;
+        }
+        .ef-anchor-price {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--accent-blue);
+        }
+        .ef-vol-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+        }
+        .ef-stats-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 8px 0;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+        .ef-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 4px 18px;
+            border-right: 1px solid var(--border-color);
+            min-width: 100px;
+        }
+        .ef-stat:last-child { border-right: none; }
+        .ef-stat-label {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+        .ef-stat-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .ef-stat-value.highlight { color: var(--accent-green); }
+        .ef-filter-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .ef-filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+        .ef-filter-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+            margin-bottom: 2px;
+        }
+        .ef-filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .ef-range-pair {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .ef-range-sep {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+        .ef-num-input {
+            width: 70px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.82rem;
+            padding: 4px 7px;
+            outline: none;
+        }
+        .ef-num-input:focus { border-color: var(--accent-blue); }
+        .ef-filter-vdiv {
+            width: 1px;
+            height: 32px;
+            background: var(--border-color);
+            margin: 0 4px;
+        }
+        .ef-pill-group {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .ef-pill {
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .ef-pill:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
+        .ef-pill.active { background: var(--accent-blue); border-color: var(--accent-blue); color: #fff; }
+        .ef-reset-btn {
+            padding: 5px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .ef-reset-btn:hover { border-color: var(--accent-yellow); color: var(--accent-yellow); }
+        .ef-filter-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <h1 class="title">Exchange Focus</h1>
+                <p class="subtitle">Semua pair dari satu exchange, dibandingkan ke exchange lain</p>
+            </div>
+            <div class="header-controls">
+                <a href="/" class="nav-link-btn" title="Kembali ke halaman utama">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                    Kembali
+                </a>
+                <a href="/arbitrage" class="nav-link-btn" title="Halaman Arbitrase">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                        <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/>
+                    </svg>
+                    Arbitrase
+                </a>
+                <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"/>
+                        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                    </svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <section class="control-panel" style="padding:10px 0;">
+            <!-- Stats bar -->
+            <div class="ef-stats-bar" id="ef-stats">
+                <div class="ef-stat">
+                    <span class="ef-stat-label">Total Pair</span>
+                    <span class="ef-stat-value" id="stat-total">—</span>
+                </div>
+                <div class="ef-stat">
+                    <span class="ef-stat-label">Spread &gt;5%</span>
+                    <span class="ef-stat-value highlight" id="stat-high">—</span>
+                </div>
+                <div class="ef-stat">
+                    <span class="ef-stat-label">Spread &gt;1%</span>
+                    <span class="ef-stat-value" style="color:var(--accent-yellow)" id="stat-medium">—</span>
+                </div>
+                <div class="ef-stat">
+                    <span class="ef-stat-label">Spread Tertinggi</span>
+                    <span class="ef-stat-value highlight" id="stat-max">—</span>
+                </div>
+                <div class="ef-stat">
+                    <span class="ef-stat-label">Ada di Exchange Lain</span>
+                    <span class="ef-stat-value" id="stat-shared">—</span>
+                </div>
+                <div class="ef-stat">
+                    <span class="ef-stat-label">Terakhir Dimuat</span>
+                    <span class="ef-stat-value" style="font-size:0.78rem;color:var(--text-secondary)" id="stat-updated">—</span>
+                </div>
+            </div>
+
+            <!-- Anchor exchange selector -->
+            <div class="ef-anchor-bar">
+                <span class="ef-anchor-label">Exchange Anchor:</span>
+                <select id="ef-anchor-select" class="ef-anchor-select" onchange="onAnchorChange()">
+                    {% for exch in ['LBANK','HASHKEY','BICONOMY','MEXC','BITRUE','ASCENDEX','BITMART','DEXTRADE','POLONIEX','GATEIO','NIZA','XT','COINSTORE','VINDAX','FAMEEX','BIGONE','P2PB2B','DIGIFINEX','AZBIT','LATOKEN','KRAKEN','BINGX','BTSE','WHITEBIT','HTX'] %}
+                    <option value="{{ exch }}">{{ exch }}</option>
+                    {% endfor %}
+                </select>
+                <span id="ef-anchor-badge" class="ef-anchor-chip" style="background:#666;">MEXC</span>
+            </div>
+
+            <!-- Filter panel -->
+            <div class="ef-filter-panel">
+                <div class="ef-filter-row">
+                    <div class="ef-filter-group">
+                        <span class="ef-filter-label">Spread %</span>
+                        <div class="ef-range-pair">
+                            <input type="number" id="ef-min-spread" class="ef-num-input" value="0" min="0" step="0.1" placeholder="Min">
+                            <span class="ef-range-sep">–</span>
+                            <input type="number" id="ef-max-spread" class="ef-num-input" value="500" min="0" step="1" placeholder="Max">
+                        </div>
+                    </div>
+                    <div class="ef-filter-vdiv"></div>
+                    <div class="ef-filter-group">
+                        <span class="ef-filter-label">Min Exchange Lain</span>
+                        <input type="number" id="ef-min-others" class="ef-num-input" value="0" min="0" step="1" style="width:54px;">
+                    </div>
+                    <div class="ef-filter-vdiv"></div>
+                    <div class="ef-filter-group">
+                        <span class="ef-filter-label">Status</span>
+                        <div class="ef-pill-group" id="ef-filter-pills">
+                            <button type="button" class="ef-pill" data-value="hide_blacklist">Sembunyikan BL ⛔</button>
+                            <button type="button" class="ef-pill" data-value="">Semua Data</button>
+                            <button type="button" class="ef-pill" data-value="only_blacklist">Hanya BL ⛔</button>
+                        </div>
+                        <select id="ef-list-filter" style="display:none">
+                            <option value="hide_blacklist">Sembunyikan Blacklist</option>
+                            <option value="">Semua Data</option>
+                            <option value="only_blacklist">Hanya Blacklist</option>
+                        </select>
+                    </div>
+                    <div class="ef-filter-vdiv"></div>
+                    <label class="ef-filter-toggle">
+                        <input type="checkbox" id="ef-only-shared" style="accent-color:var(--accent-blue);">
+                        <span>Hanya yg ada di exchange lain</span>
+                    </label>
+                    <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+                        <button type="button" class="ef-reset-btn" onclick="resetEfFilters()">↺ Reset</button>
+                        <button class="load-depth-btn" onclick="loadEfData()" id="ef-btn-refresh">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            Muat Ulang
+                        </button>
+                        <span id="ef-loading" style="display:none; font-size:0.75rem; color:var(--text-muted);">Memuat data…</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="table-section">
+            <div class="table-wrapper">
+                <table id="ef-table" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Harga Anchor</th>
+                            <th>Vol Anchor (USD)</th>
+                            <th>Exchange Lain</th>
+                            <th>Best Spread %</th>
+                            <th>Jml Exchange</th>
+                            <th>BL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ef-tbody"></tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- Orderbook modal (reuse same pattern as arbitrage) -->
+    <div id="ef-ob-modal" class="modal modal-secondary">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="ef-ob-title" style="font-size:1rem;">Orderbook</h2>
+                <button class="modal-close" onclick="closeEfOrderbook()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="orderbook-header">
+                    <span class="ob-col-header">Harga</span>
+                    <span class="ob-col-header">Qty</span>
+                    <span class="ob-col-header">Total USDT</span>
+                </div>
+                <div class="orderbook-container">
+                    <div class="orderbook-side asks">
+                        <div id="ef-ob-asks" class="orderbook-list"></div>
+                    </div>
+                    <div id="ef-ob-spread" class="orderbook-divider">—</div>
+                    <div class="orderbook-side bids">
+                        <div id="ef-ob-bids" class="orderbook-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script>
+    // ---- Theme ----
+    function initTheme() {
+        const saved = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', saved);
+        updateThemeIcons(saved);
+    }
+    function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme') || 'dark';
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+        updateThemeIcons(next);
+    }
+    function updateThemeIcons(theme) {
+        const sun = document.querySelector('.icon-sun');
+        const moon = document.querySelector('.icon-moon');
+        if (sun && moon) {
+            sun.style.display = theme === 'dark' ? 'block' : 'none';
+            moon.style.display = theme === 'dark' ? 'none' : 'block';
+        }
+    }
+
+    // ---- Exchange URL mapping ----
+    function getExchangeUrl(exchange, symbol) {
+        const pair = symbol.replace('/', '_').toLowerCase();
+        const pairUpper = symbol.replace('/', '_');
+        const base = symbol.split('/')[0];
+        switch(exchange.toUpperCase()) {
+            case 'LBANK': return `https://www.lbank.com/trade/${pair}`;
+            case 'HASHKEY': return `https://global.hashkey.com/en-US/spot/${symbol.replace('/', '-')}`;
+            case 'BICONOMY': return `https://www.biconomy.com/exchange/${pairUpper}`;
+            case 'MEXC': return `https://www.mexc.com/exchange/${pairUpper}`;
+            case 'BITRUE': return `https://www.bitrue.com/trade/${pair}`;
+            case 'ASCENDEX': return `https://ascendex.com/en/cashtrade-spottrading/usdt/${base.toLowerCase()}`;
+            case 'BITMART': return `https://www.bitmart.com/trade/en-US?symbol=${pairUpper}`;
+            case 'DEXTRADE': return `https://dex-trade.com/spot/trading/${symbol.replace('/', '')}?interface=classic`;
+            case 'POLONIEX': return `https://poloniex.com/trade/${base}_USDT`;
+            case 'GATEIO': return `https://www.gate.io/trade/${pairUpper}`;
+            case 'NIZA': return `https://niza.io/trade/${pairUpper}`;
+            case 'XT': return `https://www.xt.com/en/trade/${pair}`;
+            case 'COINSTORE': return `https://www.coinstore.com/spot/${base}USDT`;
+            case 'VINDAX': return `https://vindax.com/exchange-base.html?symbol=${base}_USDT`;
+            case 'FAMEEX': return `https://www.fameex.com/en-US/trade/${base.toLowerCase()}-usdt`;
+            case 'BIGONE': return `https://big.one/en/trade/${base}-USDT`;
+            case 'P2PB2B': return `https://p2pb2b.com/trade/${base}_USDT`;
+            case 'DIGIFINEX': return `https://www.digifinex.com/en-ww/trade/USDT/${base}`;
+            case 'AZBIT': return `https://azbit.com/exchange/${base}_USDT`;
+            case 'LATOKEN': return `https://latoken.com/exchange/${base}_USDT`;
+            case 'BINGX': return `https://bingx.com/en/trade/${base}-USDT/`;
+            case 'KRAKEN': return `https://pro.kraken.com/app/trade/${base}-USD`;
+            case 'BTSE': return `https://www.btse.com/en/trading/${base}-USDT`;
+            case 'WHITEBIT': return `https://whitebit.com/trade/${base}_USDT`;
+            case 'HTX': return `https://www.htx.com/trade/${base.toLowerCase()}_usdt/`;
+            default: return '#';
+        }
+    }
+
+    const EXCHANGE_COLORS = {
+        LBANK:'#2962ff', HASHKEY:'#7c3aed', BICONOMY:'#00b894', MEXC:'#1873e8',
+        BITRUE:'#00c853', ASCENDEX:'#ff6b35', BITMART:'#00b8d4', DEXTRADE:'#9b59b6',
+        POLONIEX:'#0c9c4e', GATEIO:'#c23b33', NIZA:'#6366f1', XT:'#2563eb',
+        COINSTORE:'#f59e0b', VINDAX:'#10b981', FAMEEX:'#e11d48', BIGONE:'#0ea5e9',
+        P2PB2B:'#8b5cf6', DIGIFINEX:'#00d4aa', AZBIT:'#f97316', LATOKEN:'#3b82f6',
+        KRAKEN:'#5841d8', BINGX:'#f0a500', BTSE:'#1a56db', WHITEBIT:'#0095ff',
+        HTX:'#02a4d3'
+    };
+
+    // ---- Format helpers ----
+    function formatPrice(p) {
+        if (p === null || p === undefined || p === '') return '—';
+        p = parseFloat(p);
+        if (isNaN(p)) return '—';
+        if (p === 0) return '0';
+        if (p >= 1000) return p.toLocaleString('en-US', {maximumFractionDigits: 2});
+        if (p >= 1) return p.toFixed(4);
+        if (p >= 0.0001) return p.toFixed(6);
+        const sci = parseFloat(p.toPrecision(5)).toExponential();
+        const [mantissa, expPart] = sci.split('e');
+        const exp = parseInt(expPart);
+        const leadingZeros = -exp - 1;
+        const digits = mantissa.replace('.', '').replace(/0+$/, '') || '0';
+        return `0.(${leadingZeros})${digits}`;
+    }
+    function formatVolume(v) {
+        if (!v || v === 0) return '—';
+        if (v >= 1e9) return (v/1e9).toFixed(2) + 'B';
+        if (v >= 1e6) return (v/1e6).toFixed(2) + 'M';
+        if (v >= 1e3) return (v/1e3).toFixed(2) + 'K';
+        return v.toFixed(2);
+    }
+    function spreadBadge(pct) {
+        let cls = 'spread-low';
+        if (pct >= 5) cls = 'spread-very-high';
+        else if (pct >= 3) cls = 'spread-high';
+        else if (pct >= 1) cls = 'spread-medium';
+        return `<span class="spread-badge ${cls}">${pct.toFixed(2)}%</span>`;
+    }
+
+    // ---- Pill filter ----
+    function setActivePill(value) {
+        document.querySelectorAll('#ef-filter-pills .ef-pill').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.value === value);
+        });
+    }
+    document.querySelectorAll('#ef-filter-pills .ef-pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const val = btn.dataset.value;
+            document.getElementById('ef-list-filter').value = val;
+            setActivePill(val);
+            localStorage.setItem('ef_list_filter', val);
+            applyEfFilters();
+        });
+    });
+
+    // ---- Orderbook ----
+    function showEfOrderbook(exchange, symbol) {
+        const modal = document.getElementById('ef-ob-modal');
+        const title = document.getElementById('ef-ob-title');
+        const asksEl = document.getElementById('ef-ob-asks');
+        const bidsEl = document.getElementById('ef-ob-bids');
+        const spreadEl = document.getElementById('ef-ob-spread');
+        title.textContent = `${exchange} — ${symbol}`;
+        asksEl.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:12px">Memuat…</div>';
+        bidsEl.innerHTML = '';
+        spreadEl.textContent = '—';
+        modal.style.display = 'flex';
+        fetch(`/api/orderbook/${exchange}/${encodeURIComponent(symbol)}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.status !== 'success') { asksEl.innerHTML = '<div style="color:var(--accent-red);text-align:center;padding:12px">Gagal memuat data</div>'; return; }
+                const asks = data.asks || [];
+                const bids = data.bids || [];
+                asksEl.innerHTML = asks.slice(0,20).map(([p,q]) => {
+                    const total = (parseFloat(p)*parseFloat(q)).toFixed(2);
+                    return `<div class="orderbook-row ask-row"><span class="ob-price ask-price">${formatPrice(p)}</span><span class="ob-qty">${parseFloat(q).toFixed(4)}</span><span class="ob-total">${parseFloat(total).toLocaleString('en-US',{maximumFractionDigits:2})}</span></div>`;
+                }).join('');
+                bidsEl.innerHTML = bids.slice(0,20).map(([p,q]) => {
+                    const total = (parseFloat(p)*parseFloat(q)).toFixed(2);
+                    return `<div class="orderbook-row bid-row"><span class="ob-price bid-price">${formatPrice(p)}</span><span class="ob-qty">${parseFloat(q).toFixed(4)}</span><span class="ob-total">${parseFloat(total).toLocaleString('en-US',{maximumFractionDigits:2})}</span></div>`;
+                }).join('');
+                if (asks.length && bids.length) {
+                    const bestAsk = parseFloat(asks[0][0]);
+                    const bestBid = parseFloat(bids[0][0]);
+                    const sp = bestAsk > 0 ? (((bestAsk - bestBid) / bestAsk) * 100).toFixed(3) : '—';
+                    spreadEl.textContent = `Spread: ${sp}%`;
+                }
+            })
+            .catch(() => { asksEl.innerHTML = '<div style="color:var(--accent-red);text-align:center;padding:12px">Error jaringan</div>'; });
+    }
+    function closeEfOrderbook() {
+        document.getElementById('ef-ob-modal').style.display = 'none';
+    }
+    document.getElementById('ef-ob-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeEfOrderbook();
+    });
+
+    // ---- DataTable ----
+    let efTable = null;
+    let efAllData = [];
+
+    function initEfTable() {
+        efTable = $('#ef-table').DataTable({
+            data: [],
+            columns: [
+                { title: 'Symbol', data: 'symbol_html', orderable: true, width: '90px' },
+                { title: 'Harga Anchor', data: 'anchor_price_sort', orderable: true, render: function(d, type, row) {
+                    return type === 'display' ? row.anchor_price_html : d;
+                }},
+                { title: 'Vol Anchor (USD)', data: 'anchor_vol_sort', orderable: true, render: function(d, type, row) {
+                    return type === 'display' ? row.anchor_vol_html : d;
+                }},
+                { title: 'Exchange Lain', data: 'others_html', orderable: false },
+                { title: 'Best Spread %', data: 'spread_sort', orderable: true, render: function(d, type, row) {
+                    return type === 'display' ? row.spread_html : d;
+                }},
+                { title: 'Jml Exchange', data: 'other_count', orderable: true, width: '80px', className: 'dt-center' },
+                { title: 'BL', data: 'bl_html', orderable: false, width: '44px', className: 'dt-center' }
+            ],
+            order: [[4, 'desc']],
+            pageLength: 50,
+            lengthMenu: [25, 50, 100, 200],
+            language: {
+                search: 'Cari:',
+                lengthMenu: 'Tampilkan _MENU_ data',
+                info: 'Menampilkan _START_–_END_ dari _TOTAL_ data',
+                infoEmpty: 'Tidak ada data',
+                paginate: { previous: '‹', next: '›' },
+                zeroRecords: 'Tidak ada pair yang memenuhi filter',
+                emptyTable: 'Pilih exchange anchor dan muat data.'
+            },
+            autoWidth: false,
+            responsive: false
+        });
+    }
+
+    function buildEfRows(data) {
+        return data.map(item => {
+            const safeEx = (item.anchor || currentAnchor).replace(/'/g, "\\'");
+            const safeSym = item.symbol.replace(/'/g, "\\'");
+
+            // Other exchanges chips
+            const othersHtml = item.other_exchanges.length === 0
+                ? '<span style="color:var(--text-muted);font-size:0.75rem;">—</span>'
+                : item.other_exchanges.map(o => {
+                    const color = EXCHANGE_COLORS[o.exchange.toUpperCase()] || '#666';
+                    const diff = o.diff_pct;
+                    const sign = diff > 0 ? '+' : '';
+                    const diffCls = diff > 0.01 ? 'ef-diff-pos' : (diff < -0.01 ? 'ef-diff-neg' : 'ef-diff-neu');
+                    const arrow = diff > 0.01 ? '▲' : (diff < -0.01 ? '▼' : '≈');
+                    const safeO = o.exchange.replace(/'/g, "\\'");
+                    return `<span class="ef-other-chip-wrap">` +
+                        `<span class="ef-exch-chip" style="background:${color};" onclick="showEfOrderbook('${safeO}','${safeSym}')" title="Klik lihat orderbook ${o.exchange}&#10;Harga: ${formatPrice(o.price)}">${o.exchange}</span>` +
+                        `<span class="ef-diff-tag ${diffCls}">${arrow} ${sign}${diff.toFixed(2)}%</span>` +
+                    `</span>`;
+                }).join(' ');
+
+            const blActive = item.is_blacklisted ? 'arb-bl-active' : '';
+            const blTitle = item.is_blacklisted ? 'Hapus dari blacklist' : 'Tambah ke blacklist';
+
+            return {
+                symbol_html: `<span style="font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--accent-blue)">${item.base_currency}</span>`,
+                anchor_price_sort: item.anchor_price,
+                anchor_price_html: `<span class="ef-anchor-price">${formatPrice(item.anchor_price)}</span>`,
+                anchor_vol_sort: item.anchor_turnover || 0,
+                anchor_vol_html: `<span class="ef-vol-text">${formatVolume(item.anchor_turnover)}</span>`,
+                others_html: `<div class="ef-other-list">${othersHtml}</div>`,
+                spread_sort: item.best_spread_pct,
+                spread_html: item.best_spread_pct > 0 ? spreadBadge(item.best_spread_pct) : '<span style="color:var(--text-muted)">—</span>',
+                other_count: item.other_count,
+                bl_html: `<button class="arb-bl-btn ${blActive}" onclick="toggleEfBlacklist('${safeSym}',this)" title="${blTitle}">⛔</button>`,
+                _raw: item
+            };
+        });
+    }
+
+    // ---- Blacklist toggle (reuse ARB blacklist) ----
+    function toggleEfBlacklist(symbol, btn) {
+        fetch('/api/market-list/toggle', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({exchange: 'ARB', symbol: symbol, list_type: 'blacklist'})
+        }).then(r => r.json()).then(data => {
+            if (data.status === 'success') {
+                const isNowActive = data.action === 'added';
+                btn.classList.toggle('arb-bl-active', isNowActive);
+                btn.title = isNowActive ? 'Hapus dari blacklist' : 'Tambah ke blacklist';
+                const row = efAllData.find(d => d.symbol === symbol);
+                if (row) row.is_blacklisted = isNowActive;
+                applyEfFilters();
+            }
+        });
+    }
+
+    // ---- Anchor change ----
+    let currentAnchor = 'MEXC';
+    function onAnchorChange() {
+        currentAnchor = document.getElementById('ef-anchor-select').value;
+        localStorage.setItem('ef_anchor', currentAnchor);
+        updateAnchorBadge(currentAnchor);
+        loadEfData();
+    }
+    function updateAnchorBadge(exch) {
+        const badge = document.getElementById('ef-anchor-badge');
+        badge.textContent = exch;
+        badge.style.background = EXCHANGE_COLORS[exch.toUpperCase()] || '#666';
+    }
+
+    // ---- Apply filters ----
+    function applyEfFilters() {
+        const minSpread = parseFloat(document.getElementById('ef-min-spread').value) || 0;
+        const maxSpread = parseFloat(document.getElementById('ef-max-spread').value);
+        const minOthers = parseInt(document.getElementById('ef-min-others').value) || 0;
+        const listFilter = document.getElementById('ef-list-filter').value;
+        const onlyShared = document.getElementById('ef-only-shared').checked;
+
+        const filtered = efAllData.filter(item => {
+            if (item.best_spread_pct < minSpread) return false;
+            if (!isNaN(maxSpread) && maxSpread !== '' && item.best_spread_pct > maxSpread) return false;
+            if (item.other_count < minOthers) return false;
+            if (onlyShared && item.other_count === 0) return false;
+            if (listFilter === 'hide_blacklist' && item.is_blacklisted) return false;
+            if (listFilter === 'only_blacklist' && !item.is_blacklisted) return false;
+            return true;
+        });
+
+        efTable.clear().rows.add(buildEfRows(filtered)).draw();
+        updateEfStats(filtered);
+        saveEfFilterPrefs();
+    }
+
+    function updateEfStats(data) {
+        document.getElementById('stat-total').textContent = data.length;
+        document.getElementById('stat-high').textContent = data.filter(d => d.best_spread_pct >= 5).length;
+        document.getElementById('stat-medium').textContent = data.filter(d => d.best_spread_pct >= 1).length;
+        const max = data.reduce((m, d) => d.best_spread_pct > m ? d.best_spread_pct : m, 0);
+        document.getElementById('stat-max').textContent = max > 0 ? max.toFixed(2) + '%' : '—';
+        document.getElementById('stat-shared').textContent = data.filter(d => d.other_count > 0).length;
+        document.getElementById('stat-updated').textContent = new Date().toLocaleTimeString('id-ID');
+    }
+
+    // ---- Load data ----
+    function loadEfData() {
+        document.getElementById('ef-loading').style.display = 'inline';
+        document.getElementById('ef-btn-refresh').disabled = true;
+        fetch(`/api/exchange-focus?exchange=${currentAnchor}`)
+            .then(r => r.json())
+            .then(data => {
+                efAllData = data.data || [];
+                applyEfFilters();
+            })
+            .catch(() => {
+                efAllData = [];
+                efTable.clear().draw();
+            })
+            .finally(() => {
+                document.getElementById('ef-loading').style.display = 'none';
+                document.getElementById('ef-btn-refresh').disabled = false;
+            });
+    }
+
+    // ---- localStorage ----
+    function saveEfFilterPrefs() {
+        localStorage.setItem('ef_min_spread', document.getElementById('ef-min-spread').value);
+        localStorage.setItem('ef_max_spread', document.getElementById('ef-max-spread').value);
+        localStorage.setItem('ef_min_others', document.getElementById('ef-min-others').value);
+        localStorage.setItem('ef_list_filter', document.getElementById('ef-list-filter').value);
+        localStorage.setItem('ef_only_shared', document.getElementById('ef-only-shared').checked ? '1' : '0');
+    }
+    function loadEfFilterPrefs() {
+        const minSpread = localStorage.getItem('ef_min_spread');
+        const maxSpread = localStorage.getItem('ef_max_spread');
+        const minOthers = localStorage.getItem('ef_min_others');
+        const listFilter = localStorage.getItem('ef_list_filter');
+        const onlyShared = localStorage.getItem('ef_only_shared');
+        const anchor = localStorage.getItem('ef_anchor');
+
+        if (minSpread !== null) document.getElementById('ef-min-spread').value = minSpread;
+        if (maxSpread !== null) document.getElementById('ef-max-spread').value = maxSpread;
+        if (minOthers !== null) document.getElementById('ef-min-others').value = minOthers;
+        if (listFilter !== null) {
+            document.getElementById('ef-list-filter').value = listFilter;
+            setActivePill(listFilter);
+        } else {
+            setActivePill('hide_blacklist');
+        }
+        if (onlyShared !== null) document.getElementById('ef-only-shared').checked = onlyShared === '1';
+        if (anchor) {
+            currentAnchor = anchor;
+            document.getElementById('ef-anchor-select').value = anchor;
+        }
+        updateAnchorBadge(currentAnchor);
+    }
+
+    function resetEfFilters() {
+        document.getElementById('ef-min-spread').value = '0';
+        document.getElementById('ef-max-spread').value = '500';
+        document.getElementById('ef-min-others').value = '0';
+        document.getElementById('ef-list-filter').value = 'hide_blacklist';
+        document.getElementById('ef-only-shared').checked = false;
+        setActivePill('hide_blacklist');
+        applyEfFilters();
+    }
+
+    // ---- filter event listeners ----
+    ['ef-min-spread','ef-max-spread','ef-min-others'].forEach(id => {
+        document.getElementById(id).addEventListener('change', applyEfFilters);
+    });
+    document.getElementById('ef-only-shared').addEventListener('change', applyEfFilters);
+
+    // ---- init ----
+    initTheme();
+    initEfTable();
+    loadEfFilterPrefs();
+    loadEfData();
+    </script>
+</body>
+</html>

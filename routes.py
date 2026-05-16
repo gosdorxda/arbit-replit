@@ -1395,6 +1395,78 @@ def get_arbitrage():
     return jsonify({'status': 'success', 'data': results, 'count': len(results)})
 
 
+@app.route('/exchange-focus')
+def exchange_focus():
+    return render_template('exchange_focus.html')
+
+
+@app.route('/api/exchange-focus')
+def get_exchange_focus():
+    exchange = request.args.get('exchange', 'MEXC').upper()
+
+    arb_blacklist = {e.symbol for e in MarketList.query.filter_by(exchange='ARB', list_type='blacklist').all()}
+
+    anchor_tickers = SpotTicker.query.filter_by(exchange=exchange).filter(
+        SpotTicker.price.isnot(None),
+        SpotTicker.price > 0
+    ).all()
+
+    if not anchor_tickers:
+        return jsonify({'status': 'success', 'anchor': exchange, 'data': [], 'count': 0})
+
+    anchor_map = {t.symbol: t for t in anchor_tickers}
+
+    other_tickers = SpotTicker.query.filter(
+        SpotTicker.symbol.in_(list(anchor_map.keys())),
+        SpotTicker.exchange != exchange,
+        SpotTicker.price.isnot(None),
+        SpotTicker.price > 0
+    ).all()
+
+    others_by_symbol = {}
+    for t in other_tickers:
+        others_by_symbol.setdefault(t.symbol, []).append(t)
+
+    results = []
+    for symbol, anchor_t in anchor_map.items():
+        others = others_by_symbol.get(symbol, [])
+
+        other_list = []
+        best_spread = 0.0
+
+        for o in others:
+            if anchor_t.price and anchor_t.price > 0:
+                diff_pct = ((o.price - anchor_t.price) / anchor_t.price) * 100
+            else:
+                diff_pct = 0.0
+            abs_diff = abs(diff_pct)
+            if abs_diff > best_spread:
+                best_spread = abs_diff
+            other_list.append({
+                'exchange': o.exchange,
+                'price': o.price,
+                'turnover_24h': o.turnover_24h,
+                'diff_pct': round(diff_pct, 4)
+            })
+
+        other_list.sort(key=lambda x: x['price'], reverse=True)
+
+        results.append({
+            'symbol': symbol,
+            'base_currency': anchor_t.base_currency,
+            'anchor_price': anchor_t.price,
+            'anchor_turnover': anchor_t.turnover_24h,
+            'other_exchanges': other_list,
+            'other_count': len(other_list),
+            'best_spread_pct': round(best_spread, 4),
+            'is_blacklisted': symbol in arb_blacklist
+        })
+
+    results.sort(key=lambda x: x['best_spread_pct'], reverse=True)
+
+    return jsonify({'status': 'success', 'anchor': exchange, 'data': results, 'count': len(results)})
+
+
 @app.route('/api/market-list')
 def get_market_list():
     list_type = request.args.get('type', None)
