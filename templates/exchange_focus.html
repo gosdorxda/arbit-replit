@@ -541,16 +541,25 @@
         modal.classList.add('show');
 
         try {
-            const resp = await fetch('/api/orderbook/' + exchange + '/' + encodeURIComponent(symbol));
+            const url = '/api/orderbook/' + exchange + '/' + encodeURIComponent(symbol);
+            const resp = await fetch(url);
             const data = await resp.json();
 
             if (data.status === 'success') {
                 const ob = data.data;
+                const asksRaw = ob.asks || [];
+                const bidsRaw = ob.bids || [];
+
+                if (asksRaw.length === 0 && bidsRaw.length === 0) {
+                    asksEl.innerHTML = '<div style="padding:8px;color:var(--text-muted);text-align:center">Tidak ada data orderbook</div>';
+                    return;
+                }
+
                 const parseEntry = (item) => Array.isArray(item)
                     ? {price: parseFloat(item[0]), amount: parseFloat(item[1])}
                     : {price: parseFloat(item.price), amount: parseFloat(item.amount)};
 
-                const allAsks = ob.asks.map(parseEntry).sort((a, b) => a.price - b.price);
+                const allAsks = asksRaw.map(parseEntry).sort((a, b) => a.price - b.price);
                 const asksToShow = allAsks.slice(0, 15).reverse();
                 let askCum = 0;
                 const askTotals = [];
@@ -567,7 +576,7 @@
                 ).join('');
                 asksEl.scrollTop = asksEl.scrollHeight;
 
-                const allBids = ob.bids.map(parseEntry).sort((a, b) => b.price - a.price);
+                const allBids = bidsRaw.map(parseEntry).sort((a, b) => b.price - a.price);
                 const bidsToShow = allBids.slice(0, 15);
                 let bidCum = 0;
                 bidsEl.innerHTML = bidsToShow.map(({price, amount}) => {
@@ -586,10 +595,10 @@
                     spreadEl.textContent = 'Spread: ' + sp + '%';
                 }
             } else {
-                asksEl.innerHTML = '<div style="padding:8px;color:var(--accent-red)">' + (data.message || 'Error') + '</div>';
+                asksEl.innerHTML = '<div style="padding:8px;color:var(--accent-red)">Status: ' + (data.status || '?') + ' — ' + (data.message || 'Error') + '</div>';
             }
         } catch(e) {
-            asksEl.innerHTML = '<div style="padding:8px;color:var(--accent-red)">Gagal memuat orderbook</div>';
+            asksEl.innerHTML = '<div style="padding:8px;color:var(--accent-red)">Error: ' + String(e) + '</div>';
         }
     }
     function closeEfOrderbook() {
