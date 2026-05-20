@@ -24,5 +24,6 @@ from .bingx import BingXAdapter
 from .btse import BTSEAdapter
 from .whitebit import WhiteBitAdapter
 from .htx import HTXAdapter
+from .binancealpha import BinanceAlphaAdapter
 
-__all__ = ['BaseAdapter', 'LBankAdapter', 'HashKeyAdapter', 'BiconomyAdapter', 'MEXCAdapter', 'BitrueAdapter', 'AscendEXAdapter', 'BitMartAdapter', 'DexTradeAdapter', 'PoloniexAdapter', 'GateIOAdapter', 'NizaAdapter', 'XTAdapter', 'CoinstoreAdapter', 'VindaxAdapter', 'FameEXAdapter', 'BigOneAdapter', 'P2PB2BAdapter', 'DigiFinexAdapter', 'AzbitAdapter', 'LatokenAdapter', 'KrakenAdapter', 'BingXAdapter', 'BTSEAdapter', 'WhiteBitAdapter', 'HTXAdapter']
+__all__ = ['BaseAdapter', 'LBankAdapter', 'HashKeyAdapter', 'BiconomyAdapter', 'MEXCAdapter', 'BitrueAdapter', 'AscendEXAdapter', 'BitMartAdapter', 'DexTradeAdapter', 'PoloniexAdapter', 'GateIOAdapter', 'NizaAdapter', 'XTAdapter', 'CoinstoreAdapter', 'VindaxAdapter', 'FameEXAdapter', 'BigOneAdapter', 'P2PB2BAdapter', 'DigiFinexAdapter', 'AzbitAdapter', 'LatokenAdapter', 'KrakenAdapter', 'BingXAdapter', 'BTSEAdapter', 'WhiteBitAdapter', 'HTXAdapter', 'BinanceAlphaAdapter']

@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import render_template, jsonify, request
 from app import app, db
 from models import SpotTicker, FetchLog, MarketList
-from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter, VindaxAdapter, FameEXAdapter, BigOneAdapter, P2PB2BAdapter, DigiFinexAdapter, AzbitAdapter, LatokenAdapter, KrakenAdapter, BingXAdapter, BTSEAdapter, WhiteBitAdapter, HTXAdapter
+from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter, VindaxAdapter, FameEXAdapter, BigOneAdapter, P2PB2BAdapter, DigiFinexAdapter, AzbitAdapter, LatokenAdapter, KrakenAdapter, BingXAdapter, BTSEAdapter, WhiteBitAdapter, HTXAdapter, BinanceAlphaAdapter
 
 
 def save_tickers(tickers, exchange_name):
@@ -735,6 +735,7 @@ def get_status():
     btse_log = FetchLog.query.filter_by(exchange='BTSE').order_by(FetchLog.fetched_at.desc()).first()
     whitebit_log = FetchLog.query.filter_by(exchange='WHITEBIT').order_by(FetchLog.fetched_at.desc()).first()
     htx_log = FetchLog.query.filter_by(exchange='HTX').order_by(FetchLog.fetched_at.desc()).first()
+    binancealpha_log = FetchLog.query.filter_by(exchange='BINANCEALPHA').order_by(FetchLog.fetched_at.desc()).first()
     
     lbank_count = SpotTicker.query.filter_by(exchange='LBANK').count()
     hashkey_count = SpotTicker.query.filter_by(exchange='HASHKEY').count()
@@ -761,10 +762,11 @@ def get_status():
     btse_count = SpotTicker.query.filter_by(exchange='BTSE').count()
     whitebit_count = SpotTicker.query.filter_by(exchange='WHITEBIT').count()
     htx_count = SpotTicker.query.filter_by(exchange='HTX').count()
+    binancealpha_count = SpotTicker.query.filter_by(exchange='BINANCEALPHA').count()
     
     exchanges = ['LBANK', 'HASHKEY', 'BICONOMY', 'MEXC', 'BITRUE', 'ASCENDEX', 
                  'BITMART', 'DEXTRADE', 'POLONIEX', 'GATEIO', 'NIZA', 'XT', 
-                 'COINSTORE', 'VINDAX', 'FAMEEX', 'BIGONE', 'P2PB2B', 'DIGIFINEX', 'AZBIT', 'LATOKEN', 'KRAKEN', 'BINGX', 'BTSE', 'WHITEBIT', 'HTX']
+                 'COINSTORE', 'VINDAX', 'FAMEEX', 'BIGONE', 'P2PB2B', 'DIGIFINEX', 'AZBIT', 'LATOKEN', 'KRAKEN', 'BINGX', 'BTSE', 'WHITEBIT', 'HTX', 'BINANCEALPHA']
     
     from sqlalchemy import func
     blacklist_counts = dict(db.session.query(
@@ -979,6 +981,14 @@ def get_status():
             'blacklist_count': blacklist_counts.get('HTX', 0),
             'whitelist_count': whitelist_counts.get('HTX', 0),
             'walletlock_count': walletlock_counts.get('HTX', 0)
+        },
+        'binancealpha': {
+            'last_fetch': binancealpha_log.fetched_at.isoformat() if binancealpha_log else None,
+            'status': binancealpha_log.status if binancealpha_log else 'never',
+            'pairs_count': binancealpha_count,
+            'blacklist_count': blacklist_counts.get('BINANCEALPHA', 0),
+            'whitelist_count': whitelist_counts.get('BINANCEALPHA', 0),
+            'walletlock_count': walletlock_counts.get('BINANCEALPHA', 0)
         }
     })
 
@@ -1037,6 +1047,8 @@ def get_depth(exchange, symbol):
             adapter = WhiteBitAdapter()
         elif exchange.upper() == 'HTX':
             adapter = HTXAdapter()
+        elif exchange.upper() == 'BINANCEALPHA':
+            adapter = BinanceAlphaAdapter()
         else:
             return jsonify({
                 'status': 'error',
@@ -1146,6 +1158,8 @@ def get_orderbook(exchange, symbol):
             adapter = WhiteBitAdapter()
         elif exchange.upper() == 'HTX':
             adapter = HTXAdapter()
+        elif exchange.upper() == 'BINANCEALPHA':
+            adapter = BinanceAlphaAdapter()
         else:
             return jsonify({
                 'status': 'error',
@@ -1284,6 +1298,29 @@ def fetch_whitebit():
         return jsonify({
             'status': 'error',
             'exchange': 'WHITEBIT',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/fetch/binancealpha', methods=['POST'])
+def fetch_binancealpha():
+    try:
+        adapter = BinanceAlphaAdapter()
+        tickers = adapter.fetch_usdt_tickers()
+        save_tickers(tickers, adapter.exchange_name)
+        log_fetch(adapter.exchange_name, 'success', len(tickers))
+
+        return jsonify({
+            'status': 'success',
+            'exchange': adapter.exchange_name,
+            'pairs_count': len(tickers),
+            'message': f'Successfully fetched {len(tickers)} pairs from Binance Alpha'
+        })
+    except Exception as e:
+        log_fetch('BINANCEALPHA', 'error', error_message=str(e))
+        return jsonify({
+            'status': 'error',
+            'exchange': 'BINANCEALPHA',
             'message': str(e)
         }), 500
 

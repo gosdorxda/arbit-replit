@@ -411,6 +411,20 @@
                     <button class="reset-visited-btn" onclick="resetVisitedRows('htx')" title="Reset visited">✕</button>
                 </div>
                 <div class="exchange-card">
+                    <button id="btn-binancealpha" class="fetch-btn binancealpha-btn" onclick="fetchData('binancealpha')">
+                        <div class="btn-main">
+                            <span class="btn-name">BN Alpha</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('binancealpha')" title="Reset visited">✕</button>
+                </div>
+                <div class="exchange-card">
                     <button id="btn-btse" class="fetch-btn btse-btn" onclick="fetchData('btse')">
                         <div class="btn-main">
                             <span class="btn-name">BTSE</span>
@@ -458,6 +472,7 @@
                         <option value="BTSE">BTSE</option>
                         <option value="WHITEBIT">WHITEBIT</option>
                         <option value="HTX">HTX</option>
+                        <option value="BINANCEALPHA">BINANCEALPHA</option>
                     </select>
                 </div>
                 <div class="filter-item">

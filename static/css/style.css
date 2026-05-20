@@ -680,6 +680,16 @@ body {
     transform: translateY(-1px);
 }
 
+.binancealpha-btn {
+    background-color: #f0b90b;
+    color: #1a1a1a;
+}
+
+.binancealpha-btn:hover:not(:disabled) {
+    background-color: #d4a009;
+    transform: translateY(-1px);
+}
+
 .status-row {
     display: flex;
     flex-direction: column;
