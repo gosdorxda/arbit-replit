@@ -47,6 +47,44 @@
             color: #fff;
             letter-spacing: 0.02em;
         }
+        /* ---- Free-floating orderbook windows ---- */
+        .ef-float-modal {
+            display: none;
+            position: fixed;
+            z-index: 2050;
+            width: 280px;
+        }
+        .ef-float-modal.show {
+            display: block;
+        }
+        .ef-float-modal .modal-content {
+            transform: none !important;
+            width: 280px;
+            max-height: 460px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+            pointer-events: auto;
+            cursor: default;
+        }
+        .ef-float-modal .modal-header {
+            cursor: move;
+            user-select: none;
+        }
+        .ef-float-modal .modal-header:active {
+            cursor: grabbing;
+        }
+        /* Color accent strip per modal type */
+        #ef-ob-modal-other .modal-header {
+            border-top: 2px solid var(--accent-blue);
+        }
+        #ef-ob-modal-anchor .modal-header {
+            border-top: 2px solid var(--accent-green);
+        }
         .ef-other-chip-wrap {
             display: inline-flex;
             align-items: center;
@@ -406,12 +444,12 @@
         </section>
     </div>
 
-    <!-- Orderbook modal (reuse same pattern as arbitrage) -->
-    <div id="ef-ob-modal" class="modal modal-secondary">
+    <!-- Orderbook modal: Other exchanges -->
+    <div id="ef-ob-modal-other" class="ef-float-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="ef-ob-title" style="font-size:1rem;">Orderbook</h2>
-                <button class="modal-close" onclick="closeEfOrderbook()">&times;</button>
+                <h2 id="ef-ob-title-other" style="font-size:0.9rem;">Orderbook</h2>
+                <button class="modal-close" onclick="closeEfOrderbook('other')">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="orderbook-header">
@@ -421,11 +459,37 @@
                 </div>
                 <div class="orderbook-container">
                     <div class="orderbook-side asks">
-                        <div id="ef-ob-asks" class="orderbook-list"></div>
+                        <div id="ef-ob-asks-other" class="orderbook-list"></div>
                     </div>
-                    <div id="ef-ob-spread" class="orderbook-divider">—</div>
+                    <div id="ef-ob-spread-other" class="orderbook-divider">—</div>
                     <div class="orderbook-side bids">
-                        <div id="ef-ob-bids" class="orderbook-list"></div>
+                        <div id="ef-ob-bids-other" class="orderbook-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orderbook modal: Anchor exchange -->
+    <div id="ef-ob-modal-anchor" class="ef-float-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="ef-ob-title-anchor" style="font-size:0.9rem;">Orderbook (Anchor)</h2>
+                <button class="modal-close" onclick="closeEfOrderbook('anchor')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="orderbook-header">
+                    <span class="ob-col-header">Harga</span>
+                    <span class="ob-col-header">Qty</span>
+                    <span class="ob-col-header">Total USDT</span>
+                </div>
+                <div class="orderbook-container">
+                    <div class="orderbook-side asks">
+                        <div id="ef-ob-asks-anchor" class="orderbook-list"></div>
+                    </div>
+                    <div id="ef-ob-spread-anchor" class="orderbook-divider">—</div>
+                    <div class="orderbook-side bids">
+                        <div id="ef-ob-bids-anchor" class="orderbook-list"></div>
                     </div>
                 </div>
             </div>
@@ -549,19 +613,71 @@
         });
     });
 
+    // ---- Draggable float modals ----
+    function makeEfDraggable(modalId, storageKey, defaultPosFn) {
+        const modal = document.getElementById(modalId);
+        const header = modal.querySelector('.modal-header');
+
+        function getPos() {
+            try {
+                const s = localStorage.getItem(storageKey);
+                if (s) return JSON.parse(s);
+            } catch(e) {}
+            return defaultPosFn();
+        }
+        function applyPos(pos) {
+            const maxL = Math.max(10, window.innerWidth - 290);
+            const maxT = Math.max(10, window.innerHeight - 80);
+            modal.style.left = Math.max(10, Math.min(pos.left, maxL)) + 'px';
+            modal.style.top  = Math.max(10, Math.min(pos.top,  maxT)) + 'px';
+        }
+        function savePos() {
+            localStorage.setItem(storageKey, JSON.stringify({
+                left: parseInt(modal.style.left) || 0,
+                top:  parseInt(modal.style.top)  || 0
+            }));
+        }
+        applyPos(getPos());
+
+        let dragging = false, sx, sy, sl, st;
+        header.addEventListener('mousedown', function(e) {
+            if (e.target.classList.contains('modal-close')) return;
+            dragging = true;
+            sx = e.clientX; sy = e.clientY;
+            sl = parseInt(modal.style.left) || 0;
+            st = parseInt(modal.style.top)  || 0;
+            modal.style.zIndex = 2055;
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+            e.preventDefault();
+        });
+        function onMove(e) {
+            if (!dragging) return;
+            applyPos({ left: sl + e.clientX - sx, top: st + e.clientY - sy });
+        }
+        function onUp() {
+            if (dragging) { savePos(); modal.style.zIndex = 2050; }
+            dragging = false;
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+        }
+    }
+
     // ---- Orderbook ----
-    async function showEfOrderbook(exchange, symbol) {
-        const modal = document.getElementById('ef-ob-modal');
-        const title = document.getElementById('ef-ob-title');
-        const asksEl = document.getElementById('ef-ob-asks');
-        const bidsEl = document.getElementById('ef-ob-bids');
-        const spreadEl = document.getElementById('ef-ob-spread');
+    async function showEfOrderbook(exchange, symbol, type) {
+        const suffix = (type === 'anchor') ? 'anchor' : 'other';
+        const modal    = document.getElementById('ef-ob-modal-' + suffix);
+        const title    = document.getElementById('ef-ob-title-'  + suffix);
+        const asksEl   = document.getElementById('ef-ob-asks-'   + suffix);
+        const bidsEl   = document.getElementById('ef-ob-bids-'   + suffix);
+        const spreadEl = document.getElementById('ef-ob-spread-' + suffix);
 
         title.textContent = exchange + ' — ' + symbol;
         asksEl.innerHTML = '<div style="padding:8px;color:var(--text-muted)">Memuat...</div>';
         bidsEl.innerHTML = '';
         spreadEl.textContent = '—';
         modal.classList.add('show');
+        modal.style.zIndex = 2050;
 
         try {
             const url = '/api/orderbook/' + exchange + '/' + encodeURIComponent(symbol);
@@ -624,11 +740,17 @@
             asksEl.innerHTML = '<div style="padding:8px;color:var(--accent-red)">Error: ' + String(e) + '</div>';
         }
     }
-    function closeEfOrderbook() {
-        document.getElementById('ef-ob-modal').classList.remove('show');
+    function closeEfOrderbook(type) {
+        const suffix = (type === 'anchor') ? 'anchor' : 'other';
+        document.getElementById('ef-ob-modal-' + suffix).classList.remove('show');
     }
-    document.getElementById('ef-ob-modal').addEventListener('click', function(e) {
-        if (e.target === this) closeEfOrderbook();
+
+    // Init draggable — default position top-right corner
+    makeEfDraggable('ef-ob-modal-other',  'ef_modal_pos_other',  function() {
+        return { left: Math.max(10, window.innerWidth - 300), top: 20 };
+    });
+    makeEfDraggable('ef-ob-modal-anchor', 'ef_modal_pos_anchor', function() {
+        return { left: Math.max(10, window.innerWidth - 300), top: 500 };
     });
 
     // ---- DataTable ----
@@ -671,7 +793,8 @@
 
         // Event delegation — DataTables 1.13+ strips onclick attrs, use data-* + delegation instead
         $('#ef-table tbody').on('click', '.ef-clickable-ob', function() {
-            showEfOrderbook($(this).data('exchange'), $(this).data('symbol'));
+            const type = $(this).data('modal-target') === 'anchor' ? 'anchor' : 'other';
+            showEfOrderbook($(this).data('exchange'), $(this).data('symbol'), type);
         });
         $('#ef-table tbody').on('click', '.ef-bl-btn', function() {
             toggleEfBlacklist($(this).data('symbol'), this);
@@ -708,7 +831,7 @@
             return {
                 symbol_html: `<a href="${anchorUrl}" target="_blank" style="font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--accent-blue);text-decoration:none;" title="Buka trading ${anchorEx}">${item.base_currency}</a>`,
                 anchor_price_sort: item.anchor_price,
-                anchor_price_html: `<span class="ef-anchor-price">${formatPrice(item.anchor_price)}</span> <span class="ef-exch-chip ef-clickable-ob" style="background:${anchorColor};font-size:0.65rem;cursor:pointer;vertical-align:middle;" data-exchange="${anchorEx}" data-symbol="${item.symbol}" title="Klik lihat orderbook ${anchorEx}">${anchorEx}</span>`,
+                anchor_price_html: `<span class="ef-anchor-price">${formatPrice(item.anchor_price)}</span> <span class="ef-exch-chip ef-clickable-ob" style="background:${anchorColor};font-size:0.65rem;cursor:pointer;vertical-align:middle;" data-exchange="${anchorEx}" data-symbol="${item.symbol}" data-modal-target="anchor" title="Klik lihat orderbook ${anchorEx}">${anchorEx}</span>`,
                 anchor_vol_sort: item.anchor_turnover || 0,
                 anchor_vol_html: `<span class="ef-vol-text">${formatVolume(item.anchor_turnover)}</span>`,
                 others_html: `<div class="ef-other-list">${othersHtml}</div>`,
