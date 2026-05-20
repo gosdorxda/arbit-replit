@@ -51,7 +51,30 @@
             display: inline-flex;
             align-items: center;
             gap: 3px;
-            margin: 2px 2px;
+            margin: 14px 2px 2px 2px;
+        }
+        .ef-chip-vol-wrap {
+            position: relative;
+            display: inline-block;
+        }
+        .ef-vol-bubble {
+            position: absolute;
+            top: -13px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.58rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            padding: 1px 5px;
+            border-radius: 8px;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 2;
+            line-height: 1.5;
+            letter-spacing: 0.01em;
         }
         .ef-exch-chip {
             display: inline-block;
@@ -671,8 +694,12 @@
                     const diffCls = diff > 0.01 ? 'ef-diff-pos' : (diff < -0.01 ? 'ef-diff-neg' : 'ef-diff-neu');
                     const arrow = diff > 0.01 ? '▲' : (diff < -0.01 ? '▼' : '≈');
                     const tradeUrl = getExchangeUrl(o.exchange, item.symbol);
+                    const volLabel = o.turnover_24h > 0 ? formatVolume(o.turnover_24h) : null;
+                    const chipInner = volLabel
+                        ? `<span class="ef-chip-vol-wrap"><span class="ef-vol-bubble">${volLabel}</span><span class="ef-exch-chip ef-clickable-ob" style="background:${color};cursor:pointer;" data-exchange="${o.exchange}" data-symbol="${item.symbol}" title="Klik lihat orderbook ${o.exchange} | Harga: ${formatPrice(o.price)} | Vol: ${volLabel}">${o.exchange}</span></span>`
+                        : `<span class="ef-exch-chip ef-clickable-ob" style="background:${color};cursor:pointer;" data-exchange="${o.exchange}" data-symbol="${item.symbol}" title="Klik lihat orderbook ${o.exchange} | Harga: ${formatPrice(o.price)}">${o.exchange}</span>`;
                     return `<span class="ef-other-chip-wrap">` +
-                        `<span class="ef-exch-chip ef-clickable-ob" style="background:${color};cursor:pointer;" data-exchange="${o.exchange}" data-symbol="${item.symbol}" title="Klik lihat orderbook ${o.exchange} | Harga: ${formatPrice(o.price)}">${o.exchange}</span>` +
+                        chipInner +
                         `<a href="${tradeUrl}" target="_blank" class="ef-diff-tag ${diffCls}" style="text-decoration:none;" title="Buka trading ${o.exchange}">${arrow} ${sign}${diff.toFixed(2)}%</a>` +
                     `</span>`;
                 }).join(' ');
