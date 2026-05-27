@@ -110,6 +110,7 @@ class UZXAdapter(BaseAdapter):
         return tickers
 
     def fetch_orderbook(self, symbol: str, limit: int = 20) -> NormalizedOrderbook:
+        """UZX has no orderbook depth channel — use spot.ticker for best bid/ask."""
         uzx_symbol = symbol.replace("/", "-")
         result_holder = []
         done = threading.Event()
@@ -121,8 +122,8 @@ class UZXAdapter(BaseAdapter):
                 except Exception:
                     data = msg if isinstance(msg, bytes) else msg.encode()
                 j = json.loads(data)
-                t = j.get("type", "")
-                if "depth" in t and j.get("data"):
+                msg_type = j.get("type", "")
+                if "ticker" in msg_type and j.get("data"):
                     result_holder.append(j["data"])
                     done.set()
                     ws.close()
@@ -134,7 +135,7 @@ class UZXAdapter(BaseAdapter):
                 "event": "sub",
                 "params": {
                     "biz": "market",
-                    "type": "spot.depth",
+                    "type": "spot.ticker",
                     "symbol": uzx_symbol,
                     "interval": ""
                 },
@@ -160,32 +161,14 @@ class UZXAdapter(BaseAdapter):
         if not result_holder:
             return NormalizedOrderbook(exchange=self.exchange_name, symbol=symbol, asks=[], bids=[])
 
-        book = result_holder[0]
-        asks = []
-        for row in (book.get("asks") or book.get("sell") or [])[:limit]:
-            if isinstance(row, list) and len(row) >= 2:
-                p = self._safe_float(row[0])
-                a = self._safe_float(row[1])
-            elif isinstance(row, dict):
-                p = self._safe_float(row.get("price") or row.get("p"))
-                a = self._safe_float(row.get("amount") or row.get("a") or row.get("q"))
-            else:
-                continue
-            if p and a:
-                asks.append({"price": p, "amount": a})
+        ticker = result_holder[0]
+        ask_price = self._safe_float(ticker.get("ask_price"))
+        ask_vol   = self._safe_float(ticker.get("ask_vol"))
+        bid_price = self._safe_float(ticker.get("bid_price"))
+        bid_vol   = self._safe_float(ticker.get("bid_vol"))
 
-        bids = []
-        for row in (book.get("bids") or book.get("buy") or [])[:limit]:
-            if isinstance(row, list) and len(row) >= 2:
-                p = self._safe_float(row[0])
-                a = self._safe_float(row[1])
-            elif isinstance(row, dict):
-                p = self._safe_float(row.get("price") or row.get("p"))
-                a = self._safe_float(row.get("amount") or row.get("a") or row.get("q"))
-            else:
-                continue
-            if p and a:
-                bids.append({"price": p, "amount": a})
+        asks = [{"price": ask_price, "amount": ask_vol}] if ask_price and ask_vol else []
+        bids = [{"price": bid_price, "amount": bid_vol}] if bid_price and bid_vol else []
 
         return NormalizedOrderbook(
             exchange=self.exchange_name,
