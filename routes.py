@@ -1059,6 +1059,8 @@ def get_depth(exchange, symbol):
             adapter = HTXAdapter()
         elif exchange.upper() == 'BINANCEALPHA':
             adapter = BinanceAlphaAdapter()
+        elif exchange.upper() == 'UZX':
+            adapter = UZXAdapter()
         else:
             return jsonify({
                 'status': 'error',
@@ -1170,6 +1172,8 @@ def get_orderbook(exchange, symbol):
             adapter = HTXAdapter()
         elif exchange.upper() == 'BINANCEALPHA':
             adapter = BinanceAlphaAdapter()
+        elif exchange.upper() == 'UZX':
+            adapter = UZXAdapter()
         else:
             return jsonify({
                 'status': 'error',
