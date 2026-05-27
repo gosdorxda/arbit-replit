@@ -363,7 +363,7 @@
             <div class="ef-anchor-bar">
                 <span class="ef-anchor-label">Exchange Anchor:</span>
                 <select id="ef-anchor-select" class="ef-anchor-select" onchange="onAnchorChange()">
-                    {% for exch in ['LBANK','HASHKEY','BICONOMY','MEXC','BITRUE','ASCENDEX','BITMART','DEXTRADE','POLONIEX','GATEIO','NIZA','XT','COINSTORE','VINDAX','FAMEEX','BIGONE','P2PB2B','DIGIFINEX','AZBIT','LATOKEN','KRAKEN','BINGX','BTSE','WHITEBIT','HTX','BINANCEALPHA'] %}
+                    {% for exch in ['LBANK','HASHKEY','BICONOMY','MEXC','BITRUE','ASCENDEX','BITMART','DEXTRADE','POLONIEX','GATEIO','NIZA','XT','COINSTORE','VINDAX','FAMEEX','BIGONE','P2PB2B','DIGIFINEX','AZBIT','LATOKEN','KRAKEN','BINGX','BTSE','WHITEBIT','HTX','BINANCEALPHA','UZX'] %}
                     <option value="{{ exch }}">{{ exch }}</option>
                     {% endfor %}
                 </select>
@@ -552,6 +552,8 @@
             case 'BTSE': return `https://www.btse.com/en/trading/${base}-USDT`;
             case 'WHITEBIT': return `https://whitebit.com/trade/${base}_USDT`;
             case 'HTX': return `https://www.htx.com/trade/${base.toLowerCase()}_usdt/`;
+            case 'BINANCEALPHA': return `https://www.binance.com/en/alpha-trade`;
+            case 'UZX': return `https://www.uzx.com/spot/${base.toUpperCase()}-USDT`;
             default: return '#';
         }
     }
@@ -563,7 +565,7 @@
         COINSTORE:'#f59e0b', VINDAX:'#10b981', FAMEEX:'#e11d48', BIGONE:'#0ea5e9',
         P2PB2B:'#8b5cf6', DIGIFINEX:'#00d4aa', AZBIT:'#f97316', LATOKEN:'#3b82f6',
         KRAKEN:'#5841d8', BINGX:'#f0a500', BTSE:'#1a56db', WHITEBIT:'#0095ff',
-        HTX:'#02a4d3'
+        HTX:'#02a4d3', BINANCEALPHA:'#f0b90b', UZX:'#1a6dff'
     };
 
     // ---- Format helpers ----

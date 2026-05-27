@@ -92,6 +92,8 @@ function getExchangeUrl(exchange, symbol) {
             return `https://www.htx.com/trade/${base.toLowerCase()}_usdt/`;
         case 'BINANCEALPHA':
             return `https://www.binance.com/en/alpha-trade`;
+        case 'UZX':
+            return `https://www.uzx.com/spot/${base.toUpperCase()}-USDT`;
         default:
             return '#';
     }
@@ -379,7 +381,7 @@ function updateExchangeColumnVisibility() {
 }
 
 async function fetchAll() {
-    const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt', 'coinstore', 'vindax', 'fameex', 'bigone', 'p2pb2b', 'digifinex', 'azbit', 'latoken', 'kraken', 'bingx', 'btse', 'whitebit', 'htx', 'binancealpha'];
+    const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt', 'coinstore', 'vindax', 'fameex', 'bigone', 'p2pb2b', 'digifinex', 'azbit', 'latoken', 'kraken', 'bingx', 'btse', 'whitebit', 'htx', 'binancealpha', 'uzx'];
     const fetchAllBtn = document.getElementById('btn-fetch-all');
     const progressEl = fetchAllBtn.querySelector('.fetch-all-progress');
     const labelEl = fetchAllBtn.querySelector('.fetch-all-label');
@@ -490,9 +492,10 @@ async function loadStatus() {
         updateStatusDisplay('whitebit', data.whitebit);
         updateStatusDisplay('htx', data.htx);
         updateStatusDisplay('binancealpha', data.binancealpha);
+        updateStatusDisplay('uzx', data.uzx);
         
         let totalMarkets = 0;
-        const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt', 'coinstore', 'vindax', 'fameex', 'bigone', 'p2pb2b', 'digifinex', 'azbit', 'latoken', 'kraken', 'bingx', 'btse', 'whitebit', 'htx', 'binancealpha'];
+        const exchanges = ['lbank', 'hashkey', 'biconomy', 'mexc', 'bitrue', 'ascendex', 'bitmart', 'dextrade', 'poloniex', 'gateio', 'niza', 'xt', 'coinstore', 'vindax', 'fameex', 'bigone', 'p2pb2b', 'digifinex', 'azbit', 'latoken', 'kraken', 'bingx', 'btse', 'whitebit', 'htx', 'binancealpha', 'uzx'];
         exchanges.forEach(ex => {
             if (data[ex] && data[ex].pairs_count) {
                 totalMarkets += data[ex].pairs_count;
