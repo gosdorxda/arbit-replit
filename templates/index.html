@@ -425,6 +425,20 @@
                     <button class="reset-visited-btn" onclick="resetVisitedRows('binancealpha')" title="Reset visited">✕</button>
                 </div>
                 <div class="exchange-card">
+                    <button id="btn-uzx" class="fetch-btn uzx-btn" onclick="fetchData('uzx')">
+                        <div class="btn-main">
+                            <span class="btn-name">UZX</span>
+                            <span class="spinner"></span>
+                        </div>
+                        <div class="btn-status">
+                            <span class="btn-time">Never fetched</span>
+                            <span class="btn-pairs">0 pairs</span>
+                            <span class="btn-list"></span>
+                        </div>
+                    </button>
+                    <button class="reset-visited-btn" onclick="resetVisitedRows('uzx')" title="Reset visited">✕</button>
+                </div>
+                <div class="exchange-card">
                     <button id="btn-btse" class="fetch-btn btse-btn" onclick="fetchData('btse')">
                         <div class="btn-main">
                             <span class="btn-name">BTSE</span>
@@ -473,6 +487,7 @@
                         <option value="WHITEBIT">WHITEBIT</option>
                         <option value="HTX">HTX</option>
                         <option value="BINANCEALPHA">BINANCEALPHA</option>
+                        <option value="UZX">UZX</option>
                     </select>
                 </div>
                 <div class="filter-item">
@@ -511,7 +526,7 @@
                 <div class="filter-item stats-info">
                     <div class="stat-item">
                         <span class="stat-label">Exchanges:</span>
-                        <span class="stat-value" id="total-exchanges">23</span>
+                        <span class="stat-value" id="total-exchanges">24</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Total Markets:</span>

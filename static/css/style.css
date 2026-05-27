@@ -690,6 +690,16 @@ body {
     transform: translateY(-1px);
 }
 
+.uzx-btn {
+    background-color: #1a6dff;
+    color: #ffffff;
+}
+
+.uzx-btn:hover:not(:disabled) {
+    background-color: #1558d6;
+    transform: translateY(-1px);
+}
+
 .status-row {
     display: flex;
     flex-direction: column;
