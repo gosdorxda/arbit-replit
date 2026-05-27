@@ -410,6 +410,27 @@
                         <input type="checkbox" id="ef-exclude-leveraged" style="accent-color:var(--accent-blue);">
                         <span>Sembunyikan Token Leveraged</span>
                     </label>
+                    <div class="ef-filter-vdiv"></div>
+                    <div style="position:relative; display:flex; align-items:center; gap:6px;">
+                        <span class="ef-filter-label" style="margin-bottom:0; white-space:nowrap;">Kecualikan Exchange Lain:</span>
+                        <details id="ef-exclude-exch-details">
+                            <summary id="ef-exclude-exch-summary" class="exclude-exch-summary">Tidak ada</summary>
+                            <div class="exclude-exch-panel">
+                                <div style="display:flex; gap:6px; margin-bottom:6px;">
+                                    <button type="button" class="exclude-exch-btn-sm" onclick="setAllEfExchangeExclusion(true)">Semua</button>
+                                    <button type="button" class="exclude-exch-btn-sm" onclick="setAllEfExchangeExclusion(false)">Hapus</button>
+                                </div>
+                                <div class="exclude-exch-grid">
+                                    {% for exch in ['LBANK','HASHKEY','BICONOMY','MEXC','BITRUE','ASCENDEX','BITMART','DEXTRADE','POLONIEX','GATEIO','NIZA','XT','COINSTORE','VINDAX','FAMEEX','BIGONE','P2PB2B','DIGIFINEX','AZBIT','LATOKEN','KRAKEN','BINGX','BTSE','WHITEBIT','HTX','BINANCEALPHA','UZX'] %}
+                                    <label class="exclude-exch-item">
+                                        <input type="checkbox" class="ef-exclude-exch-cb" value="{{ exch }}" style="accent-color:var(--accent-blue);">
+                                        {{ exch }}
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </details>
+                    </div>
                     <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
                         <button type="button" class="ef-reset-btn" onclick="resetEfFilters()">↺ Reset</button>
                         <button class="load-depth-btn" onclick="loadEfData()" id="ef-btn-refresh">
@@ -809,10 +830,15 @@
             const anchorColor = EXCHANGE_COLORS[anchorEx.toUpperCase()] || '#666';
             const anchorUrl = getExchangeUrl(anchorEx, item.symbol);
 
+            // Use pre-filtered exchanges from applyEfFilters (respects exclusion)
+            const effOthers = item._eff_others !== undefined ? item._eff_others : item.other_exchanges;
+            const effCount  = item._eff_count  !== undefined ? item._eff_count  : item.other_count;
+            const effSpread = item._eff_spread !== undefined ? item._eff_spread : item.best_spread_pct;
+
             // Other exchanges chips — data-* attrs for event delegation (DataTables strips onclick)
-            const othersHtml = item.other_exchanges.length === 0
+            const othersHtml = effOthers.length === 0
                 ? '<span style="color:var(--text-muted);font-size:0.75rem;">—</span>'
-                : item.other_exchanges.map(o => {
+                : effOthers.map(o => {
                     const color = EXCHANGE_COLORS[o.exchange.toUpperCase()] || '#666';
                     const diff = o.diff_pct;
                     const sign = diff > 0 ? '+' : '';
@@ -837,9 +863,9 @@
                 anchor_vol_sort: item.anchor_turnover || 0,
                 anchor_vol_html: `<span class="ef-vol-text">${formatVolume(item.anchor_turnover)}</span>`,
                 others_html: `<div class="ef-other-list">${othersHtml}</div>`,
-                spread_sort: item.best_spread_pct,
-                spread_html: item.best_spread_pct > 0 ? spreadBadge(item.best_spread_pct) : '<span style="color:var(--text-muted)">—</span>',
-                other_count: item.other_count,
+                spread_sort: effSpread,
+                spread_html: effSpread > 0 ? spreadBadge(effSpread) : '<span style="color:var(--text-muted)">—</span>',
+                other_count: effCount,
                 bl_html: `<button class="arb-bl-btn ef-bl-btn ${blActive}" data-symbol="${item.symbol}" title="${blTitle}">⛔</button>`,
                 _raw: item
             };
@@ -881,6 +907,32 @@
     // ---- Leveraged token pattern ----
     const LEVERAGED_PATTERN = /\d+[LSls](USDT)?$/;
 
+    // ---- Exchange exclusion helpers ----
+    function getExcludedEfExchanges() {
+        const excluded = new Set();
+        document.querySelectorAll('.ef-exclude-exch-cb:checked').forEach(cb => {
+            excluded.add(cb.value.toUpperCase());
+        });
+        return excluded;
+    }
+
+    function setAllEfExchangeExclusion(checked) {
+        document.querySelectorAll('.ef-exclude-exch-cb').forEach(cb => { cb.checked = checked; });
+        updateEfExcludeSummary();
+        applyEfFilters();
+    }
+
+    function updateEfExcludeSummary() {
+        const checked = document.querySelectorAll('.ef-exclude-exch-cb:checked');
+        const summary = document.getElementById('ef-exclude-exch-summary');
+        if (checked.length === 0) {
+            summary.textContent = 'Tidak ada';
+        } else {
+            const names = Array.from(checked).map(cb => cb.value);
+            summary.textContent = names.length <= 3 ? names.join(', ') : names.slice(0, 3).join(', ') + ` +${names.length - 3}`;
+        }
+    }
+
     // ---- Apply filters ----
     function applyEfFilters() {
         const minSpread = parseFloat(document.getElementById('ef-min-spread').value) || 0;
@@ -889,12 +941,27 @@
         const listFilter = document.getElementById('ef-list-filter').value;
         const onlyShared = document.getElementById('ef-only-shared').checked;
         const excludeLeveraged = document.getElementById('ef-exclude-leveraged').checked;
+        const excludedExchanges = getExcludedEfExchanges();
 
         const filtered = efAllData.filter(item => {
-            if (item.best_spread_pct < minSpread) return false;
-            if (!isNaN(maxSpread) && maxSpread !== '' && item.best_spread_pct > maxSpread) return false;
-            if (item.other_count < minOthers) return false;
-            if (onlyShared && item.other_count === 0) return false;
+            // Compute effective other_exchanges after exclusions
+            const effOthers = excludedExchanges.size > 0
+                ? item.other_exchanges.filter(o => !excludedExchanges.has(o.exchange.toUpperCase()))
+                : item.other_exchanges;
+            const effCount = effOthers.length;
+            const effSpread = effOthers.length > 0
+                ? Math.max(...effOthers.map(o => Math.abs(o.diff_pct)))
+                : 0;
+
+            // Attach effective data for buildEfRows
+            item._eff_others = effOthers;
+            item._eff_count = effCount;
+            item._eff_spread = effSpread;
+
+            if (effSpread < minSpread) return false;
+            if (!isNaN(maxSpread) && maxSpread !== '' && effSpread > maxSpread) return false;
+            if (effCount < minOthers) return false;
+            if (onlyShared && effCount === 0) return false;
             if (listFilter === 'hide_blacklist' && item.is_blacklisted) return false;
             if (listFilter === 'only_blacklist' && !item.is_blacklisted) return false;
             if (excludeLeveraged && LEVERAGED_PATTERN.test(item.base_currency)) return false;
@@ -944,6 +1011,8 @@
         localStorage.setItem('ef_list_filter', document.getElementById('ef-list-filter').value);
         localStorage.setItem('ef_only_shared', document.getElementById('ef-only-shared').checked ? '1' : '0');
         localStorage.setItem('ef_exclude_leveraged', document.getElementById('ef-exclude-leveraged').checked ? '1' : '0');
+        const excluded = Array.from(document.querySelectorAll('.ef-exclude-exch-cb:checked')).map(cb => cb.value);
+        localStorage.setItem('ef_excluded_exchanges', excluded.join(','));
     }
     function loadEfFilterPrefs() {
         const minSpread = localStorage.getItem('ef_min_spread');
@@ -953,6 +1022,7 @@
         const onlyShared = localStorage.getItem('ef_only_shared');
         const excludeLeveraged = localStorage.getItem('ef_exclude_leveraged');
         const anchor = localStorage.getItem('ef_anchor');
+        const excludedExchanges = localStorage.getItem('ef_excluded_exchanges');
 
         if (minSpread !== null) document.getElementById('ef-min-spread').value = minSpread;
         if (maxSpread !== null) document.getElementById('ef-max-spread').value = maxSpread;
@@ -965,6 +1035,13 @@
         }
         if (onlyShared !== null) document.getElementById('ef-only-shared').checked = onlyShared === '1';
         if (excludeLeveraged !== null) document.getElementById('ef-exclude-leveraged').checked = excludeLeveraged === '1';
+        if (excludedExchanges) {
+            const saved = excludedExchanges.split(',').filter(Boolean);
+            document.querySelectorAll('.ef-exclude-exch-cb').forEach(cb => {
+                cb.checked = saved.includes(cb.value);
+            });
+            updateEfExcludeSummary();
+        }
         if (anchor) {
             currentAnchor = anchor;
             document.getElementById('ef-anchor-select').value = anchor;
@@ -979,6 +1056,7 @@
         document.getElementById('ef-list-filter').value = 'hide_blacklist';
         document.getElementById('ef-only-shared').checked = false;
         document.getElementById('ef-exclude-leveraged').checked = false;
+        setAllEfExchangeExclusion(false);
         setActivePill('hide_blacklist');
         applyEfFilters();
     }
@@ -989,6 +1067,9 @@
     });
     document.getElementById('ef-only-shared').addEventListener('change', applyEfFilters);
     document.getElementById('ef-exclude-leveraged').addEventListener('change', applyEfFilters);
+    document.querySelectorAll('.ef-exclude-exch-cb').forEach(cb => {
+        cb.addEventListener('change', () => { updateEfExcludeSummary(); applyEfFilters(); });
+    });
 
     // ---- init ----
     initTheme();
