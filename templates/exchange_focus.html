@@ -455,7 +455,6 @@
                             <th>Vol Anchor (USD)</th>
                             <th>Exchange Lain</th>
                             <th>Best Spread %</th>
-                            <th>Jml Exchange</th>
                             <th>BL</th>
                         </tr>
                     </thead>
@@ -785,7 +784,7 @@
             data: [],
             columns: [
                 { title: 'Symbol', data: 'symbol_html', orderable: true, width: '90px' },
-                { title: 'Harga Anchor', data: 'anchor_price_sort', orderable: true, render: function(d, type, row) {
+                { title: 'Harga Anchor', data: 'anchor_price_sort', orderable: true, width: '180px', render: function(d, type, row) {
                     return type === 'display' ? row.anchor_price_html : d;
                 }},
                 { title: 'Vol Anchor (USD)', data: 'anchor_vol_sort', orderable: true, render: function(d, type, row) {
@@ -795,7 +794,6 @@
                 { title: 'Best Spread %', data: 'spread_sort', orderable: true, render: function(d, type, row) {
                     return type === 'display' ? row.spread_html : d;
                 }},
-                { title: 'Jml Exchange', data: 'other_count', orderable: true, width: '80px', className: 'dt-center' },
                 { title: 'BL', data: 'bl_html', orderable: false, width: '44px', className: 'dt-center' }
             ],
             order: [[4, 'desc']],
@@ -859,7 +857,7 @@
             return {
                 symbol_html: `<a href="${anchorUrl}" target="_blank" style="font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--accent-blue);text-decoration:none;" title="Buka trading ${anchorEx}">${item.base_currency}</a>`,
                 anchor_price_sort: item.anchor_price,
-                anchor_price_html: `<span class="ef-anchor-price">${formatPrice(item.anchor_price)}</span> <span class="ef-exch-chip ef-clickable-ob" style="background:${anchorColor};font-size:0.65rem;cursor:pointer;vertical-align:middle;" data-exchange="${anchorEx}" data-symbol="${item.symbol}" data-modal-target="anchor" title="Klik lihat orderbook ${anchorEx}">${anchorEx}</span>`,
+                anchor_price_html: `<span style="white-space:nowrap;"><span class="ef-anchor-price">${formatPrice(item.anchor_price)}</span> <span class="ef-exch-chip ef-clickable-ob" style="background:${anchorColor};font-size:0.65rem;cursor:pointer;vertical-align:middle;" data-exchange="${anchorEx}" data-symbol="${item.symbol}" data-modal-target="anchor" title="Klik lihat orderbook ${anchorEx}">${anchorEx}</span></span>`,
                 anchor_vol_sort: item.anchor_turnover || 0,
                 anchor_vol_html: `<span class="ef-vol-text">${formatVolume(item.anchor_turnover)}</span>`,
                 others_html: `<div class="ef-other-list">${othersHtml}</div>`,
