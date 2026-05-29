@@ -1385,6 +1385,37 @@ def fetch_uzx():
         }), 500
 
 
+_poloniex_currency_cache = {'data': None, 'ts': 0}
+
+@app.route('/api/poloniex/currency-status')
+def poloniex_currency_status():
+    import time as _time
+    now = _time.time()
+    if _poloniex_currency_cache['data'] is not None and now - _poloniex_currency_cache['ts'] < 600:
+        return jsonify({'status': 'success', 'data': _poloniex_currency_cache['data']})
+    try:
+        import requests as _req
+        resp = _req.get(
+            'https://api.poloniex.com/v2/currencies?includeMultiChainCurrencies=true',
+            timeout=15
+        )
+        resp.raise_for_status()
+        raw = resp.json()
+        result = {}
+        for item in raw:
+            coin = item.get('coin', '').upper()
+            networks = item.get('networkList', [])
+            deposit = any(n.get('depositEnable', False) for n in networks)
+            withdraw = any(n.get('withdrawalEnable', False) for n in networks)
+            result[coin] = {'deposit': deposit, 'withdraw': withdraw}
+        _poloniex_currency_cache['data'] = result
+        _poloniex_currency_cache['ts'] = now
+        return jsonify({'status': 'success', 'data': result})
+    except Exception as e:
+        logger.error(f'Poloniex currency-status error: {e}')
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
 @app.route('/arbitrage')
 def arbitrage():
     return render_template('arbitrage.html')
