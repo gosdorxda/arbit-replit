@@ -753,11 +753,11 @@
 
         if (d.best_sell) {
             html += `<div style="margin-bottom:4px;font-size:0.75rem;color:#4ade80;font-weight:600;">↑ TERBAIK JUAL — ${d.best_sell.exchange}</div>`;
-            html += `<div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;">Bid terbaik: <strong style="color:#4ade80">${formatPrice(d.best_sell.best_bid)}</strong> | Vol bid ≥ avg: <strong>${formatVol(d.best_sell.bid_vol_above_avg)}$</strong></div>`;
+            html += `<div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;">Bid terbaik: <strong style="color:#4ade80">${formatPrice(d.best_sell.best_bid)}</strong> | Vol bid (top 5): <strong>${formatVol(d.best_sell.bid_vol_above_avg)}$</strong></div>`;
         }
         if (d.best_buy) {
             html += `<div style="margin-bottom:4px;font-size:0.75rem;color:#60a5fa;font-weight:600;">↓ TERBAIK BELI — ${d.best_buy.exchange}</div>`;
-            html += `<div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:14px;">Ask terbaik: <strong style="color:#60a5fa">${formatPrice(d.best_buy.best_ask)}</strong> | Vol ask ≤ avg: <strong>${formatVol(d.best_buy.ask_vol_below_avg)}$</strong></div>`;
+            html += `<div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:14px;">Ask terbaik: <strong style="color:#60a5fa">${formatPrice(d.best_buy.best_ask)}</strong> | Vol ask (top 5): <strong>${formatVol(d.best_buy.ask_vol_below_avg)}$</strong></div>`;
         }
 
         html += `<table class="scope-detail-table"><thead><tr>

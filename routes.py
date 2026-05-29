@@ -1559,13 +1559,14 @@ def get_scope_depth():
 
     sell_opps = [r for r in results if r['best_bid'] is not None]
     buy_opps  = [r for r in results if r['best_ask'] is not None]
-    # Best sell = exchange with the HIGHEST bid (best place to sell)
+    # Best sell = exchange with the HIGHEST bid
     best_sell = max(sell_opps, key=lambda x: x['best_bid']) if sell_opps else None
-    # Best buy  = exchange with the LOWEST ask (best place to buy)
-    best_buy  = min(buy_opps,  key=lambda x: x['best_ask']) if buy_opps  else None
+    # Best buy = exchange with the LOWEST ask, MUST be a different exchange
+    cross_buy_opps = [r for r in buy_opps if not best_sell or r['exchange'] != best_sell['exchange']]
+    best_buy = min(cross_buy_opps, key=lambda x: x['best_ask']) if cross_buy_opps else None
 
     real_spread = None
-    if best_sell and best_buy and best_sell['exchange'] != best_buy['exchange']:
+    if best_sell and best_buy:
         real_spread = round(
             (best_sell['best_bid'] - best_buy['best_ask']) / avg_price * 100, 3
         )
@@ -1655,13 +1656,14 @@ def get_scope_fetch_all():
 
         sell_opps = [r for r in results if r['best_bid'] is not None]
         buy_opps  = [r for r in results if r['best_ask'] is not None]
-        # Best sell = exchange with the HIGHEST bid (best place to sell)
+        # Best sell = exchange with the HIGHEST bid
         best_sell = max(sell_opps, key=lambda x: x['best_bid']) if sell_opps else None
-        # Best buy  = exchange with the LOWEST ask (best place to buy)
-        best_buy  = min(buy_opps,  key=lambda x: x['best_ask']) if buy_opps  else None
+        # Best buy = exchange with the LOWEST ask, MUST be a different exchange
+        cross_buy_opps = [r for r in buy_opps if not best_sell or r['exchange'] != best_sell['exchange']]
+        best_buy = min(cross_buy_opps, key=lambda x: x['best_ask']) if cross_buy_opps else None
 
         real_spread = None
-        if best_sell and best_buy and best_sell['exchange'] != best_buy['exchange']:
+        if best_sell and best_buy:
             real_spread = round(
                 (best_sell['best_bid'] - best_buy['best_ask']) / avg_price * 100, 3
             )
