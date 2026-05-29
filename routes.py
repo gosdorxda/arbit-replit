@@ -1,8 +1,11 @@
+import logging
 from datetime import datetime
 from flask import render_template, jsonify, request
 from app import app, db
 from models import SpotTicker, FetchLog, MarketList
 from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter, VindaxAdapter, FameEXAdapter, BigOneAdapter, P2PB2BAdapter, DigiFinexAdapter, AzbitAdapter, LatokenAdapter, KrakenAdapter, BingXAdapter, BTSEAdapter, WhiteBitAdapter, HTXAdapter, BinanceAlphaAdapter, UZXAdapter
+
+logger = logging.getLogger(__name__)
 
 
 def get_adapter(exchange):
@@ -1575,6 +1578,116 @@ def get_scope_depth():
         'best_buy': best_buy,
         'real_spread': real_spread
     })
+
+
+@app.route('/api/scope/fetch-all', methods=['POST'])
+def get_scope_fetch_all():
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    data = request.get_json()
+    if not data:
+        return jsonify({'status': 'error', 'message': 'No data'}), 400
+
+    coins = data.get('coins', [])
+    if not coins:
+        return jsonify({'status': 'error', 'message': 'No coins provided'}), 400
+
+    def fetch_coin_depth(coin_info):
+        coin = coin_info['coin']
+        avg_price = float(coin_info['avg_price'])
+        exchanges = coin_info['exchanges']
+
+        def fetch_one(exch_info):
+            exchange = exch_info['exchange']
+            symbol = exch_info['symbol']
+            adapter = get_adapter(exchange)
+            if not adapter or not hasattr(adapter, 'fetch_orderbook'):
+                return {'exchange': exchange, 'error': 'No adapter',
+                        'bid_vol_above_avg': 0, 'ask_vol_below_avg': 0,
+                        'best_bid': None, 'best_ask': None, 'bid_levels': [], 'ask_levels': []}
+            try:
+                ob = adapter.fetch_orderbook(symbol, limit=20)
+                bids = sorted(
+                    [{'price': float(b['price']), 'qty': float(b['amount'])} for b in ob.bids],
+                    key=lambda x: -x['price']
+                )
+                asks = sorted(
+                    [{'price': float(a['price']), 'qty': float(a['amount'])} for a in ob.asks],
+                    key=lambda x: x['price']
+                )
+                bids_above = [b for b in bids if b['price'] >= avg_price]
+                bid_vol_usd = sum(b['price'] * b['qty'] for b in bids_above)
+                best_bid = bids_above[0]['price'] if bids_above else None
+                bid_levels = [{'price': b['price'], 'qty': b['qty'],
+                               'usd': round(b['price'] * b['qty'], 2)} for b in bids_above[:6]]
+                asks_below = [a for a in asks if a['price'] <= avg_price]
+                ask_vol_usd = sum(a['price'] * a['qty'] for a in asks_below)
+                best_ask = asks_below[0]['price'] if asks_below else None
+                ask_levels = [{'price': a['price'], 'qty': a['qty'],
+                               'usd': round(a['price'] * a['qty'], 2)} for a in asks_below]
+                return {
+                    'exchange': exchange,
+                    'best_bid': best_bid,
+                    'bid_vol_above_avg': round(bid_vol_usd, 2),
+                    'bid_levels': bid_levels,
+                    'best_ask': best_ask,
+                    'ask_vol_below_avg': round(ask_vol_usd, 2),
+                    'ask_levels': ask_levels,
+                    'error': None
+                }
+            except Exception as e:
+                logger.error(f'Scope depth {exchange}/{coin}: {e}')
+                return {'exchange': exchange, 'error': str(e),
+                        'bid_vol_above_avg': 0, 'ask_vol_below_avg': 0,
+                        'best_bid': None, 'best_ask': None, 'bid_levels': [], 'ask_levels': []}
+
+        results = []
+        with ThreadPoolExecutor(max_workers=min(len(exchanges), 6)) as ex:
+            futs = {ex.submit(fetch_one, e): e for e in exchanges}
+            for fut in as_completed(futs):
+                r = fut.result()
+                if r:
+                    results.append(r)
+
+        sell_opps = [r for r in results if r['best_bid'] is not None]
+        buy_opps  = [r for r in results if r['best_ask'] is not None]
+        best_sell = max(sell_opps, key=lambda x: x['best_bid']) if sell_opps else None
+        best_buy  = min(buy_opps,  key=lambda x: x['best_ask']) if buy_opps  else None
+
+        real_spread = None
+        if best_sell and best_buy:
+            real_spread = round(
+                (best_sell['best_bid'] - best_buy['best_ask']) / avg_price * 100, 3
+            )
+
+        results.sort(key=lambda x: x['bid_vol_above_avg'], reverse=True)
+
+        return {
+            'coin': coin,
+            'avg_price': avg_price,
+            'results': results,
+            'best_sell': best_sell,
+            'best_buy': best_buy,
+            'real_spread': real_spread
+        }
+
+    all_results = {}
+    # Run coins in parallel — up to 10 concurrent coins at a time
+    with ThreadPoolExecutor(max_workers=min(len(coins), 10)) as executor:
+        future_map = {executor.submit(fetch_coin_depth, c): c['coin'] for c in coins}
+        for future in as_completed(future_map):
+            coin_name = future_map[future]
+            try:
+                result = future.result()
+                all_results[coin_name] = result
+            except Exception as e:
+                logger.error(f'fetch-all coin {coin_name}: {e}')
+                all_results[coin_name] = {
+                    'coin': coin_name, 'avg_price': 0,
+                    'results': [], 'best_sell': None, 'best_buy': None, 'real_spread': None
+                }
+
+    return jsonify({'status': 'success', 'data': all_results})
 
 
 @app.route('/arbitrage')
