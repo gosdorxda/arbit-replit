@@ -7,6 +7,30 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Roboto:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .polo-dw-wrap {
+            display: inline-flex;
+            align-items: stretch;
+            gap: 2px;
+            vertical-align: middle;
+        }
+        .polo-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 0 4px;
+            border-radius: 3px;
+            color: #fff;
+            cursor: default;
+            letter-spacing: 0.04em;
+            line-height: 1;
+        }
+        .polo-badge-on  { background: #16a34a; }
+        .polo-badge-off { background: #dc2626; }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -273,30 +297,59 @@
         HTX:'#02a4d3', BINANCEALPHA:'#f0b90b', UZX:'#1a6dff'
     };
 
-    function exchangeChip(exchange, symbol) {
-        const color = EXCHANGE_COLORS[exchange.toUpperCase()] || '#666';
-        const url = getExchangeUrl(exchange, symbol);
-        return `<a href="${url}" target="_blank" rel="noopener noreferrer"
-            class="arb-exchange-chip" style="background-color:${color};"
-            title="${exchange}">${exchange}</a>`;
+    // ---- Poloniex deposit/withdraw status ----
+    let poloStatus = {};
+
+    async function loadPoloStatus() {
+        try {
+            const r = await fetch('/api/poloniex/currency-status');
+            const d = await r.json();
+            if (d.status === 'success') poloStatus = d.data || {};
+        } catch(e) { poloStatus = {}; }
     }
 
-    function exchangeChipWithVol(exchange, symbol, volume) {
+    function poloChipHtml(coin, chipHtml) {
+        const s = poloStatus[coin.toUpperCase()];
+        if (!s) return chipHtml;
+        const depCls = s.deposit  ? 'polo-badge-on' : 'polo-badge-off';
+        const wdCls  = s.withdraw ? 'polo-badge-on' : 'polo-badge-off';
+        const depTip = s.deposit  ? 'Deposit Aktif'  : 'Deposit Nonaktif';
+        const wdTip  = s.withdraw ? 'Withdraw Aktif' : 'Withdraw Nonaktif';
+        return `<span class="polo-dw-wrap">` +
+            `<span class="polo-badge ${depCls}" title="${depTip}">D</span>` +
+            chipHtml +
+            `<span class="polo-badge ${wdCls}" title="${wdTip}">W</span>` +
+        `</span>`;
+    }
+
+    function exchangeChip(exchange, symbol, coin) {
+        const color = EXCHANGE_COLORS[exchange.toUpperCase()] || '#666';
+        const url = getExchangeUrl(exchange, symbol);
+        const raw = `<a href="${url}" target="_blank" rel="noopener noreferrer"
+            class="arb-exchange-chip" style="background-color:${color};"
+            title="${exchange}">${exchange}</a>`;
+        return (exchange.toUpperCase() === 'POLONIEX' && coin) ? poloChipHtml(coin, raw) : raw;
+    }
+
+    function exchangeChipWithVol(exchange, symbol, volume, coin) {
         const color = EXCHANGE_COLORS[exchange.toUpperCase()] || '#666';
         const url = getExchangeUrl(exchange, symbol);
         const volStr = formatVolShort(volume);
-        return `<span class="arb-vol-badge">${volStr}</span><a href="${url}" target="_blank" rel="noopener noreferrer"
+        const raw = `<a href="${url}" target="_blank" rel="noopener noreferrer"
             class="arb-exchange-chip" style="background-color:${color};"
             title="${exchange}">${exchange}</a>`;
+        const chip = (exchange.toUpperCase() === 'POLONIEX' && coin) ? poloChipHtml(coin, raw) : raw;
+        return `<span class="arb-vol-badge">${volStr}</span>${chip}`;
     }
 
-    function exchangeChipOrderbook(exchange, symbol) {
+    function exchangeChipOrderbook(exchange, symbol, coin) {
         const color = EXCHANGE_COLORS[exchange.toUpperCase()] || '#666';
         const safeEx = exchange.replace(/'/g, "\\'");
         const safeSym = symbol.replace(/'/g, "\\'");
-        return `<span class="arb-exchange-chip" style="background-color:${color}; cursor:pointer;"
+        const raw = `<span class="arb-exchange-chip" style="background-color:${color}; cursor:pointer;"
             onclick="showArbOrderbook('${safeEx}','${safeSym}')"
             title="Klik untuk lihat orderbook ${exchange}">${exchange}</span>`;
+        return (exchange.toUpperCase() === 'POLONIEX' && coin) ? poloChipHtml(coin, raw) : raw;
     }
 
     // ---- Spread badge ----
@@ -384,7 +437,7 @@
     function buildRows(data) {
         return data.map(item => {
             const allChips = item.exchanges.map(e =>
-                exchangeChipOrderbook(e.exchange, item.symbol)
+                exchangeChipOrderbook(e.exchange, item.symbol, item.base_currency)
             ).join(' ');
 
             const blActive = item.is_blacklisted ? 'arb-bl-active' : '';
@@ -397,11 +450,11 @@
                 symbol_html: `<span style="font-weight:700; font-family:'JetBrains Mono',monospace; color:var(--accent-blue)">${item.base_currency}</span>`,
                 exchange_count: item.exchange_count,
                 max_html: `<div class="arb-exchange-row">
-                    ${exchangeChipWithVol(item.max_exchange, item.symbol, item.max_turnover)}
+                    ${exchangeChipWithVol(item.max_exchange, item.symbol, item.max_turnover, item.base_currency)}
                     <span class="arb-price" style="color:var(--accent-green)">${formatPrice(item.max_price)}</span>
                 </div>`,
                 min_html: `<div class="arb-exchange-row">
-                    ${exchangeChipWithVol(item.min_exchange, item.symbol, item.min_turnover)}
+                    ${exchangeChipWithVol(item.min_exchange, item.symbol, item.min_turnover, item.base_currency)}
                     <span class="arb-price" style="color:var(--accent-red)">${formatPrice(item.min_price)}</span>
                 </div>`,
                 spread_html: spreadBadge(item.spread_pct),
@@ -535,6 +588,7 @@
         const indicator = document.getElementById('loading-indicator');
         btn.disabled = true;
         indicator.style.display = 'inline';
+        loadPoloStatus();
 
         const excludeLeveraged = document.getElementById('exclude-leveraged').checked;
         localStorage.setItem('arb_exclude_leveraged', excludeLeveraged ? '1' : '0');
