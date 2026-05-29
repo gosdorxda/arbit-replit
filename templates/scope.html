@@ -355,9 +355,9 @@
 
         <!-- Legend -->
         <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:8px;display:flex;gap:14px;flex-wrap:wrap;">
-            <span><span style="color:#4ade80;font-weight:700;">↑ Sell Opp</span> = ada bid ≥ avg → bisa jual di atas rata-rata</span>
-            <span><span style="color:#60a5fa;font-weight:700;">↓ Buy Opp</span> = ada ask ≤ avg → bisa beli di bawah rata-rata</span>
-            <span><span style="color:#22c55e;font-weight:700;">★ Real Arb</span> = keduanya ada di exchange berbeda → spread nyata positif</span>
+            <span><span style="color:#4ade80;font-weight:700;">↑ Best Sell</span> = exchange dengan bid tertinggi → jual di sini</span>
+            <span><span style="color:#60a5fa;font-weight:700;">↓ Best Buy</span> = exchange dengan ask terendah → beli di sini</span>
+            <span><span style="color:#22c55e;font-weight:700;">★ Real Arb</span> = bid terbaik &gt; ask terbaik di exchange berbeda → spread positif</span>
         </div>
     </section>
 
@@ -481,9 +481,9 @@
                 { title: 'Rata2 Price', data: 'avg_price_sort', orderable: true, width: '110px',
                   render: (d, t, row) => t === 'display' ? row.avg_price_html : d },
                 { title: '# Exch', data: 'exchange_count', orderable: true, width: '55px', className: 'dt-center' },
-                { title: '↑ Best Sell (Bid ≥ Avg)', data: 'sell_sort', orderable: true, width: '210px',
+                { title: '↑ Best Sell (Highest Bid)', data: 'sell_sort', orderable: true, width: '210px',
                   render: (d, t, row) => t === 'display' ? row.sell_html : d },
-                { title: '↓ Best Buy (Ask ≤ Avg)', data: 'buy_sort', orderable: true, width: '210px',
+                { title: '↓ Best Buy (Lowest Ask)', data: 'buy_sort', orderable: true, width: '210px',
                   render: (d, t, row) => t === 'display' ? row.buy_html : d },
                 { title: 'Real Spread', data: 'spread_sort', orderable: true, width: '90px',
                   render: (d, t, row) => t === 'display' ? row.spread_html : d },
@@ -509,36 +509,39 @@
         const d = depthCache[item.coin];
         const loaded = !!d;
 
-        // Sell opp
+        // Best sell = exchange with highest bid
         let sellHtml = '<span class="scope-dash">—</span>';
         let sellSort = -Infinity;
         if (loaded && d.best_sell) {
             const bs = d.best_sell;
             const chip = exchChip(bs.exchange, item.coin);
-            const pricePct = ((bs.best_bid - item.avg_price) / item.avg_price * 100).toFixed(2);
+            const pricePct = ((bs.best_bid - item.avg_price) / item.avg_price * 100);
+            const pctLabel = (pricePct >= 0 ? '+' : '') + pricePct.toFixed(2) + '%';
+            const pctColor = pricePct >= 0 ? 'bid-color' : 'style="color:var(--text-muted)"';
             sellSort = bs.bid_vol_above_avg;
             sellHtml = `<div class="scope-opp-cell">
                 ${chip}
                 <span class="scope-price-val bid-color">${formatPrice(bs.best_bid)}</span>
-                <span class="scope-vol-val">(+${pricePct}%) ${formatVol(bs.bid_vol_above_avg)}$</span>
+                <span class="scope-vol-val">(${pctLabel}) ${formatVol(bs.bid_vol_above_avg)}$</span>
             </div>`;
         } else if (loaded) {
             sellHtml = '<span class="no-opp-label">—</span>';
             sellSort = -1;
         }
 
-        // Buy opp
+        // Best buy = exchange with lowest ask
         let buyHtml = '<span class="scope-dash">—</span>';
         let buySort = -Infinity;
         if (loaded && d.best_buy) {
             const bb = d.best_buy;
             const chip = exchChip(bb.exchange, item.coin);
-            const pricePct = ((item.avg_price - bb.best_ask) / item.avg_price * 100).toFixed(2);
+            const pricePct = ((item.avg_price - bb.best_ask) / item.avg_price * 100);
+            const pctLabel = (pricePct >= 0 ? '-' : '+') + Math.abs(pricePct).toFixed(2) + '%';
             buySort = bb.ask_vol_below_avg;
             buyHtml = `<div class="scope-opp-cell">
                 ${chip}
                 <span class="scope-price-val ask-color">${formatPrice(bb.best_ask)}</span>
-                <span class="scope-vol-val">(-${pricePct}%) ${formatVol(bb.ask_vol_below_avg)}$</span>
+                <span class="scope-vol-val">(${pctLabel}) ${formatVol(bb.ask_vol_below_avg)}$</span>
             </div>`;
         } else if (loaded) {
             buyHtml = '<span class="no-opp-label">—</span>';

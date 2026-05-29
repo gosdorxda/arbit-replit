@@ -1521,17 +1521,17 @@ def get_scope_depth():
                 key=lambda x: x['price']
             )
 
-            bids_above = [b for b in bids if b['price'] >= avg_price]
-            bid_vol_usd = sum(b['price'] * b['qty'] for b in bids_above)
-            best_bid = bids_above[0]['price'] if bids_above else None
+            # Best bid = highest bid on this exchange (top of book)
+            best_bid = bids[0]['price'] if bids else None
+            bid_vol_usd = sum(b['price'] * b['qty'] for b in bids[:5])
             bid_levels = [{'price': b['price'], 'qty': b['qty'],
-                           'usd': round(b['price'] * b['qty'], 2)} for b in bids_above[:6]]
+                           'usd': round(b['price'] * b['qty'], 2)} for b in bids[:6]]
 
-            asks_below = [a for a in asks if a['price'] <= avg_price]
-            ask_vol_usd = sum(a['price'] * a['qty'] for a in asks_below)
-            best_ask = asks_below[0]['price'] if asks_below else None
+            # Best ask = lowest ask on this exchange (top of book)
+            best_ask = asks[0]['price'] if asks else None
+            ask_vol_usd = sum(a['price'] * a['qty'] for a in asks[:5])
             ask_levels = [{'price': a['price'], 'qty': a['qty'],
-                           'usd': round(a['price'] * a['qty'], 2)} for a in asks_below]
+                           'usd': round(a['price'] * a['qty'], 2)} for a in asks[:6]]
 
             return {
                 'exchange': exchange,
@@ -1559,11 +1559,13 @@ def get_scope_depth():
 
     sell_opps = [r for r in results if r['best_bid'] is not None]
     buy_opps  = [r for r in results if r['best_ask'] is not None]
+    # Best sell = exchange with the HIGHEST bid (best place to sell)
     best_sell = max(sell_opps, key=lambda x: x['best_bid']) if sell_opps else None
+    # Best buy  = exchange with the LOWEST ask (best place to buy)
     best_buy  = min(buy_opps,  key=lambda x: x['best_ask']) if buy_opps  else None
 
     real_spread = None
-    if best_sell and best_buy:
+    if best_sell and best_buy and best_sell['exchange'] != best_buy['exchange']:
         real_spread = round(
             (best_sell['best_bid'] - best_buy['best_ask']) / avg_price * 100, 3
         )
@@ -1617,16 +1619,16 @@ def get_scope_fetch_all():
                     [{'price': float(a[0]), 'qty': float(a[1])} for a in ob.asks if len(a) >= 2],
                     key=lambda x: x['price']
                 )
-                bids_above = [b for b in bids if b['price'] >= avg_price]
-                bid_vol_usd = sum(b['price'] * b['qty'] for b in bids_above)
-                best_bid = bids_above[0]['price'] if bids_above else None
+                # Best bid = highest bid on this exchange (top of book)
+                best_bid = bids[0]['price'] if bids else None
+                bid_vol_usd = sum(b['price'] * b['qty'] for b in bids[:5])
                 bid_levels = [{'price': b['price'], 'qty': b['qty'],
-                               'usd': round(b['price'] * b['qty'], 2)} for b in bids_above[:6]]
-                asks_below = [a for a in asks if a['price'] <= avg_price]
-                ask_vol_usd = sum(a['price'] * a['qty'] for a in asks_below)
-                best_ask = asks_below[0]['price'] if asks_below else None
+                               'usd': round(b['price'] * b['qty'], 2)} for b in bids[:6]]
+                # Best ask = lowest ask on this exchange (top of book)
+                best_ask = asks[0]['price'] if asks else None
+                ask_vol_usd = sum(a['price'] * a['qty'] for a in asks[:5])
                 ask_levels = [{'price': a['price'], 'qty': a['qty'],
-                               'usd': round(a['price'] * a['qty'], 2)} for a in asks_below]
+                               'usd': round(a['price'] * a['qty'], 2)} for a in asks[:6]]
                 return {
                     'exchange': exchange,
                     'best_bid': best_bid,
@@ -1653,11 +1655,13 @@ def get_scope_fetch_all():
 
         sell_opps = [r for r in results if r['best_bid'] is not None]
         buy_opps  = [r for r in results if r['best_ask'] is not None]
+        # Best sell = exchange with the HIGHEST bid (best place to sell)
         best_sell = max(sell_opps, key=lambda x: x['best_bid']) if sell_opps else None
+        # Best buy  = exchange with the LOWEST ask (best place to buy)
         best_buy  = min(buy_opps,  key=lambda x: x['best_ask']) if buy_opps  else None
 
         real_spread = None
-        if best_sell and best_buy:
+        if best_sell and best_buy and best_sell['exchange'] != best_buy['exchange']:
             real_spread = round(
                 (best_sell['best_bid'] - best_buy['best_ask']) / avg_price * 100, 3
             )
