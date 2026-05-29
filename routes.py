@@ -1511,12 +1511,13 @@ def get_scope_depth():
                     'best_bid': None, 'best_ask': None, 'bid_levels': [], 'ask_levels': []}
         try:
             ob = adapter.fetch_orderbook(symbol, limit=20)
+            # bids/asks are [[price, amount], ...] lists
             bids = sorted(
-                [{'price': float(b['price']), 'qty': float(b['amount'])} for b in ob.bids],
+                [{'price': float(b[0]), 'qty': float(b[1])} for b in ob.bids if len(b) >= 2],
                 key=lambda x: -x['price']
             )
             asks = sorted(
-                [{'price': float(a['price']), 'qty': float(a['amount'])} for a in ob.asks],
+                [{'price': float(a[0]), 'qty': float(a[1])} for a in ob.asks if len(a) >= 2],
                 key=lambda x: x['price']
             )
 
@@ -1607,12 +1608,13 @@ def get_scope_fetch_all():
                         'best_bid': None, 'best_ask': None, 'bid_levels': [], 'ask_levels': []}
             try:
                 ob = adapter.fetch_orderbook(symbol, limit=20)
+                # bids/asks are [[price, amount], ...] lists
                 bids = sorted(
-                    [{'price': float(b['price']), 'qty': float(b['amount'])} for b in ob.bids],
+                    [{'price': float(b[0]), 'qty': float(b[1])} for b in ob.bids if len(b) >= 2],
                     key=lambda x: -x['price']
                 )
                 asks = sorted(
-                    [{'price': float(a['price']), 'qty': float(a['amount'])} for a in ob.asks],
+                    [{'price': float(a[0]), 'qty': float(a[1])} for a in ob.asks if len(a) >= 2],
                     key=lambda x: x['price']
                 )
                 bids_above = [b for b in bids if b['price'] >= avg_price]
