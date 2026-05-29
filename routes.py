@@ -5,6 +5,23 @@ from models import SpotTicker, FetchLog, MarketList
 from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter, VindaxAdapter, FameEXAdapter, BigOneAdapter, P2PB2BAdapter, DigiFinexAdapter, AzbitAdapter, LatokenAdapter, KrakenAdapter, BingXAdapter, BTSEAdapter, WhiteBitAdapter, HTXAdapter, BinanceAlphaAdapter, UZXAdapter
 
 
+def get_adapter(exchange):
+    """Return an adapter instance for the given exchange name, or None."""
+    adapter_map = {
+        'LBANK': LBankAdapter, 'HASHKEY': HashKeyAdapter, 'BICONOMY': BiconomyAdapter,
+        'MEXC': MEXCAdapter, 'BITRUE': BitrueAdapter, 'ASCENDEX': AscendEXAdapter,
+        'BITMART': BitMartAdapter, 'DEXTRADE': DexTradeAdapter, 'POLONIEX': PoloniexAdapter,
+        'GATEIO': GateIOAdapter, 'NIZA': NizaAdapter, 'XT': XTAdapter,
+        'COINSTORE': CoinstoreAdapter, 'VINDAX': VindaxAdapter, 'FAMEEX': FameEXAdapter,
+        'BIGONE': BigOneAdapter, 'P2PB2B': P2PB2BAdapter, 'DIGIFINEX': DigiFinexAdapter,
+        'AZBIT': AzbitAdapter, 'LATOKEN': LatokenAdapter, 'KRAKEN': KrakenAdapter,
+        'BINGX': BingXAdapter, 'BTSE': BTSEAdapter, 'WHITEBIT': WhiteBitAdapter,
+        'HTX': HTXAdapter, 'BINANCEALPHA': BinanceAlphaAdapter, 'UZX': UZXAdapter,
+    }
+    cls = adapter_map.get(exchange.upper())
+    return cls() if cls else None
+
+
 def save_tickers(tickers, exchange_name):
     SpotTicker.query.filter_by(exchange=exchange_name).delete()
     
@@ -1414,6 +1431,150 @@ def poloniex_currency_status():
     except Exception as e:
         logger.error(f'Poloniex currency-status error: {e}')
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/scope')
+def scope():
+    return render_template('scope.html')
+
+
+@app.route('/api/scope')
+def get_scope():
+    import re
+    from collections import defaultdict
+
+    exclude_leveraged = request.args.get('exclude_leveraged', 'true') == 'true'
+    leveraged_pattern = re.compile(r'\d+[LSls](USDT)?$')
+
+    all_tickers = SpotTicker.query.filter(
+        SpotTicker.price.isnot(None),
+        SpotTicker.price > 0,
+        SpotTicker.quote_currency == 'USDT'
+    ).all()
+
+    coin_map = defaultdict(list)
+    for t in all_tickers:
+        if exclude_leveraged and leveraged_pattern.search(t.base_currency):
+            continue
+        coin_map[t.base_currency].append({
+            'exchange': t.exchange,
+            'last_price': float(t.price),
+            'turnover': float(t.turnover_24h or 0),
+            'symbol': t.symbol
+        })
+
+    result = []
+    for coin, exchanges in coin_map.items():
+        if len(exchanges) < 2:
+            continue
+        prices = [e['last_price'] for e in exchanges if e['last_price'] > 0]
+        avg_price = sum(prices) / len(prices) if prices else 0
+        total_turnover = sum(e['turnover'] for e in exchanges)
+        result.append({
+            'coin': coin,
+            'symbol': f'{coin}/USDT',
+            'avg_price': round(avg_price, 10),
+            'exchange_count': len(exchanges),
+            'total_turnover': total_turnover,
+            'exchanges': exchanges
+        })
+
+    result.sort(key=lambda x: x['total_turnover'], reverse=True)
+    return jsonify({'status': 'success', 'data': result})
+
+
+@app.route('/api/scope/depth', methods=['POST'])
+def get_scope_depth():
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    data = request.get_json()
+    if not data:
+        return jsonify({'status': 'error', 'message': 'No data'}), 400
+
+    coin = data.get('coin', '')
+    avg_price = float(data.get('avg_price', 0))
+    exchanges = data.get('exchanges', [])
+
+    if not coin or avg_price <= 0 or not exchanges:
+        return jsonify({'status': 'error', 'message': 'Invalid input'}), 400
+
+    def fetch_one(exch_info):
+        exchange = exch_info['exchange']
+        symbol = exch_info['symbol']
+        adapter = get_adapter(exchange)
+        if not adapter or not hasattr(adapter, 'fetch_orderbook'):
+            return {'exchange': exchange, 'error': 'No adapter',
+                    'bid_vol_above_avg': 0, 'ask_vol_below_avg': 0,
+                    'best_bid': None, 'best_ask': None, 'bid_levels': [], 'ask_levels': []}
+        try:
+            ob = adapter.fetch_orderbook(symbol, limit=20)
+            bids = sorted(
+                [{'price': float(b['price']), 'qty': float(b['amount'])} for b in ob.bids],
+                key=lambda x: -x['price']
+            )
+            asks = sorted(
+                [{'price': float(a['price']), 'qty': float(a['amount'])} for a in ob.asks],
+                key=lambda x: x['price']
+            )
+
+            bids_above = [b for b in bids if b['price'] >= avg_price]
+            bid_vol_usd = sum(b['price'] * b['qty'] for b in bids_above)
+            best_bid = bids_above[0]['price'] if bids_above else None
+            bid_levels = [{'price': b['price'], 'qty': b['qty'],
+                           'usd': round(b['price'] * b['qty'], 2)} for b in bids_above[:6]]
+
+            asks_below = [a for a in asks if a['price'] <= avg_price]
+            ask_vol_usd = sum(a['price'] * a['qty'] for a in asks_below)
+            best_ask = asks_below[0]['price'] if asks_below else None
+            ask_levels = [{'price': a['price'], 'qty': a['qty'],
+                           'usd': round(a['price'] * a['qty'], 2)} for a in asks_below]
+
+            return {
+                'exchange': exchange,
+                'best_bid': best_bid,
+                'bid_vol_above_avg': round(bid_vol_usd, 2),
+                'bid_levels': bid_levels,
+                'best_ask': best_ask,
+                'ask_vol_below_avg': round(ask_vol_usd, 2),
+                'ask_levels': ask_levels,
+                'error': None
+            }
+        except Exception as e:
+            logger.error(f'Scope depth {exchange}/{coin}: {e}')
+            return {'exchange': exchange, 'error': str(e),
+                    'bid_vol_above_avg': 0, 'ask_vol_below_avg': 0,
+                    'best_bid': None, 'best_ask': None, 'bid_levels': [], 'ask_levels': []}
+
+    results = []
+    with ThreadPoolExecutor(max_workers=min(len(exchanges), 8)) as executor:
+        futures = {executor.submit(fetch_one, e): e for e in exchanges}
+        for future in as_completed(futures):
+            r = future.result()
+            if r:
+                results.append(r)
+
+    sell_opps = [r for r in results if r['best_bid'] is not None]
+    buy_opps  = [r for r in results if r['best_ask'] is not None]
+    best_sell = max(sell_opps, key=lambda x: x['best_bid']) if sell_opps else None
+    best_buy  = min(buy_opps,  key=lambda x: x['best_ask']) if buy_opps  else None
+
+    real_spread = None
+    if best_sell and best_buy:
+        real_spread = round(
+            (best_sell['best_bid'] - best_buy['best_ask']) / avg_price * 100, 3
+        )
+
+    results.sort(key=lambda x: x['bid_vol_above_avg'], reverse=True)
+
+    return jsonify({
+        'status': 'success',
+        'coin': coin,
+        'avg_price': avg_price,
+        'results': results,
+        'best_sell': best_sell,
+        'best_buy': best_buy,
+        'real_spread': real_spread
+    })
 
 
 @app.route('/arbitrage')
