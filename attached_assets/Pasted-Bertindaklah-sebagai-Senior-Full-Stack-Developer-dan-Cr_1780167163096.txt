@@ -1,0 +1,38 @@
+Bertindaklah sebagai Senior Full-Stack Developer dan Crypto Quantitative Analyst. Saya sedang membangun halaman bernama "Scope" (Scanner Arbitrase Kripto Real-Time berdasarkan Orderbook). 
+
+Saya ingin kamu mengoreksi logika, memperbaiki formula kalkulasi, dan memberikan rekomendasi struktur kode/UI yang sempurna berdasarkan arsitektur proyek berikut:
+
+---
+[ARSITEKTUR & ALUR DATA]
+1. Halaman Utama: Fetch ticker (last price) per exchange -> Simpan ke DB (SpotTicker).
+2. Halaman Market Fetch: Fetch top-5 orderbook per pair per exchange -> Simpan ke DB (OrderbookSnapshot).
+3. Halaman Scope (Target Perbaikan):
+   - Baca SpotTicker -> kelompokkan per coin -> hitung avg_price (hanya jika coin ada di ≥2 exchange).
+   - Ambil data dari OrderbookSnapshot (Baik lewat DB langsung atau Live Fetch).
+   - Cari Best Sell (Exchange dengan best_bid TERTINGGI).
+   - Cari Best Buy (Exchange berbeda dengan best_ask TERENDAH).
+---
+
+Ada beberapa masalah logika dan akurasi pada sistem saat ini yang HARUS kamu perbaiki:
+
+1. Koreksi Formula Spread (Akurasi Modal)
+Saat ini formula saya adalah: Real Spread = (best_bid_sell - best_ask_buy) / avg_price * 100%.
+Koreksi: Ubah denominator (pembagi) menggunakan 'best_ask_buy' karena itulah modal riil yang dikeluarkan saat membeli aset.
+
+2. Integrasi Trading Fee (Cuan Riil / Actionable)
+Spread positif belum tentu profit karena ada biaya transaksi. Masukkan variabel 'Trading Fee' (asumsikan default Taker Fee 0.2% per exchange, atau total 0.4% untuk satu kali putaran beli-jual). 
+Formula baru harus menghasilkan "Net Spread":
+Net Spread (%) = ((best_bid_sell - best_ask_buy) / best_ask_buy * 100) - Total_Fee_Persen
+
+3. Validasi Data Pendukung (Bug Filter)
+Saat ini ada filter "Hanya tampilkan coin jika ada di ≥2 exchange di SpotTicker". Namun, ada risiko di tabel OrderbookSnapshot data exchange kedua belum di-fetch (baru ada 1 exchange).
+Solusi: Tambahkan validasi ketat. Coin hanya boleh dihitung dan ditampilkan jika minimal ada 2 exchange BERBEDA yang memiliki data aktif di OrderbookSnapshot pada saat itu.
+
+4. Deteksi Data Usang (Snapshot Staleness)
+Data dari DB bisa saja sudah 'basi'. Tambahkan logika pengecekan timestamp pada OrderbookSnapshot. Jika data lebih tua dari X detik (misal 15-30 detik), beri flag/status 'Stale Data' atau 'Risky'.
+
+---
+TUGAS KAMU:
+1. Berikan rekomendasi pseudo-code atau fungsi JavaScript/TypeScript/Python (sesuaikan dengan logika clean code) untuk fungsi kalkulasi `calculateArbitrageOpportunity()` yang sudah menerapkan 4 perbaikan di atas.
+2. Buatkan skema respons JSON yang ideal yang dikembalikan oleh backend/API /api/scope agar frontend bisa menampilkan data peluang arbitrase ini secara urut (Sort by Net Spread Descending).
+3. Berikan saran UI/UX singkat bagaimana menampilkan peluang yang "Benar-benar Cuan" (Net Spread > 0) vs "Peluang Semu" (Real Spread positif tapi Net Spread minus karena kemakan fee).

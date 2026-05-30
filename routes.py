@@ -1557,19 +1557,21 @@ def get_scope_depth():
             if r:
                 results.append(r)
 
+    fee_pct = float(data.get('fee_pct', 0.4))
+
     sell_opps = [r for r in results if r['best_bid'] is not None]
     buy_opps  = [r for r in results if r['best_ask'] is not None]
-    # Best sell = exchange with the HIGHEST bid
     best_sell = max(sell_opps, key=lambda x: x['best_bid']) if sell_opps else None
-    # Best buy = exchange with the LOWEST ask, MUST be a different exchange
     cross_buy_opps = [r for r in buy_opps if not best_sell or r['exchange'] != best_sell['exchange']]
     best_buy = min(cross_buy_opps, key=lambda x: x['best_ask']) if cross_buy_opps else None
 
     real_spread = None
-    if best_sell and best_buy:
+    net_spread  = None
+    if best_sell and best_buy and best_buy['best_ask'] > 0:
         real_spread = round(
-            (best_sell['best_bid'] - best_buy['best_ask']) / avg_price * 100, 3
+            (best_sell['best_bid'] - best_buy['best_ask']) / best_buy['best_ask'] * 100, 3
         )
+        net_spread = round(real_spread - fee_pct, 3)
 
     results.sort(key=lambda x: x['bid_vol_above_avg'], reverse=True)
 
@@ -1580,7 +1582,9 @@ def get_scope_depth():
         'results': results,
         'best_sell': best_sell,
         'best_buy': best_buy,
-        'real_spread': real_spread
+        'real_spread': real_spread,
+        'net_spread': net_spread,
+        'fee_pct': fee_pct
     })
 
 
@@ -1654,19 +1658,21 @@ def get_scope_fetch_all():
                 if r:
                     results.append(r)
 
+        fee_pct = float(data.get('fee_pct', 0.4))
+
         sell_opps = [r for r in results if r['best_bid'] is not None]
         buy_opps  = [r for r in results if r['best_ask'] is not None]
-        # Best sell = exchange with the HIGHEST bid
         best_sell = max(sell_opps, key=lambda x: x['best_bid']) if sell_opps else None
-        # Best buy = exchange with the LOWEST ask, MUST be a different exchange
         cross_buy_opps = [r for r in buy_opps if not best_sell or r['exchange'] != best_sell['exchange']]
         best_buy = min(cross_buy_opps, key=lambda x: x['best_ask']) if cross_buy_opps else None
 
         real_spread = None
-        if best_sell and best_buy:
+        net_spread  = None
+        if best_sell and best_buy and best_buy['best_ask'] > 0:
             real_spread = round(
-                (best_sell['best_bid'] - best_buy['best_ask']) / avg_price * 100, 3
+                (best_sell['best_bid'] - best_buy['best_ask']) / best_buy['best_ask'] * 100, 3
             )
+            net_spread = round(real_spread - fee_pct, 3)
 
         results.sort(key=lambda x: x['bid_vol_above_avg'], reverse=True)
 
@@ -1676,11 +1682,12 @@ def get_scope_fetch_all():
             'results': results,
             'best_sell': best_sell,
             'best_buy': best_buy,
-            'real_spread': real_spread
+            'real_spread': real_spread,
+            'net_spread': net_spread,
+            'fee_pct': fee_pct
         }
 
     all_results = {}
-    # Run coins in parallel — up to 10 concurrent coins at a time
     with ThreadPoolExecutor(max_workers=min(len(coins), 10)) as executor:
         future_map = {executor.submit(fetch_coin_depth, c): c['coin'] for c in coins}
         for future in as_completed(future_map):
@@ -1692,7 +1699,8 @@ def get_scope_fetch_all():
                 logger.error(f'fetch-all coin {coin_name}: {e}')
                 all_results[coin_name] = {
                     'coin': coin_name, 'avg_price': 0,
-                    'results': [], 'best_sell': None, 'best_buy': None, 'real_spread': None
+                    'results': [], 'best_sell': None, 'best_buy': None,
+                    'real_spread': None, 'net_spread': None, 'fee_pct': 0.4
                 }
 
     return jsonify({'status': 'success', 'data': all_results})
@@ -1799,6 +1807,9 @@ def do_market_fetch(exchange):
     })
 
 
+STALE_THRESHOLD_SEC = 300  # 5 minutes — snapshots older than this are flagged
+
+
 @app.route('/api/scope/from-db', methods=['POST'])
 def get_scope_from_db():
     data = request.get_json()
@@ -1808,21 +1819,19 @@ def get_scope_from_db():
     if not coins:
         return jsonify({'status': 'error', 'message': 'No coins'}), 400
 
-    # Collect all symbols needed
+    fee_pct = float(data.get('fee_pct', 0.4))
     symbols_needed = [f"{c['coin']}/USDT" for c in coins]
 
-    # Bulk query all snapshots for needed symbols
     all_snaps = OrderbookSnapshot.query.filter(
         OrderbookSnapshot.symbol.in_(symbols_needed)
     ).all()
 
-    # Index by (exchange, symbol)
     snap_index = {}
     for s in all_snaps:
         snap_index[(s.exchange, s.symbol)] = s
 
-    # Latest snapshot timestamp across all results
     latest_ts = max((s.fetched_at for s in all_snaps), default=None)
+    now = datetime.utcnow()
 
     all_results = {}
     for coin_info in coins:
@@ -1853,7 +1862,8 @@ def get_scope_from_db():
             ask_vol_usd = sum(a['price'] * a['qty'] for a in asks[:5])
             ask_levels = [{'price': a['price'], 'qty': a['qty'],
                            'usd': round(a['price'] * a['qty'], 2)} for a in asks[:6]]
-            snap_age = round((datetime.utcnow() - snap.fetched_at).total_seconds()) if snap.fetched_at else None
+            snap_age = round((now - snap.fetched_at).total_seconds()) if snap.fetched_at else None
+            is_stale = snap_age is not None and snap_age > STALE_THRESHOLD_SEC
             results.append({
                 'exchange': exchange,
                 'best_bid': best_bid,
@@ -1863,25 +1873,39 @@ def get_scope_from_db():
                 'ask_vol_below_avg': round(ask_vol_usd, 2),
                 'ask_levels': ask_levels,
                 'snap_age_sec': snap_age,
+                'is_stale': is_stale,
                 'error': None
             })
 
-        sell_opps = [r for r in results if r['best_bid'] is not None]
-        buy_opps  = [r for r in results if r['best_ask'] is not None]
-        best_sell = max(sell_opps, key=lambda x: x['best_bid']) if sell_opps else None
-        cross_buy = [r for r in buy_opps if not best_sell or r['exchange'] != best_sell['exchange']]
-        best_buy  = min(cross_buy, key=lambda x: x['best_ask']) if cross_buy else None
-        real_spread = None
-        if best_sell and best_buy:
-            real_spread = round(
-                (best_sell['best_bid'] - best_buy['best_ask']) / avg_price * 100, 3
-            )
+        # Fix #3: require ≥2 exchanges with actual snapshot data
+        if len(results) < 2:
+            sell_opps, buy_opps = [], []
+            best_sell = best_buy = real_spread = net_spread = None
+        else:
+            sell_opps = [r for r in results if r['best_bid'] is not None]
+            buy_opps  = [r for r in results if r['best_ask'] is not None]
+            best_sell = max(sell_opps, key=lambda x: x['best_bid']) if sell_opps else None
+            cross_buy = [r for r in buy_opps if not best_sell or r['exchange'] != best_sell['exchange']]
+            best_buy  = min(cross_buy, key=lambda x: x['best_ask']) if cross_buy else None
+
+            real_spread = None
+            net_spread  = None
+            # Fix #1: denominator = best_ask (actual capital deployed)
+            if best_sell and best_buy and best_buy['best_ask'] > 0:
+                real_spread = round(
+                    (best_sell['best_bid'] - best_buy['best_ask']) / best_buy['best_ask'] * 100, 3
+                )
+                # Fix #2: subtract round-trip fee
+                net_spread = round(real_spread - fee_pct, 3)
+
         results.sort(key=lambda x: x['bid_vol_above_avg'], reverse=True)
         all_results[coin] = {
             'coin': coin, 'avg_price': avg_price,
             'results': results,
             'best_sell': best_sell, 'best_buy': best_buy,
-            'real_spread': real_spread
+            'real_spread': real_spread,
+            'net_spread': net_spread,
+            'fee_pct': fee_pct
         }
 
     return jsonify({

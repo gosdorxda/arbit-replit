@@ -136,6 +136,17 @@
         .scope-row-fetch-btn.loading { color: var(--accent-yellow); border-color: var(--accent-yellow); }
         .scope-row-fetch-btn.done { color: var(--accent-green); border-color: var(--accent-green); }
 
+        /* Net spread badge */
+        .scope-spread-fee {
+            display: inline-flex; align-items: center; gap: 3px;
+            background: rgba(245,158,11,0.15);
+            color: #f59e0b;
+            border: 1px solid rgba(245,158,11,0.35);
+            border-radius: 5px; padding: 2px 7px;
+            font-size: 0.75rem; font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
         /* Real spread badge */
         .scope-spread-real {
             display: inline-block;
@@ -334,6 +345,11 @@
                     Sembunyikan 3L/3S
                 </label>
             </div>
+            <div class="scope-filter-group" style="gap:4px;">
+                <span class="scope-filter-label">Fee/Side (%):</span>
+                <input type="number" id="scope-fee" class="scope-num-input" value="0.2" min="0" max="2" step="0.05" style="width:60px;" title="Taker fee per exchange. Total fee = 2× nilai ini">
+                <span style="font-size:0.68rem;color:var(--text-muted);">×2 = <span id="scope-fee-total">0.40</span>%</span>
+            </div>
 
             <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                 <!-- Fetch progress -->
@@ -368,8 +384,10 @@
         <!-- Legend -->
         <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:8px;display:flex;gap:14px;flex-wrap:wrap;">
             <span><span style="color:#4ade80;font-weight:700;">↑ Best Sell</span> = exchange dengan bid tertinggi → jual di sini</span>
-            <span><span style="color:#60a5fa;font-weight:700;">↓ Best Buy</span> = exchange dengan ask terendah → beli di sini</span>
-            <span><span style="color:#22c55e;font-weight:700;">★ Real Arb</span> = bid terbaik &gt; ask terbaik di exchange berbeda → spread positif</span>
+            <span><span style="color:#60a5fa;font-weight:700;">↓ Best Buy</span> = exchange dengan ask terendah (exchange berbeda) → beli di sini</span>
+            <span><span style="color:#22c55e;font-weight:700;">★ PROFIT</span> = Net Spread &gt; 0 → cuan riil setelah fee</span>
+            <span><span style="color:#f59e0b;font-weight:700;">⚠ Fee-Eaten</span> = Real Spread positif tapi Net Spread negatif setelah fee</span>
+            <span><span style="color:#ef4444;font-weight:700;">⚡ Stale</span> = data snapshot &gt;5 menit, perlu re-fetch</span>
         </div>
     </section>
 
@@ -497,7 +515,7 @@
                   render: (d, t, row) => t === 'display' ? row.sell_html : d },
                 { title: '↓ Best Buy (Lowest Ask)', data: 'buy_sort', orderable: true, width: '210px',
                   render: (d, t, row) => t === 'display' ? row.buy_html : d },
-                { title: 'Real Spread', data: 'spread_sort', orderable: true, width: '90px',
+                { title: 'Net Spread', data: 'spread_sort', orderable: true, width: '110px',
                   render: (d, t, row) => t === 'display' ? row.spread_html : d },
                 { title: 'Aksi', data: 'action_html', orderable: false, width: '100px', className: 'dt-center' }
             ],
@@ -560,15 +578,24 @@
             buySort = -1;
         }
 
-        // Real spread
+        // Net spread (with fee) + staleness indicator
         let spreadHtml = '<span class="scope-dash">—</span>';
         let spreadSort = loaded ? -999 : -9999;
-        if (loaded && d.real_spread !== null && d.real_spread !== undefined) {
-            const sp = d.real_spread;
-            spreadSort = sp;
-            const cls = sp > 0 ? 'scope-spread-arb' : (sp < 0 ? 'scope-spread-neg' : 'scope-spread-none');
-            const star = sp > 0 ? '★ ' : '';
-            spreadHtml = `<span class="scope-spread-real ${cls}">${star}${sp.toFixed(2)}%</span>`;
+        const anyStale = loaded && d.results && d.results.some(r => r.is_stale);
+        const staleTag = anyStale ? ' <span style="font-size:0.6rem;color:#ef4444;font-weight:700;" title="Data >5 menit, re-fetch disarankan">⚡</span>' : '';
+        if (loaded && d.net_spread !== null && d.net_spread !== undefined) {
+            const ns = d.net_spread;
+            const rs = d.real_spread;
+            spreadSort = ns;
+            if (ns > 0) {
+                spreadHtml = `<span class="scope-spread-arb">★ ${ns.toFixed(3)}%<br><small style="opacity:0.65;font-weight:400;">Real: ${rs.toFixed(3)}%</small></span>${staleTag}`;
+            } else if (rs !== null && rs > 0) {
+                spreadHtml = `<span class="scope-spread-fee">⚠ ${ns.toFixed(3)}%<br><small style="opacity:0.65;font-weight:400;">Real: ${rs.toFixed(3)}%</small></span>${staleTag}`;
+            } else {
+                spreadHtml = `<span class="scope-spread-neg">${ns.toFixed(3)}%</span>${staleTag}`;
+            }
+        } else if (loaded) {
+            spreadHtml = `<span class="scope-dash">—</span>${staleTag}`;
         }
 
         // Actions
@@ -616,13 +643,18 @@
         const scanned = filtered.filter(i => depthCache[i.coin]).length;
         const withSell = filtered.filter(i => depthCache[i.coin] && depthCache[i.coin].best_sell).length;
         const withBuy  = filtered.filter(i => depthCache[i.coin] && depthCache[i.coin].best_buy).length;
-        const withArb  = filtered.filter(i => depthCache[i.coin] && depthCache[i.coin].real_spread > 0).length;
+        const withArb  = filtered.filter(i => depthCache[i.coin] && depthCache[i.coin].net_spread > 0).length;
         document.getElementById('stat-total').textContent    = filtered.length.toLocaleString();
         document.getElementById('stat-scanned').textContent  = scanned.toLocaleString();
         document.getElementById('stat-sell').textContent     = scanned > 0 ? withSell.toLocaleString() : '—';
         document.getElementById('stat-buy').textContent      = scanned > 0 ? withBuy.toLocaleString()  : '—';
         document.getElementById('stat-arb').textContent      = scanned > 0 ? withArb.toLocaleString()  : '—';
         document.getElementById('stat-updated').textContent  = new Date().toLocaleTimeString('id-ID');
+    }
+
+    function getFeePct() {
+        const perSide = parseFloat(document.getElementById('scope-fee').value) || 0.2;
+        return Math.round(perSide * 2 * 1000) / 1000;
     }
 
     // ---- Fetch depth for single coin ----
@@ -640,6 +672,7 @@
                 body: JSON.stringify({
                     coin: item.coin,
                     avg_price: item.avg_price,
+                    fee_pct: getFeePct(),
                     exchanges: item.exchanges.map(e => ({ exchange: e.exchange, symbol: e.symbol }))
                 })
             });
@@ -696,7 +729,7 @@
             const resp = await fetch('/api/scope/fetch-all', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ coins })
+                body: JSON.stringify({ coins, fee_pct: getFeePct() })
             });
             const data = await resp.json();
 
@@ -760,7 +793,7 @@
             const resp = await fetch('/api/scope/from-db', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ coins })
+                body: JSON.stringify({ coins, fee_pct: getFeePct() })
             });
             const data = await resp.json();
             clearInterval(animInterval);
@@ -842,10 +875,11 @@
         html += `<table class="scope-detail-table"><thead><tr>
             <th>Exchange</th>
             <th>Last Price</th>
-            <th>Best Bid (≥Avg)</th>
+            <th>Best Bid</th>
             <th>Bid Vol USD</th>
-            <th>Best Ask (≤Avg)</th>
+            <th>Best Ask</th>
             <th>Ask Vol USD</th>
+            <th>Snapshot</th>
         </tr></thead><tbody>`;
 
         const exMap = {};
@@ -858,20 +892,28 @@
             const rowClass = (isBestSell || isBestBuy) ? 'best-row' : '';
             const lastPrice = exMap[r.exchange] ? formatPrice(exMap[r.exchange]) : '—';
             const chip = exchChip(r.exchange, coin);
+            // Staleness badge
+            let snapCell = '<td style="font-size:0.65rem;color:var(--text-muted);">Live</td>';
+            if (r.snap_age_sec !== undefined && r.snap_age_sec !== null) {
+                const age = r.snap_age_sec;
+                const ageStr = age < 60 ? age + 's' : age < 3600 ? Math.floor(age/60) + 'm' : Math.floor(age/3600) + 'j';
+                const staleStyle = r.is_stale ? 'color:#ef4444;font-weight:700;' : 'color:#22c55e;';
+                snapCell = `<td style="font-size:0.65rem;${staleStyle}">${r.is_stale ? '⚡' : '✓'} ${ageStr}</td>`;
+            }
             const errCell = r.error ? `<td colspan="4" style="color:var(--text-muted);font-size:0.72rem;">${r.error}</td>` :
                 `<td style="color:#4ade80;">${r.best_bid ? formatPrice(r.best_bid) : '—'}</td>
                  <td>${r.bid_vol_above_avg > 0 ? formatVol(r.bid_vol_above_avg)+'$' : '—'}</td>
                  <td style="color:#60a5fa;">${r.best_ask ? formatPrice(r.best_ask) : '—'}</td>
                  <td>${r.ask_vol_below_avg > 0 ? formatVol(r.ask_vol_below_avg)+'$' : '—'}</td>`;
 
-            html += `<tr class="${rowClass}"><td>${chip}</td><td style="font-family:'JetBrains Mono',monospace;">${lastPrice}</td>${errCell}</tr>`;
+            html += `<tr class="${rowClass}"><td>${chip}</td><td style="font-family:'JetBrains Mono',monospace;">${lastPrice}</td>${errCell}${snapCell}</tr>`;
         });
 
         html += `</tbody></table>`;
 
         // Bid levels detail for best sell
         if (d.best_sell && d.best_sell.bid_levels && d.best_sell.bid_levels.length > 0) {
-            html += `<div class="section-title-sm">Level Bid ≥ Avg (${d.best_sell.exchange})</div>`;
+            html += `<div class="section-title-sm">Level Bid — ${d.best_sell.exchange} (Top 5)</div>`;
             html += `<ul class="level-list">`;
             d.best_sell.bid_levels.forEach(l => {
                 html += `<li><span class="lp bid-color">${formatPrice(l.price)}</span><span class="lq">×${formatVol(l.qty)}</span><span class="lu">= ${formatVol(l.usd)}$</span></li>`;
@@ -881,7 +923,7 @@
 
         // Ask levels detail for best buy
         if (d.best_buy && d.best_buy.ask_levels && d.best_buy.ask_levels.length > 0) {
-            html += `<div class="section-title-sm">Level Ask ≤ Avg (${d.best_buy.exchange})</div>`;
+            html += `<div class="section-title-sm">Level Ask — ${d.best_buy.exchange} (Top 5)</div>`;
             html += `<ul class="level-list">`;
             d.best_buy.ask_levels.forEach(l => {
                 html += `<li><span class="lp ask-color">${formatPrice(l.price)}</span><span class="lq">×${formatVol(l.qty)}</span><span class="lu">= ${formatVol(l.usd)}$</span></li>`;
@@ -907,6 +949,12 @@
         loadScopeData();
         document.getElementById('scope-min-exch').addEventListener('change', refreshTable);
         document.getElementById('scope-hide-leveraged').addEventListener('change', loadScopeData);
+        document.getElementById('scope-fee').addEventListener('input', function() {
+            const perSide = parseFloat(this.value) || 0;
+            document.getElementById('scope-fee-total').textContent = (perSide * 2).toFixed(2);
+            // Re-render table with new fee if data already loaded
+            if (Object.keys(depthCache).length > 0) refreshTable();
+        });
     });
 </script>
 </body>
