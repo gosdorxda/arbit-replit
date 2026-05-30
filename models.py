@@ -1,5 +1,6 @@
 from datetime import datetime
 from app import db
+import json
 
 
 class SpotTicker(db.Model):
@@ -80,4 +81,33 @@ class MarketList(db.Model):
             'symbol': self.symbol,
             'list_type': self.list_type,
             'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
+
+class OrderbookSnapshot(db.Model):
+    __tablename__ = 'orderbook_snapshots'
+
+    id = db.Column(db.Integer, primary_key=True)
+    exchange = db.Column(db.String(50), nullable=False)
+    symbol = db.Column(db.String(50), nullable=False)
+    best_bid = db.Column(db.Float, nullable=True)
+    best_ask = db.Column(db.Float, nullable=True)
+    bids = db.Column(db.JSON, nullable=True)
+    asks = db.Column(db.JSON, nullable=True)
+    fetched_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('exchange', 'symbol', name='unique_ob_exchange_symbol'),
+    )
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'exchange': self.exchange,
+            'symbol': self.symbol,
+            'best_bid': self.best_bid,
+            'best_ask': self.best_ask,
+            'bids': self.bids,
+            'asks': self.asks,
+            'fetched_at': self.fetched_at.isoformat() if self.fetched_at else None
         }

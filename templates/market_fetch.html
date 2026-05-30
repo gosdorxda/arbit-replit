@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Fetch — Orderbook DB Builder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .mf-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .mf-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: border-color 0.2s;
+        }
+        .mf-card:hover { border-color: var(--accent-blue); }
+        .mf-card.fetching { border-color: #f59e0b; }
+        .mf-card.done { border-color: #22c55e; }
+        .mf-card.error { border-color: #ef4444; }
+        .mf-exchange-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .mf-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            background: var(--accent-blue);
+            color: #fff;
+        }
+        .mf-stats-row {
+            display: flex;
+            gap: 10px;
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+        }
+        .mf-stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            background: var(--bg-primary);
+            border-radius: 6px;
+            padding: 5px 4px;
+            border: 1px solid var(--border-color);
+        }
+        .mf-stat-val {
+            font-weight: 700;
+            font-size: 0.9rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+        }
+        .mf-stat-lbl {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .mf-last-fetch {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .mf-btn {
+            margin-top: auto;
+            padding: 7px 12px;
+            background: var(--accent-blue);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: opacity 0.2s, background 0.2s;
+        }
+        .mf-btn:hover { opacity: 0.85; }
+        .mf-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .mf-btn.success { background: #16a34a; }
+        .mf-btn.error-btn { background: #dc2626; }
+        .mf-progress {
+            width: 100%;
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 2px;
+            overflow: hidden;
+            display: none;
+        }
+        .mf-progress-fill {
+            height: 100%;
+            background: var(--accent-blue);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .mf-progress.active { display: block; }
+        .mf-status-msg {
+            font-size: 0.68rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            min-height: 14px;
+        }
+        .top-stats-bar {
+            display: flex;
+            gap: 0;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        .top-stat {
+            flex: 1;
+            padding: 10px 14px;
+            border-right: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .top-stat:last-child { border-right: none; }
+        .top-stat-label { font-size: 0.68rem; color: var(--text-muted); display: block; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .top-stat-value { font-size: 1.1rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--text-primary); }
+        .fetch-all-btn {
+            padding: 9px 18px;
+            background: #16a34a;
+            color: #fff;
+            border: none;
+            border-radius: 7px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            transition: opacity 0.2s;
+        }
+        .fetch-all-btn:hover { opacity: 0.85; }
+        .fetch-all-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .info-box {
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+        .info-box strong { color: var(--accent-blue); }
+        .spinner {
+            width: 12px; height: 12px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header class="header">
+        <div class="header-content">
+            <h1 class="title">Market Fetch</h1>
+            <p class="subtitle">Fetch orderbook (top 5 bid/ask) semua pair per exchange → simpan ke database</p>
+        </div>
+        <div class="header-controls">
+            <a href="/" class="nav-link-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Kembali
+            </a>
+            <a href="/scope" class="nav-link-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                </svg>
+                Scope
+            </a>
+            <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()">
+                <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"/>
+                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                </svg>
+                <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="info-box">
+        <strong>Cara pakai:</strong> Fetch harga dulu di halaman utama → lalu fetch orderbook di sini per exchange → data tersimpan di DB → buka halaman <strong>Scope</strong> dan klik <strong>"Baca dari DB"</strong> untuk analisis arbitrase instan tanpa hit API.
+        <br>Setiap exchange akan fetch top-<strong>5 bid &amp; ask</strong> untuk semua pair USDT yang sudah ada di database.
+    </div>
+
+    <!-- Summary bar -->
+    <div class="top-stats-bar">
+        <div class="top-stat">
+            <span class="top-stat-label">Total Exchange</span>
+            <span class="top-stat-value" id="total-exchanges">—</span>
+        </div>
+        <div class="top-stat">
+            <span class="top-stat-label">Total Tickers di DB</span>
+            <span class="top-stat-value" id="total-tickers">—</span>
+        </div>
+        <div class="top-stat">
+            <span class="top-stat-label">Orderbook Snapshots</span>
+            <span class="top-stat-value" id="total-snapshots">—</span>
+        </div>
+        <div class="top-stat">
+            <span class="top-stat-label">Exchange Sudah Di-fetch</span>
+            <span class="top-stat-value" id="fetched-exchanges">—</span>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+        <div style="font-size:0.75rem;color:var(--text-muted);">Klik tombol per exchange, atau fetch semua sekaligus (proses bertahap)</div>
+        <div style="display:flex;gap:8px;">
+            <button class="fetch-all-btn" id="fetch-all-btn" onclick="fetchAllExchanges()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                </svg>
+                Fetch Semua Exchange
+            </button>
+            <button class="mf-btn" style="background:var(--bg-primary);border:1px solid var(--border-color);color:var(--text-secondary);" onclick="loadStatus()">
+                ↺ Refresh Status
+            </button>
+        </div>
+    </div>
+
+    <!-- Exchange cards -->
+    <div class="mf-grid" id="exchange-grid">
+        <div style="padding:20px;color:var(--text-muted);font-size:0.8rem;">Memuat status exchange…</div>
+    </div>
+</div>
+
+<script>
+    // All known exchanges
+    const ALL_EXCHANGES = [
+        'LBANK','HASHKEY','BICONOMY','MEXC','BITRUE','ASCENDEX','BITMART','DEXTRADE',
+        'POLONIEX','GATEIO','NIZA','XT','COINSTORE','VINDAX','FAMEEX','BIGONE',
+        'P2PB2B','DIGIFINEX','AZBIT','LATOKEN','KRAKEN','BINGX','BTSE','WHITEBIT',
+        'HTX','BINANCEALPHA','UZX'
+    ];
+
+    const EXCHANGE_COLORS = {
+        'LBANK':'#1a6cf5','HASHKEY':'#7c3aed','BICONOMY':'#0891b2','MEXC':'#16a34a',
+        'BITRUE':'#dc2626','ASCENDEX':'#2563eb','BITMART':'#0d9488','DEXTRADE':'#7c3aed',
+        'POLONIEX':'#16a34a','GATEIO':'#1d4ed8','NIZA':'#9333ea','XT':'#0f766e',
+        'COINSTORE':'#c2410c','VINDAX':'#92400e','FAMEEX':'#b45309','BIGONE':'#7c3aed',
+        'P2PB2B':'#065f46','DIGIFINEX':'#1e40af','AZBIT':'#831843','LATOKEN':'#9d174d',
+        'KRAKEN':'#1d4ed8','BINGX':'#ea580c','BTSE':'#0e7490','WHITEBIT':'#1f2937',
+        'HTX':'#16a34a','BINANCEALPHA':'#b45309','UZX':'#7c2d12'
+    };
+
+    let statusData = {}; // exchange → {ticker_count, snapshot_count, last_fetched}
+    let fetchingExchanges = new Set();
+    let fetchAllQueue = [];
+    let fetchAllActive = false;
+
+    async function loadStatus() {
+        try {
+            const r = await fetch('/api/market-fetch/status');
+            const d = await r.json();
+            if (d.status === 'success') {
+                statusData = {};
+                d.data.forEach(e => { statusData[e.exchange] = e; });
+                updateSummaryBar(d.data);
+                renderCards();
+            }
+        } catch(e) {
+            console.error('loadStatus error', e);
+        }
+    }
+
+    function updateSummaryBar(data) {
+        const totalTickers = data.reduce((s, e) => s + (e.ticker_count || 0), 0);
+        const totalSnaps = data.reduce((s, e) => s + (e.snapshot_count || 0), 0);
+        const fetchedExch = data.filter(e => e.snapshot_count > 0).length;
+        document.getElementById('total-exchanges').textContent = ALL_EXCHANGES.length;
+        document.getElementById('total-tickers').textContent = totalTickers.toLocaleString();
+        document.getElementById('total-snapshots').textContent = totalSnaps.toLocaleString();
+        document.getElementById('fetched-exchanges').textContent = fetchedExch + '/' + ALL_EXCHANGES.length;
+    }
+
+    function formatAge(isoStr) {
+        if (!isoStr) return '—';
+        const diff = Math.floor((Date.now() - new Date(isoStr + 'Z').getTime()) / 1000);
+        if (diff < 60) return diff + 's lalu';
+        if (diff < 3600) return Math.floor(diff / 60) + 'm lalu';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'j lalu';
+        return Math.floor(diff / 86400) + 'h lalu';
+    }
+
+    function renderCards() {
+        const grid = document.getElementById('exchange-grid');
+        grid.innerHTML = '';
+
+        ALL_EXCHANGES.forEach(exch => {
+            const info = statusData[exch] || {};
+            const tickerCount = info.ticker_count || 0;
+            const snapCount = info.snapshot_count || 0;
+            const lastFetch = info.last_fetched;
+            const isFetching = fetchingExchanges.has(exch);
+            const color = EXCHANGE_COLORS[exch] || '#3b82f6';
+            const pct = tickerCount > 0 ? Math.round(snapCount / tickerCount * 100) : 0;
+            const cardClass = isFetching ? 'fetching' : (snapCount > 0 ? 'done' : '');
+
+            const card = document.createElement('div');
+            card.className = 'mf-card ' + cardClass;
+            card.id = 'card-' + exch;
+            card.innerHTML = `
+                <div class="mf-exchange-name">
+                    <span class="mf-badge" style="background:${color}">${exch}</span>
+                </div>
+                <div class="mf-stats-row">
+                    <div class="mf-stat-item">
+                        <span class="mf-stat-val" id="tc-${exch}">${tickerCount > 0 ? tickerCount.toLocaleString() : '—'}</span>
+                        <span class="mf-stat-lbl">Tickers</span>
+                    </div>
+                    <div class="mf-stat-item">
+                        <span class="mf-stat-val" id="sc-${exch}" style="color:${snapCount > 0 ? '#22c55e' : 'var(--text-muted)'}">${snapCount > 0 ? snapCount.toLocaleString() : '—'}</span>
+                        <span class="mf-stat-lbl">Snapshots</span>
+                    </div>
+                    <div class="mf-stat-item">
+                        <span class="mf-stat-val" style="color:${pct >= 80 ? '#22c55e' : pct > 0 ? '#f59e0b' : 'var(--text-muted)'}">${pct > 0 ? pct + '%' : '—'}</span>
+                        <span class="mf-stat-lbl">Coverage</span>
+                    </div>
+                </div>
+                <div class="mf-last-fetch" id="lf-${exch}">
+                    ${lastFetch ? '⏱ ' + formatAge(lastFetch) : 'Belum pernah di-fetch'}
+                </div>
+                <div class="mf-progress" id="prog-${exch}">
+                    <div class="mf-progress-fill" id="progfill-${exch}"></div>
+                </div>
+                <div class="mf-status-msg" id="msg-${exch}"></div>
+                <button class="mf-btn" id="btn-${exch}" onclick="fetchExchange('${exch}')" ${isFetching || tickerCount === 0 ? 'disabled' : ''}>
+                    ${isFetching ? '<span class="spinner"></span> Fetching…' : tickerCount === 0 ? '⚠ Fetch harga dulu' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Fetch Orderbooks'}
+                </button>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    async function fetchExchange(exch) {
+        if (fetchingExchanges.has(exch)) return;
+        fetchingExchanges.add(exch);
+
+        const card = document.getElementById('card-' + exch);
+        const btn = document.getElementById('btn-' + exch);
+        const prog = document.getElementById('prog-' + exch);
+        const fill = document.getElementById('progfill-' + exch);
+        const msg = document.getElementById('msg-' + exch);
+
+        if (card) card.className = 'mf-card fetching';
+        if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Fetching…'; }
+        if (prog) prog.classList.add('active');
+        if (msg) msg.textContent = 'Menghubungi exchange API…';
+
+        // Animate progress
+        let pct = 0;
+        const animInterval = setInterval(() => {
+            if (pct < 85) { pct += 0.4; if (fill) fill.style.width = pct + '%'; }
+        }, 300);
+
+        try {
+            const r = await fetch('/api/market-fetch/' + exch, { method: 'POST' });
+            const d = await r.json();
+            clearInterval(animInterval);
+
+            if (d.status === 'success') {
+                if (fill) fill.style.width = '100%';
+                if (card) card.className = 'mf-card done';
+                if (btn) { btn.innerHTML = '✓ Selesai (' + d.success + ' pair)'; btn.className = 'mf-btn success'; }
+                if (msg) msg.textContent = `${d.success} berhasil, ${d.failed} gagal — ${d.duration}s`;
+
+                // Update snapshot count in card
+                const sc = document.getElementById('sc-' + exch);
+                if (sc) { sc.textContent = d.success.toLocaleString(); sc.style.color = '#22c55e'; }
+                const lf = document.getElementById('lf-' + exch);
+                if (lf) lf.textContent = '⏱ baru saja';
+            } else {
+                if (card) card.className = 'mf-card error';
+                if (btn) { btn.innerHTML = '✗ Error'; btn.className = 'mf-btn error-btn'; }
+                if (msg) msg.textContent = d.message || 'Gagal fetch';
+            }
+        } catch(e) {
+            clearInterval(animInterval);
+            if (card) card.className = 'mf-card error';
+            if (btn) { btn.innerHTML = '✗ Gagal'; btn.className = 'mf-btn error-btn'; }
+            if (msg) msg.textContent = e.message;
+        }
+
+        fetchingExchanges.delete(exch);
+        // Re-enable button after delay
+        setTimeout(() => {
+            const b = document.getElementById('btn-' + exch);
+            if (b) {
+                b.disabled = false;
+                b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Fetch Ulang';
+                b.className = 'mf-btn';
+            }
+        }, 4000);
+
+        // Reload status to refresh all stats
+        await loadStatus();
+    }
+
+    async function fetchAllExchanges() {
+        const btn = document.getElementById('fetch-all-btn');
+        if (fetchAllActive) return;
+        fetchAllActive = true;
+        btn.disabled = true;
+
+        // Only fetch exchanges that have tickers
+        const toFetch = ALL_EXCHANGES.filter(e => {
+            const info = statusData[e] || {};
+            return (info.ticker_count || 0) > 0;
+        });
+
+        btn.innerHTML = '<span class="spinner"></span> 0/' + toFetch.length + ' selesai…';
+
+        for (let i = 0; i < toFetch.length; i++) {
+            const exch = toFetch[i];
+            btn.innerHTML = '<span class="spinner"></span> ' + (i+1) + '/' + toFetch.length + ' — ' + exch;
+            await fetchExchange(exch);
+            // Small delay between exchanges to avoid hammering
+            await new Promise(r => setTimeout(r, 500));
+        }
+
+        btn.innerHTML = '✓ Semua selesai';
+        btn.disabled = false;
+        fetchAllActive = false;
+        setTimeout(() => {
+            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Fetch Semua Exchange';
+        }, 3000);
+    }
+
+    function toggleTheme() {
+        const body = document.body;
+        const isDark = body.classList.toggle('light-mode');
+        localStorage.setItem('theme', isDark ? 'light' : 'dark');
+    }
+
+    // Init
+    (function() {
+        const saved = localStorage.getItem('theme');
+        if (saved === 'light') document.body.classList.add('light-mode');
+        loadStatus();
+    })();
+</script>
+</body>
+</html>

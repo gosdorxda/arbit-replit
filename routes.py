@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 from flask import render_template, jsonify, request
 from app import app, db
-from models import SpotTicker, FetchLog, MarketList
+from models import SpotTicker, FetchLog, MarketList, OrderbookSnapshot
 from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter, VindaxAdapter, FameEXAdapter, BigOneAdapter, P2PB2BAdapter, DigiFinexAdapter, AzbitAdapter, LatokenAdapter, KrakenAdapter, BingXAdapter, BTSEAdapter, WhiteBitAdapter, HTXAdapter, BinanceAlphaAdapter, UZXAdapter
 
 logger = logging.getLogger(__name__)
@@ -1696,6 +1696,200 @@ def get_scope_fetch_all():
                 }
 
     return jsonify({'status': 'success', 'data': all_results})
+
+
+@app.route('/market-fetch')
+def market_fetch_page():
+    return render_template('market_fetch.html')
+
+
+@app.route('/api/market-fetch/status')
+def market_fetch_status():
+    from sqlalchemy import func
+    ticker_counts = db.session.query(
+        SpotTicker.exchange, func.count(SpotTicker.id)
+    ).group_by(SpotTicker.exchange).all()
+    snap_data = db.session.query(
+        OrderbookSnapshot.exchange,
+        func.count(OrderbookSnapshot.id),
+        func.max(OrderbookSnapshot.fetched_at)
+    ).group_by(OrderbookSnapshot.exchange).all()
+
+    ticker_map = {e: c for e, c in ticker_counts}
+    snap_map = {e: {'count': c, 'last_fetched': ts.isoformat() if ts else None}
+                for e, c, ts in snap_data}
+    all_exchanges = sorted(set(list(ticker_map.keys()) + list(snap_map.keys())))
+    result = []
+    for exc in all_exchanges:
+        result.append({
+            'exchange': exc,
+            'ticker_count': ticker_map.get(exc, 0),
+            'snapshot_count': snap_map.get(exc, {}).get('count', 0),
+            'last_fetched': snap_map.get(exc, {}).get('last_fetched')
+        })
+    return jsonify({'status': 'success', 'data': result})
+
+
+@app.route('/api/market-fetch/<exchange>', methods=['POST'])
+def do_market_fetch(exchange):
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    exch_upper = exchange.upper()
+    adapter = get_adapter(exch_upper)
+    if not adapter:
+        return jsonify({'status': 'error', 'message': f'No adapter for {exch_upper}'}), 404
+    if not hasattr(adapter, 'fetch_orderbook'):
+        return jsonify({'status': 'error', 'message': f'{exch_upper} does not support orderbook'}), 400
+
+    tickers = SpotTicker.query.filter_by(exchange=exch_upper).all()
+    if not tickers:
+        return jsonify({'status': 'error', 'message': 'Tidak ada ticker. Fetch harga dulu di halaman utama.'}), 400
+
+    def fetch_ob(symbol):
+        try:
+            ob = adapter.fetch_orderbook(symbol, limit=5)
+            bids = [[float(b[0]), float(b[1])] for b in ob.bids[:5] if len(b) >= 2]
+            asks = [[float(a[0]), float(a[1])] for a in ob.asks[:5] if len(a) >= 2]
+            best_bid = bids[0][0] if bids else None
+            best_ask = asks[0][0] if asks else None
+            return symbol, bids, asks, best_bid, best_ask, None
+        except Exception as e:
+            return symbol, None, None, None, None, str(e)
+
+    success = 0
+    failed = 0
+    start = datetime.utcnow()
+    snap_updates = []
+
+    with ThreadPoolExecutor(max_workers=20) as executor:
+        futures = {executor.submit(fetch_ob, t.symbol): t.symbol for t in tickers}
+        for future in as_completed(futures):
+            symbol, bids, asks, best_bid, best_ask, err = future.result()
+            if err:
+                failed += 1
+            else:
+                snap_updates.append((symbol, bids, asks, best_bid, best_ask))
+                success += 1
+
+    # Bulk upsert
+    now = datetime.utcnow()
+    existing = {s.symbol: s for s in
+                OrderbookSnapshot.query.filter_by(exchange=exch_upper).all()}
+    for symbol, bids, asks, best_bid, best_ask in snap_updates:
+        if symbol in existing:
+            snap = existing[symbol]
+            snap.bids = bids
+            snap.asks = asks
+            snap.best_bid = best_bid
+            snap.best_ask = best_ask
+            snap.fetched_at = now
+        else:
+            snap = OrderbookSnapshot(
+                exchange=exch_upper, symbol=symbol,
+                bids=bids, asks=asks,
+                best_bid=best_bid, best_ask=best_ask,
+                fetched_at=now
+            )
+            db.session.add(snap)
+    db.session.commit()
+
+    duration = round((datetime.utcnow() - start).total_seconds(), 1)
+    return jsonify({
+        'status': 'success', 'exchange': exch_upper,
+        'success': success, 'failed': failed, 'duration': duration
+    })
+
+
+@app.route('/api/scope/from-db', methods=['POST'])
+def get_scope_from_db():
+    data = request.get_json()
+    if not data:
+        return jsonify({'status': 'error', 'message': 'No data'}), 400
+    coins = data.get('coins', [])
+    if not coins:
+        return jsonify({'status': 'error', 'message': 'No coins'}), 400
+
+    # Collect all symbols needed
+    symbols_needed = [f"{c['coin']}/USDT" for c in coins]
+
+    # Bulk query all snapshots for needed symbols
+    all_snaps = OrderbookSnapshot.query.filter(
+        OrderbookSnapshot.symbol.in_(symbols_needed)
+    ).all()
+
+    # Index by (exchange, symbol)
+    snap_index = {}
+    for s in all_snaps:
+        snap_index[(s.exchange, s.symbol)] = s
+
+    # Latest snapshot timestamp across all results
+    latest_ts = max((s.fetched_at for s in all_snaps), default=None)
+
+    all_results = {}
+    for coin_info in coins:
+        coin = coin_info['coin']
+        avg_price = float(coin_info['avg_price'])
+        exchanges = coin_info['exchanges']
+        symbol = f"{coin}/USDT"
+
+        results = []
+        for exch_info in exchanges:
+            exchange = exch_info['exchange']
+            snap = snap_index.get((exchange, symbol))
+            if not snap or not snap.bids or not snap.asks:
+                continue
+            bids = sorted(
+                [{'price': float(b[0]), 'qty': float(b[1])} for b in snap.bids if len(b) >= 2],
+                key=lambda x: -x['price']
+            )
+            asks = sorted(
+                [{'price': float(a[0]), 'qty': float(a[1])} for a in snap.asks if len(a) >= 2],
+                key=lambda x: x['price']
+            )
+            best_bid = bids[0]['price'] if bids else None
+            bid_vol_usd = sum(b['price'] * b['qty'] for b in bids[:5])
+            bid_levels = [{'price': b['price'], 'qty': b['qty'],
+                           'usd': round(b['price'] * b['qty'], 2)} for b in bids[:6]]
+            best_ask = asks[0]['price'] if asks else None
+            ask_vol_usd = sum(a['price'] * a['qty'] for a in asks[:5])
+            ask_levels = [{'price': a['price'], 'qty': a['qty'],
+                           'usd': round(a['price'] * a['qty'], 2)} for a in asks[:6]]
+            snap_age = round((datetime.utcnow() - snap.fetched_at).total_seconds()) if snap.fetched_at else None
+            results.append({
+                'exchange': exchange,
+                'best_bid': best_bid,
+                'bid_vol_above_avg': round(bid_vol_usd, 2),
+                'bid_levels': bid_levels,
+                'best_ask': best_ask,
+                'ask_vol_below_avg': round(ask_vol_usd, 2),
+                'ask_levels': ask_levels,
+                'snap_age_sec': snap_age,
+                'error': None
+            })
+
+        sell_opps = [r for r in results if r['best_bid'] is not None]
+        buy_opps  = [r for r in results if r['best_ask'] is not None]
+        best_sell = max(sell_opps, key=lambda x: x['best_bid']) if sell_opps else None
+        cross_buy = [r for r in buy_opps if not best_sell or r['exchange'] != best_sell['exchange']]
+        best_buy  = min(cross_buy, key=lambda x: x['best_ask']) if cross_buy else None
+        real_spread = None
+        if best_sell and best_buy:
+            real_spread = round(
+                (best_sell['best_bid'] - best_buy['best_ask']) / avg_price * 100, 3
+            )
+        results.sort(key=lambda x: x['bid_vol_above_avg'], reverse=True)
+        all_results[coin] = {
+            'coin': coin, 'avg_price': avg_price,
+            'results': results,
+            'best_sell': best_sell, 'best_buy': best_buy,
+            'real_spread': real_spread
+        }
+
+    return jsonify({
+        'status': 'success',
+        'data': all_results,
+        'source': 'db',
+        'snapshot_time': latest_ts.isoformat() if latest_ts else None
+    })
 
 
 @app.route('/arbitrage')
