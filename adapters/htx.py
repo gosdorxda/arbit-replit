@@ -93,14 +93,14 @@ class HTXAdapter(BaseAdapter):
                 price = self._safe_float(entry[0])
                 amount = self._safe_float(entry[1])
                 if price and amount:
-                    asks.append({'price': price, 'amount': amount})
+                    asks.append([price, amount])
 
             bids = []
             for entry in tick.get('bids', []):
                 price = self._safe_float(entry[0])
                 amount = self._safe_float(entry[1])
                 if price and amount:
-                    bids.append({'price': price, 'amount': amount})
+                    bids.append([price, amount])
 
             return NormalizedOrderbook(
                 exchange=self.exchange_name,

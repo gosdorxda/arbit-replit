@@ -87,7 +87,7 @@ class XTAdapter(BaseAdapter):
                     price = self._safe_float(ask[0])
                     amount = self._safe_float(ask[1])
                     if price and amount:
-                        asks.append({'price': price, 'amount': amount})
+                        asks.append([price, amount])
             
             bids = []
             for bid in result.get('bids', []):
@@ -95,7 +95,7 @@ class XTAdapter(BaseAdapter):
                     price = self._safe_float(bid[0])
                     amount = self._safe_float(bid[1])
                     if price and amount:
-                        bids.append({'price': price, 'amount': amount})
+                        bids.append([price, amount])
             
             return NormalizedOrderbook(
                 exchange=self.exchange_name,

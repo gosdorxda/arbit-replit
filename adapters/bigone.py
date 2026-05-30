@@ -91,14 +91,14 @@ class BigOneAdapter(BaseAdapter):
                 price = self._safe_float(ask.get('price'))
                 amount = self._safe_float(ask.get('quantity') or ask.get('amount'))
                 if price and amount:
-                    asks.append({'price': price, 'amount': amount})
+                    asks.append([price, amount])
             
             bids = []
             for bid in data.get('bids', [])[:limit]:
                 price = self._safe_float(bid.get('price'))
                 amount = self._safe_float(bid.get('quantity') or bid.get('amount'))
                 if price and amount:
-                    bids.append({'price': price, 'amount': amount})
+                    bids.append([price, amount])
             
             return NormalizedOrderbook(
                 exchange=self.exchange_name,

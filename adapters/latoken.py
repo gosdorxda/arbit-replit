@@ -125,14 +125,14 @@ class LatokenAdapter(BaseAdapter):
                 price = self._safe_float(ask.get('price'))
                 amount = self._safe_float(ask.get('quantity'))
                 if price and amount:
-                    asks.append({'price': price, 'amount': amount})
+                    asks.append([price, amount])
             
             bids = []
             for bid in data.get('bid', [])[:limit]:
                 price = self._safe_float(bid.get('price'))
                 amount = self._safe_float(bid.get('quantity'))
                 if price and amount:
-                    bids.append({'price': price, 'amount': amount})
+                    bids.append([price, amount])
             
             return NormalizedOrderbook(
                 exchange=self.exchange_name,

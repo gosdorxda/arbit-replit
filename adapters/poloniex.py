@@ -78,7 +78,7 @@ class PoloniexAdapter(BaseAdapter):
                 price = self._safe_float(asks_raw[i])
                 amount = self._safe_float(asks_raw[i + 1]) if i + 1 < len(asks_raw) else 0
                 if price and amount:
-                    asks.append({'price': price, 'amount': amount})
+                    asks.append([price, amount])
             
             bids_raw = data.get('bids', [])
             bids = []
@@ -86,7 +86,7 @@ class PoloniexAdapter(BaseAdapter):
                 price = self._safe_float(bids_raw[i])
                 amount = self._safe_float(bids_raw[i + 1]) if i + 1 < len(bids_raw) else 0
                 if price and amount:
-                    bids.append({'price': price, 'amount': amount})
+                    bids.append([price, amount])
             
             return NormalizedOrderbook(
                 exchange=self.exchange_name,

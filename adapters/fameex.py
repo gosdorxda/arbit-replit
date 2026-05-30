@@ -83,7 +83,7 @@ class FameEXAdapter(BaseAdapter):
                 else:
                     continue
                 if price and amount:
-                    asks.append({'price': price, 'amount': amount})
+                    asks.append([price, amount])
             
             bids = []
             for bid in order_data.get('bids', []):
@@ -93,7 +93,7 @@ class FameEXAdapter(BaseAdapter):
                 else:
                     continue
                 if price and amount:
-                    bids.append({'price': price, 'amount': amount})
+                    bids.append([price, amount])
             
             return NormalizedOrderbook(
                 exchange=self.exchange_name,

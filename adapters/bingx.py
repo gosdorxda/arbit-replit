@@ -87,14 +87,14 @@ class BingXAdapter(BaseAdapter):
                 price = self._safe_float(row[0])
                 amount = self._safe_float(row[1])
                 if price and amount:
-                    bids.append({'price': price, 'amount': amount})
+                    bids.append([price, amount])
 
             asks = []
             for row in book.get('asks', [])[:limit]:
                 price = self._safe_float(row[0])
                 amount = self._safe_float(row[1])
                 if price and amount:
-                    asks.append({'price': price, 'amount': amount})
+                    asks.append([price, amount])
 
             return NormalizedOrderbook(
                 exchange=self.exchange_name,
