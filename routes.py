@@ -1779,6 +1779,7 @@ def do_market_fetch(exchange):
                 success += 1
 
     # Bulk upsert
+    from sqlalchemy.orm.attributes import flag_modified
     now = datetime.utcnow()
     existing = {s.symbol: s for s in
                 OrderbookSnapshot.query.filter_by(exchange=exch_upper).all()}
@@ -1790,6 +1791,8 @@ def do_market_fetch(exchange):
             snap.best_bid = best_bid
             snap.best_ask = best_ask
             snap.fetched_at = now
+            flag_modified(snap, 'bids')
+            flag_modified(snap, 'asks')
         else:
             snap = OrderbookSnapshot(
                 exchange=exch_upper, symbol=symbol,
@@ -1812,6 +1815,7 @@ STALE_THRESHOLD_SEC = 300  # 5 minutes — snapshots older than this are flagged
 
 @app.route('/api/scope/from-db', methods=['POST'])
 def get_scope_from_db():
+    from collections import defaultdict
     data = request.get_json()
     if not data:
         return jsonify({'status': 'error', 'message': 'No data'}), 400
@@ -1820,52 +1824,57 @@ def get_scope_from_db():
         return jsonify({'status': 'error', 'message': 'No coins'}), 400
 
     fee_pct = float(data.get('fee_pct', 0.4))
-    symbols_needed = [f"{c['coin']}/USDT" for c in coins]
+    coin_map = {c['coin']: float(c['avg_price']) for c in coins}
+    symbols_needed = [f"{coin}/USDT" for coin in coin_map]
 
+    # Query ALL snapshots for needed symbols — ignore frontend exchange list entirely
+    # This ensures we always use the latest DB state regardless of when the page was loaded
     all_snaps = OrderbookSnapshot.query.filter(
         OrderbookSnapshot.symbol.in_(symbols_needed)
     ).all()
 
-    snap_index = {}
+    # Group snapshots by symbol
+    snaps_by_symbol = defaultdict(list)
     for s in all_snaps:
-        snap_index[(s.exchange, s.symbol)] = s
+        snaps_by_symbol[s.symbol].append(s)
 
     latest_ts = max((s.fetched_at for s in all_snaps), default=None)
     now = datetime.utcnow()
 
     all_results = {}
-    for coin_info in coins:
-        coin = coin_info['coin']
-        avg_price = float(coin_info['avg_price'])
-        exchanges = coin_info['exchanges']
+    for coin, avg_price in coin_map.items():
         symbol = f"{coin}/USDT"
+        snap_list = snaps_by_symbol.get(symbol, [])
 
         results = []
-        for exch_info in exchanges:
-            exchange = exch_info['exchange']
-            snap = snap_index.get((exchange, symbol))
-            if not snap or not snap.bids or not snap.asks:
+        for snap in snap_list:
+            if not snap.bids or not snap.asks:
                 continue
-            bids = sorted(
-                [{'price': float(b[0]), 'qty': float(b[1])} for b in snap.bids if len(b) >= 2],
-                key=lambda x: -x['price']
-            )
-            asks = sorted(
-                [{'price': float(a[0]), 'qty': float(a[1])} for a in snap.asks if len(a) >= 2],
-                key=lambda x: x['price']
-            )
-            best_bid = bids[0]['price'] if bids else None
+            try:
+                bids = sorted(
+                    [{'price': float(b[0]), 'qty': float(b[1])} for b in snap.bids if len(b) >= 2],
+                    key=lambda x: -x['price']
+                )
+                asks = sorted(
+                    [{'price': float(a[0]), 'qty': float(a[1])} for a in snap.asks if len(a) >= 2],
+                    key=lambda x: x['price']
+                )
+            except (TypeError, IndexError):
+                continue
+            if not bids or not asks:
+                continue
+            best_bid = bids[0]['price']
             bid_vol_usd = sum(b['price'] * b['qty'] for b in bids[:5])
             bid_levels = [{'price': b['price'], 'qty': b['qty'],
                            'usd': round(b['price'] * b['qty'], 2)} for b in bids[:6]]
-            best_ask = asks[0]['price'] if asks else None
+            best_ask = asks[0]['price']
             ask_vol_usd = sum(a['price'] * a['qty'] for a in asks[:5])
             ask_levels = [{'price': a['price'], 'qty': a['qty'],
                            'usd': round(a['price'] * a['qty'], 2)} for a in asks[:6]]
             snap_age = round((now - snap.fetched_at).total_seconds()) if snap.fetched_at else None
             is_stale = snap_age is not None and snap_age > STALE_THRESHOLD_SEC
             results.append({
-                'exchange': exchange,
+                'exchange': snap.exchange,
                 'best_bid': best_bid,
                 'bid_vol_above_avg': round(bid_vol_usd, 2),
                 'bid_levels': bid_levels,
@@ -1877,9 +1886,8 @@ def get_scope_from_db():
                 'error': None
             })
 
-        # Fix #3: require ≥2 exchanges with actual snapshot data
+        # Require ≥2 exchanges with actual snapshot data
         if len(results) < 2:
-            sell_opps, buy_opps = [], []
             best_sell = best_buy = real_spread = net_spread = None
         else:
             sell_opps = [r for r in results if r['best_bid'] is not None]
@@ -1890,12 +1898,10 @@ def get_scope_from_db():
 
             real_spread = None
             net_spread  = None
-            # Fix #1: denominator = best_ask (actual capital deployed)
             if best_sell and best_buy and best_buy['best_ask'] > 0:
                 real_spread = round(
                     (best_sell['best_bid'] - best_buy['best_ask']) / best_buy['best_ask'] * 100, 3
                 )
-                # Fix #2: subtract round-trip fee
                 net_spread = round(real_spread - fee_pct, 3)
 
         results.sort(key=lambda x: x['bid_vol_above_avg'], reverse=True)
