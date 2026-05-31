@@ -68,7 +68,10 @@ class LBankAdapter(BaseAdapter):
             )
             response.raise_for_status()
             data = response.json()
-            
+
+            if 'error' in data:
+                raise Exception(f"LBANK API error code: {data['error']}")
+
             asks = [[self._safe_float(item[0]), self._safe_float(item[1])] 
                     for item in data.get('asks', [])]
             bids = [[self._safe_float(item[0]), self._safe_float(item[1])] 

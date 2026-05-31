@@ -1748,27 +1748,44 @@ def do_market_fetch(exchange):
     if not hasattr(adapter, 'fetch_orderbook'):
         return jsonify({'status': 'error', 'message': f'{exch_upper} does not support orderbook'}), 400
 
-    tickers = SpotTicker.query.filter_by(exchange=exch_upper).all()
+    # Only fetch tickers that have actual trading volume (skip dead markets)
+    tickers = SpotTicker.query.filter_by(exchange=exch_upper).filter(
+        SpotTicker.volume_24h > 0
+    ).all()
+    if not tickers:
+        # Fallback: try all tickers if none have volume data
+        tickers = SpotTicker.query.filter_by(exchange=exch_upper).all()
     if not tickers:
         return jsonify({'status': 'error', 'message': 'Tidak ada ticker. Fetch harga dulu di halaman utama.'}), 400
 
+    import time as _time
+
     def fetch_ob(symbol):
-        try:
-            ob = adapter.fetch_orderbook(symbol, limit=5)
-            bids = [[float(b[0]), float(b[1])] for b in ob.bids[:5] if len(b) >= 2]
-            asks = [[float(a[0]), float(a[1])] for a in ob.asks[:5] if len(a) >= 2]
-            best_bid = bids[0][0] if bids else None
-            best_ask = asks[0][0] if asks else None
-            return symbol, bids, asks, best_bid, best_ask, None
-        except Exception as e:
-            return symbol, None, None, None, None, str(e)
+        for attempt in range(2):  # 1 retry on 429
+            try:
+                ob = adapter.fetch_orderbook(symbol, limit=5)
+                bids = [[float(b[0]), float(b[1])] for b in ob.bids[:5] if len(b) >= 2]
+                asks = [[float(a[0]), float(a[1])] for a in ob.asks[:5] if len(a) >= 2]
+                if not bids or not asks:
+                    return symbol, None, None, None, None, 'empty orderbook'
+                best_bid = bids[0][0]
+                best_ask = asks[0][0]
+                return symbol, bids, asks, best_bid, best_ask, None
+            except Exception as e:
+                err_str = str(e)
+                if '429' in err_str and attempt == 0:
+                    _time.sleep(1.5)  # back off and retry once on rate limit
+                    continue
+                return symbol, None, None, None, None, err_str
+        return symbol, None, None, None, None, 'max retries exceeded'
 
     success = 0
     failed = 0
     start = datetime.utcnow()
     snap_updates = []
 
-    with ThreadPoolExecutor(max_workers=20) as executor:
+    # 8 workers — enough parallelism without triggering rate limits
+    with ThreadPoolExecutor(max_workers=8) as executor:
         futures = {executor.submit(fetch_ob, t.symbol): t.symbol for t in tickers}
         for future in as_completed(futures):
             symbol, bids, asks, best_bid, best_ask, err = future.result()
