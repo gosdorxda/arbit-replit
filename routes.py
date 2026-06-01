@@ -1,11 +1,16 @@
 import logging
 from datetime import datetime
-from flask import render_template, jsonify, request
+from flask import render_template, jsonify, request, send_from_directory
 from app import app, db
 from models import SpotTicker, FetchLog, MarketList, OrderbookSnapshot
 from adapters import LBankAdapter, HashKeyAdapter, BiconomyAdapter, MEXCAdapter, BitrueAdapter, AscendEXAdapter, BitMartAdapter, DexTradeAdapter, PoloniexAdapter, GateIOAdapter, NizaAdapter, XTAdapter, CoinstoreAdapter, VindaxAdapter, FameEXAdapter, BigOneAdapter, P2PB2BAdapter, DigiFinexAdapter, AzbitAdapter, LatokenAdapter, KrakenAdapter, BingXAdapter, BTSEAdapter, WhiteBitAdapter, HTXAdapter, BinanceAlphaAdapter, UZXAdapter
 
 logger = logging.getLogger(__name__)
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory('static', 'favicon.png', mimetype='image/png')
 
 
 def get_adapter(exchange):
