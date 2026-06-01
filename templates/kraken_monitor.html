@@ -627,7 +627,7 @@
             <select class="km-ctrl-select" id="sort-mode" onchange="renderTable()">
                 <option value="spread-desc">Spread Terbesar</option>
                 <option value="symbol-asc">Symbol A-Z</option>
-                <option value="bid-desc">Bid Tertinggi</option>
+                <option value="bid-desc">Harga Beli Tertinggi</option>
                 <option value="age-asc">Terbaru</option>
                 <option value="refcount-desc">Ref Exchange ↓</option>
             </select>
@@ -658,16 +658,16 @@
                 <table id="km-table">
                     <thead>
                         <tr>
-                            <th>Symbol</th>
-                            <th>Kraken Bid ↑</th>
-                            <th>Kraken Ask</th>
-                            <th>DB Min Ask</th>
-                            <th>DB Max Bid</th>
-                            <th title="Spread 1: Jual di Kraken (Bid &gt; DB MinAsk)">Spread 1 Jual</th>
-                            <th title="Spread 2: Beli di Kraken (DB MaxBid &gt; Ask)">Spread 2 Beli</th>
-                            <th>Ref Exchange</th>
+                            <th>Simbol</th>
+                            <th>Harga Beli Kraken ↑</th>
+                            <th>Harga Jual Kraken</th>
+                            <th title="Harga termurah di exchange lain (bervolume)">Harga Min DB</th>
+                            <th title="Harga termahal di exchange lain (bervolume)">Harga Max DB</th>
+                            <th title="Selisih 1: Jual di Kraken (Bid Kraken > Harga Min DB)">Selisih Jual</th>
+                            <th title="Selisih 2: Beli di Kraken (Harga Max DB > Ask Kraken)">Selisih Beli</th>
+                            <th>Exchange Ref</th>
                             <th>Status</th>
-                            <th>Update</th>
+                            <th>Diperbarui</th>
                         </tr>
                     </thead>
                     <tbody id="km-tbody">
@@ -730,7 +730,7 @@ let wsReconnDelay    = 2000;
 let wsReconnTimer    = null;
 let pairsMap         = {};  // wsSymbol → displaySymbol
 let liveData         = {};  // displaySymbol → {bid, ask, bidQty, askQty, ts}
-let referenceData    = {};  // displaySymbol → {min_ask, max_bid, min_ask_exchange, max_bid_exchange, exchange_count}
+let referenceData    = {};  // displaySymbol → {ref_price, ref_exchange, ref_turnover, min_price, max_price, min_price_exchange, max_price_exchange, exchange_count}
 let activeAlerts     = {};  // displaySymbol → alert obj
 let alertHistory     = [];  // newest first, max 200
 let soundEnabled     = true;
@@ -881,23 +881,23 @@ function checkSpread(symbol) {
     if (!live || !ref) return;
 
     const { bid, ask } = live;
-    const { min_ask, max_bid } = ref;
+    const { min_price, max_price } = ref;
 
     const minSpreadPct = parseFloat(document.getElementById('min-spread-pct').value) || 0;
     const minSpreadUSD = parseFloat(document.getElementById('min-spread-usd').value) || 0;
 
     let spread1 = 0, spread2 = 0;
 
-    // Scenario 1: Sell at Kraken (Kraken bid > DB min ask → buy cheap elsewhere, sell on Kraken)
-    if (min_ask && min_ask > 0 && bid > min_ask) {
-        spread1 = bid - min_ask;
+    // Skenario 1: Jual di Kraken (bid Kraken > harga min DB → beli murah di DB, jual di Kraken)
+    if (min_price && min_price > 0 && bid > min_price) {
+        spread1 = bid - min_price;
     }
-    // Scenario 2: Buy at Kraken (DB max bid > Kraken ask → buy on Kraken, sell elsewhere)
-    if (max_bid && max_bid > 0 && max_bid > ask) {
-        spread2 = max_bid - ask;
+    // Skenario 2: Beli di Kraken (harga max DB > ask Kraken → beli di Kraken, jual mahal di DB)
+    if (max_price && max_price > 0 && max_price > ask) {
+        spread2 = max_price - ask;
     }
 
-    const refPrice = min_ask || ask;
+    const refPrice = min_price || ask;
     const spread1Pct = refPrice > 0 ? (spread1 / refPrice) * 100 : 0;
     const spread2Pct = refPrice > 0 ? (spread2 / refPrice) * 100 : 0;
     const bestSpreadPct = Math.max(spread1Pct, spread2Pct);
@@ -912,9 +912,11 @@ function checkSpread(symbol) {
         const alertObj = {
             symbol, spread1, spread2, spread1Pct, spread2Pct,
             krakenBid: bid, krakenAsk: ask,
-            dbMinAsk: min_ask, dbMaxBid: max_bid,
-            dbMinAskEx: ref.min_ask_exchange,
-            dbMaxBidEx: ref.max_bid_exchange,
+            dbMinPrice: min_price, dbMaxPrice: max_price,
+            dbMinEx: ref.min_price_exchange,
+            dbMaxEx: ref.max_price_exchange,
+            refPrice: ref.ref_price,
+            refExchange: ref.ref_exchange,
             lastSeen: Date.now(),
             firstSeen: isNew ? Date.now() : (activeAlerts[symbol].firstSeen || Date.now())
         };
@@ -987,7 +989,7 @@ function sendPushNotification(alert) {
     const bestSpreadUSD = Math.max(alert.spread1, alert.spread2);
     try {
         new Notification(`${type}: ${alert.symbol}`, {
-            body: `Pure Spread: ${bestSpreadPct.toFixed(3)}% — $${fmt(bestSpreadUSD)}`,
+            body: `Selisih Harga: ${bestSpreadPct.toFixed(3)}% — $${fmt(bestSpreadUSD)}`,
             icon: '/favicon.ico',
             tag: `kraken-${alert.symbol}`,
             renotify: true
@@ -1019,8 +1021,8 @@ function showToast(alert) {
             <button class="km-toast-close" onclick="this.closest('.km-toast').remove()">×</button>
         </div>
         <div class="km-toast-body">
-            ${alert.spread1 > 0 ? `Bid <span class="g">${fmt(alert.krakenBid)}</span> › DB MinAsk <span class="g">${fmt(alert.dbMinAsk)}</span> [${alert.dbMinAskEx||'?'}]<br>Spread: <span class="g">+${fmt(alert.spread1)} (${alert.spread1Pct.toFixed(3)}%)</span><br>` : ''}
-            ${alert.spread2 > 0 ? `DB MaxBid <span class="r">${fmt(alert.dbMaxBid)}</span> [${alert.dbMaxBidEx||'?'}] › Ask <span class="r">${fmt(alert.krakenAsk)}</span><br>Spread: <span class="r">+${fmt(alert.spread2)} (${alert.spread2Pct.toFixed(3)}%)</span>` : ''}
+            ${alert.spread1 > 0 ? `Harga Beli KRK <span class="g">${fmt(alert.krakenBid)}</span> › Harga Min DB <span class="g">${fmt(alert.dbMinPrice)}</span> [${alert.dbMinEx||'?'}]<br>Selisih Jual: <span class="g">+${fmt(alert.spread1)} (${alert.spread1Pct.toFixed(3)}%)</span><br>` : ''}
+            ${alert.spread2 > 0 ? `Harga Max DB <span class="r">${fmt(alert.dbMaxPrice)}</span> [${alert.dbMaxEx||'?'}] › Harga Jual KRK <span class="r">${fmt(alert.krakenAsk)}</span><br>Selisih Beli: <span class="r">+${fmt(alert.spread2)} (${alert.spread2Pct.toFixed(3)}%)</span>` : ''}
         </div>`;
     container.insertBefore(div, container.firstChild);
     setTimeout(() => {
@@ -1094,11 +1096,11 @@ function renderAlertPanel() {
                 ${sym}
                 <span class="km-alert-type ${typeCls}">${typeLabel}</span>
             </div>
-            ${a.spread1 > 0 ? `<div class="km-alert-detail">Bid <span class="val green">${fmt(a.krakenBid)}</span> › MinAsk <span class="val">${fmt(a.dbMinAsk)}</span> <span style="color:var(--text-muted)">[${a.dbMinAskEx||'?'}]</span></div>
-            <div class="km-alert-detail">Spread1: <span class="green">+${fmt(a.spread1)} (${a.spread1Pct.toFixed(3)}%)</span></div>` : ''}
-            ${a.spread2 > 0 ? `<div class="km-alert-detail">MaxBid <span class="val red">${fmt(a.dbMaxBid)}</span> <span style="color:var(--text-muted)">[${a.dbMaxBidEx||'?'}]</span> › Ask <span class="val">${fmt(a.krakenAsk)}</span></div>
-            <div class="km-alert-detail">Spread2: <span class="red">+${fmt(a.spread2)} (${a.spread2Pct.toFixed(3)}%)</span></div>` : ''}
-            <div class="km-alert-age">Sejak ${age}d lalu • ${new Date(a.firstSeen).toLocaleTimeString()}</div>
+            ${a.spread1 > 0 ? `<div class="km-alert-detail">Harga Beli KRK <span class="val green">${fmt(a.krakenBid)}</span> › Harga Min DB <span class="val">${fmt(a.dbMinPrice)}</span> <span style="color:var(--text-muted)">[${a.dbMinEx||'?'}]</span></div>
+            <div class="km-alert-detail">Selisih Jual: <span class="green">+${fmt(a.spread1)} (${a.spread1Pct.toFixed(3)}%)</span></div>` : ''}
+            ${a.spread2 > 0 ? `<div class="km-alert-detail">Harga Max DB <span class="val red">${fmt(a.dbMaxPrice)}</span> <span style="color:var(--text-muted)">[${a.dbMaxEx||'?'}]</span> › Harga Jual KRK <span class="val">${fmt(a.krakenAsk)}</span></div>
+            <div class="km-alert-detail">Selisih Beli: <span class="red">+${fmt(a.spread2)} (${a.spread2Pct.toFixed(3)}%)</span></div>` : ''}
+            <div class="km-alert-age">Sejak ${age}d • ${new Date(a.firstSeen).toLocaleTimeString()}</div>
         </div>`;
     }).join('');
 }
@@ -1137,13 +1139,13 @@ function renderTable() {
 
         let spread1 = 0, spread2 = 0, spread1Pct = 0, spread2Pct = 0;
         if (live && ref) {
-            if (ref.min_ask && live.bid > ref.min_ask) {
-                spread1 = live.bid - ref.min_ask;
-                const r = ref.min_ask;
+            if (ref.min_price && live.bid > ref.min_price) {
+                spread1 = live.bid - ref.min_price;
+                const r = ref.min_price;
                 spread1Pct = r > 0 ? (spread1 / r) * 100 : 0;
             }
-            if (ref.max_bid && ref.max_bid > live.ask) {
-                spread2 = ref.max_bid - live.ask;
+            if (ref.max_price && ref.max_price > live.ask) {
+                spread2 = ref.max_price - live.ask;
                 const r = live.ask;
                 spread2Pct = r > 0 ? (spread2 / r) * 100 : 0;
             }
@@ -1278,12 +1280,12 @@ function buildRow(r, now) {
         ? `<td class="td-ask">${fmt(live.ask)}</td>`
         : `<td class="td-ask" style="color:var(--text-muted)">—</td>`;
 
-    // DB ref
-    const dbMinAskHtml = ref?.min_ask
-        ? `<td class="td-db-ask" style="vertical-align:middle">${fmt(ref.min_ask)}${ref.min_ask_exchange ? '<br>'+exchLink(ref.min_ask_exchange, sym) : ''}</td>`
+    // DB ref — harga dari exchange bervolume tinggi
+    const dbMinAskHtml = ref?.min_price
+        ? `<td class="td-db-ask" style="vertical-align:middle">${fmt(ref.min_price)}${ref.min_price_exchange ? '<br>'+exchLink(ref.min_price_exchange, sym) : ''}</td>`
         : `<td class="td-db-ask" style="color:var(--text-muted)">—</td>`;
-    const dbMaxBidHtml = ref?.max_bid
-        ? `<td class="td-db-bid" style="vertical-align:middle">${fmt(ref.max_bid)}${ref.max_bid_exchange ? '<br>'+exchLink(ref.max_bid_exchange, sym) : ''}</td>`
+    const dbMaxBidHtml = ref?.max_price
+        ? `<td class="td-db-bid" style="vertical-align:middle">${fmt(ref.max_price)}${ref.max_price_exchange ? '<br>'+exchLink(ref.max_price_exchange, sym) : ''}</td>`
         : `<td class="td-db-bid" style="color:var(--text-muted)">—</td>`;
 
     // Spread cells
@@ -1294,32 +1296,32 @@ function buildRow(r, now) {
         ? `<td class="td-spread positive">+${fmt(spread2)}<span class="spread-pct">(${spread2Pct.toFixed(3)}%)</span></td>`
         : `<td class="td-spread negative">—</td>`;
 
-    // Ref exchange — clickable chip links
+    // Kolom exchange referensi — chip berwarna bervolume tertinggi
     let refExParts = [];
-    if (ref?.min_ask_exchange) {
-        const label = spread1 > 0
-            ? `${exchLink(ref.min_ask_exchange, sym)}&nbsp;<span style="font-size:0.6rem;color:var(--spread-sell)">↓ask</span>`
-            : exchLink(ref.min_ask_exchange, sym);
-        refExParts.push(label);
+    if (ref?.ref_exchange) {
+        const volStr = ref.ref_turnover > 0
+            ? `<span style="font-size:0.58rem;color:var(--text-muted)">Vol:${fmtVol(ref.ref_turnover)}</span>`
+            : '';
+        refExParts.push(`${exchLink(ref.ref_exchange, sym)} ${volStr}`);
     }
-    if (ref?.max_bid_exchange && ref.max_bid_exchange !== ref.min_ask_exchange) {
-        const label = spread2 > 0
-            ? `${exchLink(ref.max_bid_exchange, sym)}&nbsp;<span style="font-size:0.6rem;color:var(--spread-buy)">↑bid</span>`
-            : exchLink(ref.max_bid_exchange, sym);
-        refExParts.push(label);
+    if (spread1 > 0 && ref?.min_price_exchange && ref.min_price_exchange !== ref.ref_exchange) {
+        refExParts.push(`${exchLink(ref.min_price_exchange, sym)}&nbsp;<span style="font-size:0.6rem;color:var(--spread-sell)">↓min</span>`);
+    }
+    if (spread2 > 0 && ref?.max_price_exchange && ref.max_price_exchange !== ref.ref_exchange) {
+        refExParts.push(`${exchLink(ref.max_price_exchange, sym)}&nbsp;<span style="font-size:0.6rem;color:var(--spread-buy)">↑max</span>`);
     }
     if (!refExParts.length && ref) {
-        refExParts.push(`<span style="color:var(--text-muted);font-size:0.7rem">${ref.exchange_count||0} ex</span>`);
+        refExParts.push(`<span style="color:var(--text-muted);font-size:0.7rem">${ref.exchange_count||0} exchange</span>`);
     }
     if (!refExParts.length) refExParts.push(`<span style="color:var(--text-muted)">—</span>`);
-    const refExHtml = `<td style="vertical-align:middle;white-space:nowrap;line-height:1.6">${refExParts.join('<br>')}</td>`;
+    const refExHtml = `<td style="vertical-align:middle;white-space:nowrap;line-height:1.7">${refExParts.join('<br>')}</td>`;
 
     // Status
     let statusHtml;
     if (!live) {
-        statusHtml = `<td><span class="status-badge no-data">No Live</span></td>`;
+        statusHtml = `<td><span class="status-badge no-data">Tdk Ada Live</span></td>`;
     } else if (!ref) {
-        statusHtml = `<td><span class="status-badge no-ref">No DB Ref</span></td>`;
+        statusHtml = `<td><span class="status-badge no-ref">Tdk Ada Ref</span></td>`;
     } else if (hasBoth) {
         statusHtml = `<td><span class="status-badge alert-both">⚡ JUAL+BELI</span></td>`;
     } else if (spread1 > 0) {
@@ -1445,6 +1447,14 @@ function fmt(n) {
     if (v >= 0.01)      return v.toFixed(6);
     if (v >= 0.0001)    return v.toFixed(8);
     return v.toExponential(4);
+}
+
+function fmtVol(n) {
+    if (!n || isNaN(n)) return '0';
+    if (n >= 1e9)  return (n / 1e9).toFixed(1) + 'M';
+    if (n >= 1e6)  return (n / 1e6).toFixed(1) + 'jt';
+    if (n >= 1e3)  return (n / 1e3).toFixed(0) + 'rb';
+    return n.toFixed(0);
 }
 
 // ── Theme ─────────────────────────────────────────────────────────────────────

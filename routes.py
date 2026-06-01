@@ -2176,49 +2176,19 @@ def kraken_monitor_pairs():
 
 @app.route('/api/kraken-monitor/reference')
 def kraken_monitor_reference():
-    """Return best bid/ask from all non-Kraken exchanges in DB, keyed by symbol."""
-    from sqlalchemy import func
+    """Return reference price from highest-volume non-Kraken exchanges in DB.
 
-    # ── OrderbookSnapshot aggregates ─────────────────────────────────────────
-    ob_agg = db.session.query(
-        OrderbookSnapshot.symbol,
-        func.min(OrderbookSnapshot.best_ask).label('min_ask'),
-        func.max(OrderbookSnapshot.best_bid).label('max_bid'),
-        func.count(OrderbookSnapshot.exchange.distinct()).label('ob_count')
-    ).filter(
-        OrderbookSnapshot.exchange != 'KRAKEN',
-        OrderbookSnapshot.best_ask.isnot(None),
-        OrderbookSnapshot.best_ask > 0
-    ).group_by(OrderbookSnapshot.symbol).all()
-
-    ob_detail = db.session.query(
-        OrderbookSnapshot.symbol,
-        OrderbookSnapshot.exchange,
-        OrderbookSnapshot.best_bid,
-        OrderbookSnapshot.best_ask,
-        OrderbookSnapshot.fetched_at
-    ).filter(
-        OrderbookSnapshot.exchange != 'KRAKEN',
-        OrderbookSnapshot.best_ask.isnot(None),
-        OrderbookSnapshot.best_ask > 0
-    ).all()
-
-    # ── SpotTicker aggregates (fallback / supplement) ─────────────────────────
-    spot_agg = db.session.query(
-        SpotTicker.symbol,
-        func.min(SpotTicker.price).label('min_price'),
-        func.max(SpotTicker.price).label('max_price'),
-        func.count(SpotTicker.exchange.distinct()).label('ticker_count')
-    ).filter(
-        SpotTicker.exchange != 'KRAKEN',
-        SpotTicker.price.isnot(None),
-        SpotTicker.price > 0
-    ).group_by(SpotTicker.symbol).all()
-
-    spot_detail = db.session.query(
+    Logic: use SpotTicker last-price sorted by turnover_24h DESC.
+    High-volume exchanges represent the reliable global market price.
+    Exchanges with zero or null turnover are used only as fallback when no
+    volume data is available for a symbol.
+    """
+    # Query all SpotTicker rows excluding Kraken, with price > 0
+    spot_rows = db.session.query(
         SpotTicker.symbol,
         SpotTicker.exchange,
         SpotTicker.price,
+        SpotTicker.turnover_24h,
         SpotTicker.fetched_at
     ).filter(
         SpotTicker.exchange != 'KRAKEN',
@@ -2226,56 +2196,45 @@ def kraken_monitor_reference():
         SpotTicker.price > 0
     ).all()
 
-    # ── Build result dict from SpotTicker first ───────────────────────────────
-    spot_by_sym = {}
-    for row in spot_detail:
-        spot_by_sym.setdefault(row.symbol, []).append({
-            'exchange': row.exchange, 'price': row.price,
+    # Group by symbol
+    by_symbol = {}
+    for row in spot_rows:
+        by_symbol.setdefault(row.symbol, []).append({
+            'exchange': row.exchange,
+            'price': row.price,
+            'turnover_24h': row.turnover_24h or 0,
             'fetched_at': row.fetched_at.isoformat() if row.fetched_at else None
         })
 
     result = {}
-    for row in spot_agg:
-        entries = spot_by_sym.get(row.symbol, [])
-        min_e = min(entries, key=lambda x: x['price']) if entries else {}
-        max_e = max(entries, key=lambda x: x['price']) if entries else {}
-        result[row.symbol] = {
-            'symbol': row.symbol,
-            'min_ask': row.min_price,
-            'max_bid': row.max_price,
-            'min_ask_exchange': min_e.get('exchange'),
-            'max_bid_exchange': max_e.get('exchange'),
-            'exchange_count': row.ticker_count,
-            'source': 'spot',
-            'exchanges': entries
-        }
+    for sym, entries in by_symbol.items():
+        # Prefer entries with actual volume; if none, fall back to all entries
+        with_vol = [e for e in entries if e['turnover_24h'] > 0]
+        working = with_vol if with_vol else entries
 
-    # ── Override with OrderbookSnapshot (more precise bid/ask) ───────────────
-    ob_by_sym = {}
-    for row in ob_detail:
-        ob_by_sym.setdefault(row.symbol, []).append({
-            'exchange': row.exchange,
-            'best_bid': row.best_bid,
-            'best_ask': row.best_ask,
-            'fetched_at': row.fetched_at.isoformat() if row.fetched_at else None
-        })
+        # Sort by turnover descending — highest volume = most reliable reference
+        working.sort(key=lambda x: x['turnover_24h'], reverse=True)
 
-    for row in ob_agg:
-        detail = ob_by_sym.get(row.symbol, [])
-        valid_ask = [d for d in detail if d['best_ask'] and d['best_ask'] > 0]
-        valid_bid = [d for d in detail if d['best_bid'] and d['best_bid'] > 0]
-        min_ask_ex = min(valid_ask, key=lambda x: x['best_ask'])['exchange'] if valid_ask else None
-        max_bid_ex = max(valid_bid, key=lambda x: x['best_bid'])['exchange'] if valid_bid else None
+        # Reference price = from the highest-volume exchange (global market price)
+        top = working[0]
 
-        result[row.symbol] = {
-            'symbol': row.symbol,
-            'min_ask': row.min_ask,
-            'max_bid': row.max_bid,
-            'min_ask_exchange': min_ask_ex,
-            'max_bid_exchange': max_bid_ex,
-            'exchange_count': row.ob_count,
-            'source': 'orderbook',
-            'exchanges': detail
+        # min_price = cheapest available (buy here, sell higher at Kraken)
+        # max_price = most expensive available (sell here after buying cheap at Kraken)
+        min_e = min(working, key=lambda x: x['price'])
+        max_e = max(working, key=lambda x: x['price'])
+
+        result[sym] = {
+            'symbol': sym,
+            'ref_price':          top['price'],
+            'ref_exchange':       top['exchange'],
+            'ref_turnover':       top['turnover_24h'],
+            'min_price':          min_e['price'],
+            'max_price':          max_e['price'],
+            'min_price_exchange': min_e['exchange'],
+            'max_price_exchange': max_e['exchange'],
+            'exchange_count':     len(working),
+            'source':             'spot_volume' if with_vol else 'spot_novolume',
+            'top_exchanges':      working[:5]
         }
 
     return jsonify({'status': 'success', 'data': result, 'count': len(result),
