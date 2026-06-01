@@ -2113,3 +2113,170 @@ def get_market_list():
         'status': 'success',
         'data': [e.to_dict() for e in entries]
     })
+
+
+# ─── Kraken Live Monitor ──────────────────────────────────────────────────────
+
+import time as _time
+import requests as _req
+
+_kraken_pairs_cache = {'data': None, 'ts': 0}
+
+
+@app.route('/kraken-monitor')
+def kraken_monitor():
+    return render_template('kraken_monitor.html')
+
+
+@app.route('/api/kraken-monitor/pairs')
+def kraken_monitor_pairs():
+    """Return Kraken WS symbol → display symbol mapping (cached 5 min)."""
+    global _kraken_pairs_cache
+    now = _time.time()
+    if _kraken_pairs_cache['data'] and (now - _kraken_pairs_cache['ts']) < 300:
+        return jsonify(_kraken_pairs_cache['data'])
+
+    BASE_RENAME = {
+        'XBT': 'BTC', 'XDG': 'DOGE', 'XET': 'ETH',
+        'XXBT': 'BTC', 'XETH': 'ETH', 'XXRP': 'XRP',
+        'XLTC': 'LTC', 'XXLM': 'XLM', 'XZEC': 'ZEC', 'XXMR': 'XMR',
+    }
+
+    try:
+        resp = _req.get('https://api.kraken.com/0/public/AssetPairs', timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+
+        pairs = {}
+        for info in data.get('result', {}).values():
+            wsname = info.get('wsname', '')
+            if not wsname or '/' not in wsname:
+                continue
+            raw_base = info.get('base', '')
+            quote = info.get('quote', '')
+            base = BASE_RENAME.get(raw_base, raw_base)
+
+            if quote == 'USDT':
+                display = f"{base}/USDT"
+            elif quote in ('ZUSD', 'USD'):
+                display = f"{base}/USDT"
+            else:
+                continue
+
+            pairs[wsname] = display
+
+        result = {'status': 'success', 'pairs': pairs, 'count': len(pairs)}
+        _kraken_pairs_cache = {'data': result, 'ts': now}
+        return jsonify(result)
+
+    except Exception as e:
+        logger.error(f"kraken-monitor/pairs error: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/api/kraken-monitor/reference')
+def kraken_monitor_reference():
+    """Return best bid/ask from all non-Kraken exchanges in DB, keyed by symbol."""
+    from sqlalchemy import func
+
+    # ── OrderbookSnapshot aggregates ─────────────────────────────────────────
+    ob_agg = db.session.query(
+        OrderbookSnapshot.symbol,
+        func.min(OrderbookSnapshot.best_ask).label('min_ask'),
+        func.max(OrderbookSnapshot.best_bid).label('max_bid'),
+        func.count(OrderbookSnapshot.exchange.distinct()).label('ob_count')
+    ).filter(
+        OrderbookSnapshot.exchange != 'KRAKEN',
+        OrderbookSnapshot.best_ask.isnot(None),
+        OrderbookSnapshot.best_ask > 0
+    ).group_by(OrderbookSnapshot.symbol).all()
+
+    ob_detail = db.session.query(
+        OrderbookSnapshot.symbol,
+        OrderbookSnapshot.exchange,
+        OrderbookSnapshot.best_bid,
+        OrderbookSnapshot.best_ask,
+        OrderbookSnapshot.fetched_at
+    ).filter(
+        OrderbookSnapshot.exchange != 'KRAKEN',
+        OrderbookSnapshot.best_ask.isnot(None),
+        OrderbookSnapshot.best_ask > 0
+    ).all()
+
+    # ── SpotTicker aggregates (fallback / supplement) ─────────────────────────
+    spot_agg = db.session.query(
+        SpotTicker.symbol,
+        func.min(SpotTicker.price).label('min_price'),
+        func.max(SpotTicker.price).label('max_price'),
+        func.count(SpotTicker.exchange.distinct()).label('ticker_count')
+    ).filter(
+        SpotTicker.exchange != 'KRAKEN',
+        SpotTicker.price.isnot(None),
+        SpotTicker.price > 0
+    ).group_by(SpotTicker.symbol).all()
+
+    spot_detail = db.session.query(
+        SpotTicker.symbol,
+        SpotTicker.exchange,
+        SpotTicker.price,
+        SpotTicker.fetched_at
+    ).filter(
+        SpotTicker.exchange != 'KRAKEN',
+        SpotTicker.price.isnot(None),
+        SpotTicker.price > 0
+    ).all()
+
+    # ── Build result dict from SpotTicker first ───────────────────────────────
+    spot_by_sym = {}
+    for row in spot_detail:
+        spot_by_sym.setdefault(row.symbol, []).append({
+            'exchange': row.exchange, 'price': row.price,
+            'fetched_at': row.fetched_at.isoformat() if row.fetched_at else None
+        })
+
+    result = {}
+    for row in spot_agg:
+        entries = spot_by_sym.get(row.symbol, [])
+        min_e = min(entries, key=lambda x: x['price']) if entries else {}
+        max_e = max(entries, key=lambda x: x['price']) if entries else {}
+        result[row.symbol] = {
+            'symbol': row.symbol,
+            'min_ask': row.min_price,
+            'max_bid': row.max_price,
+            'min_ask_exchange': min_e.get('exchange'),
+            'max_bid_exchange': max_e.get('exchange'),
+            'exchange_count': row.ticker_count,
+            'source': 'spot',
+            'exchanges': entries
+        }
+
+    # ── Override with OrderbookSnapshot (more precise bid/ask) ───────────────
+    ob_by_sym = {}
+    for row in ob_detail:
+        ob_by_sym.setdefault(row.symbol, []).append({
+            'exchange': row.exchange,
+            'best_bid': row.best_bid,
+            'best_ask': row.best_ask,
+            'fetched_at': row.fetched_at.isoformat() if row.fetched_at else None
+        })
+
+    for row in ob_agg:
+        detail = ob_by_sym.get(row.symbol, [])
+        valid_ask = [d for d in detail if d['best_ask'] and d['best_ask'] > 0]
+        valid_bid = [d for d in detail if d['best_bid'] and d['best_bid'] > 0]
+        min_ask_ex = min(valid_ask, key=lambda x: x['best_ask'])['exchange'] if valid_ask else None
+        max_bid_ex = max(valid_bid, key=lambda x: x['best_bid'])['exchange'] if valid_bid else None
+
+        result[row.symbol] = {
+            'symbol': row.symbol,
+            'min_ask': row.min_ask,
+            'max_bid': row.max_bid,
+            'min_ask_exchange': min_ask_ex,
+            'max_bid_exchange': max_bid_ex,
+            'exchange_count': row.ob_count,
+            'source': 'orderbook',
+            'exchanges': detail
+        }
+
+    return jsonify({'status': 'success', 'data': result, 'count': len(result),
+                    'refreshed_at': datetime.utcnow().isoformat()})

@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kraken Live Monitor — Pure Spread Detector</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* ══ Kraken Monitor Specific Styles ══════════════════════════════════ */
+        :root {
+            --kraken-purple: #5841d8;
+            --kraken-purple-dim: rgba(88, 65, 216, 0.15);
+            --spread-sell: #3fb950;
+            --spread-sell-dim: rgba(63, 185, 80, 0.12);
+            --spread-buy: #f85149;
+            --spread-buy-dim: rgba(248, 81, 73, 0.12);
+            --alert-glow: 0 0 18px rgba(248, 81, 73, 0.4);
+        }
+
+        /* ── WS Status Bar ─────────────────────────────────────── */
+        .km-ws-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 0.8rem;
+            flex-wrap: wrap;
+        }
+        .ws-dot {
+            width: 9px; height: 9px;
+            border-radius: 50%;
+            background: #555;
+            flex-shrink: 0;
+            transition: background 0.3s;
+        }
+        .ws-dot.connecting { background: #f59e0b; animation: pulse-yellow 1.2s infinite; }
+        .ws-dot.connected  { background: var(--spread-sell); animation: pulse-green 2s infinite; }
+        .ws-dot.reconnecting { background: #f59e0b; animation: pulse-yellow 0.6s infinite; }
+        .ws-dot.error      { background: var(--spread-buy); }
+        @keyframes pulse-green {
+            0%,100% { box-shadow: 0 0 0 0 rgba(63,185,80,0.5); }
+            50%      { box-shadow: 0 0 0 5px rgba(63,185,80,0); }
+        }
+        @keyframes pulse-yellow {
+            0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.5); }
+            50%      { box-shadow: 0 0 0 5px rgba(245,158,11,0); }
+        }
+        .ws-status-text { font-weight: 600; color: var(--text-primary); }
+        .ws-sep { color: var(--border-color); }
+        .ws-stat { color: var(--text-secondary); }
+        .ws-stat strong { color: var(--text-primary); }
+        .ws-refresh-btn {
+            margin-left: auto;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            border-radius: 5px;
+            padding: 3px 10px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .ws-refresh-btn:hover { border-color: var(--kraken-purple); color: var(--kraken-purple); }
+
+        /* ── Stats Bar ─────────────────────────────────────────── */
+        .km-stats-bar {
+            display: flex;
+            gap: 0;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .km-stat {
+            flex: 1;
+            padding: 10px 14px;
+            border-right: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .km-stat:last-child { border-right: none; }
+        .km-stat-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .km-stat-value {
+            font-size: 1.15rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+        }
+        .km-stat-value.green { color: var(--spread-sell); }
+        .km-stat-value.red   { color: var(--spread-buy); }
+        .km-stat-value.purple { color: #a78bfa; }
+
+        /* ── Controls ──────────────────────────────────────────── */
+        .km-controls {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 10px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        .km-ctrl-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .km-ctrl-label {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+        .km-ctrl-input {
+            width: 72px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            color: var(--text-primary);
+            padding: 4px 7px;
+            font-size: 0.78rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .km-ctrl-input:focus { outline: none; border-color: var(--kraken-purple); }
+        .km-ctrl-select {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            color: var(--text-primary);
+            padding: 4px 7px;
+            font-size: 0.78rem;
+            cursor: pointer;
+        }
+        .km-ctrl-select:focus { outline: none; border-color: var(--kraken-purple); }
+        .km-toggle-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 11px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .km-toggle-btn.active {
+            background: var(--kraken-purple-dim);
+            border-color: var(--kraken-purple);
+            color: #a78bfa;
+        }
+        .km-toggle-btn:hover { border-color: var(--kraken-purple); color: #a78bfa; }
+        .km-divider { width: 1px; height: 22px; background: var(--border-color); margin: 0 2px; }
+        .km-danger-btn {
+            padding: 5px 11px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .km-danger-btn:hover { border-color: var(--spread-buy); color: var(--spread-buy); }
+
+        /* ── Layout ────────────────────────────────────────────── */
+        .km-layout {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 12px;
+            align-items: start;
+        }
+        @media (max-width: 1100px) {
+            .km-layout { grid-template-columns: 1fr; }
+        }
+
+        /* ── Monitoring Table ──────────────────────────────────── */
+        .km-table-wrap {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .km-table-header-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .km-table-title {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+        }
+        .km-table-count {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        #km-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+        }
+        #km-table thead th {
+            padding: 8px 10px;
+            text-align: left;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+        }
+        #km-table thead th:hover { color: var(--text-secondary); }
+        #km-table thead th.sort-asc::after  { content: ' ↑'; color: var(--accent-blue); }
+        #km-table thead th.sort-desc::after { content: ' ↓'; color: var(--accent-blue); }
+        #km-table tbody tr {
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.15s;
+        }
+        #km-table tbody tr:last-child { border-bottom: none; }
+        #km-table tbody tr:hover { background: var(--bg-hover); }
+        #km-table tbody tr.has-alert1 { background: rgba(63,185,80,0.05); }
+        #km-table tbody tr.has-alert2 { background: rgba(248,81,73,0.05); }
+        #km-table tbody tr.has-both   { background: rgba(167,139,250,0.05); }
+        #km-table td {
+            padding: 7px 10px;
+            vertical-align: middle;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-secondary);
+        }
+        .td-symbol {
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 700;
+            color: var(--text-primary) !important;
+        }
+        .td-symbol a {
+            color: inherit;
+            text-decoration: none;
+        }
+        .td-symbol a:hover { color: var(--accent-blue); }
+        .td-bid  { color: var(--spread-sell) !important; }
+        .td-ask  { color: var(--spread-buy) !important; }
+        .td-db-ask  { color: var(--text-secondary) !important; }
+        .td-db-bid  { color: var(--text-secondary) !important; }
+        .td-spread {
+            font-weight: 700;
+        }
+        .td-spread.positive {
+            color: var(--spread-sell) !important;
+        }
+        .td-spread.negative {
+            color: var(--text-muted) !important;
+        }
+        .spread-pct {
+            font-size: 0.65rem;
+            opacity: 0.8;
+            margin-left: 3px;
+        }
+        .td-status {}
+        .status-badge {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            font-family: 'Inter', sans-serif;
+        }
+        .status-badge.alert-sell { background: rgba(63,185,80,0.15); color: #3fb950; border: 1px solid rgba(63,185,80,0.3); }
+        .status-badge.alert-buy  { background: rgba(248,81,73,0.15); color: #f85149; border: 1px solid rgba(248,81,73,0.3); }
+        .status-badge.alert-both { background: rgba(167,139,250,0.15); color: #a78bfa; border: 1px solid rgba(167,139,250,0.3); }
+        .status-badge.no-data    { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
+        .status-badge.no-ref     { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
+        .td-age { font-size: 0.7rem; color: var(--text-muted) !important; }
+        .td-age.fresh { color: var(--spread-sell) !important; }
+        .flash-update {
+            animation: flash 0.4s ease-out;
+        }
+        @keyframes flash {
+            0%   { background: rgba(88,65,216,0.25); }
+            100% { background: transparent; }
+        }
+        .km-empty-row td {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 28px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* ── Alert Panel ───────────────────────────────────────── */
+        .km-alert-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .km-panel-section {
+            border-bottom: 1px solid var(--border-color);
+        }
+        .km-panel-section:last-child { border-bottom: none; }
+        .km-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: var(--bg-tertiary);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .km-panel-header span.count {
+            background: var(--spread-buy);
+            color: #fff;
+            border-radius: 10px;
+            padding: 1px 7px;
+            font-size: 0.68rem;
+            min-width: 20px;
+            text-align: center;
+        }
+        .km-panel-header span.count.zero { background: var(--text-muted); }
+        .km-panel-clear {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            border-radius: 4px;
+            padding: 2px 7px;
+            font-size: 0.68rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .km-panel-clear:hover { border-color: var(--spread-buy); color: var(--spread-buy); }
+        .km-alerts-list {
+            max-height: 320px;
+            overflow-y: auto;
+        }
+        .km-alert-item {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .km-alert-item:last-child { border-bottom: none; }
+        .km-alert-item.sell-opp { border-left: 3px solid var(--spread-sell); }
+        .km-alert-item.buy-opp  { border-left: 3px solid var(--spread-buy); }
+        .km-alert-item.both-opp { border-left: 3px solid #a78bfa; }
+        .km-alert-sym {
+            font-weight: 700;
+            font-size: 0.82rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .km-alert-type {
+            font-size: 0.62rem;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+        .km-alert-type.sell { background: rgba(63,185,80,0.15); color: #3fb950; }
+        .km-alert-type.buy  { background: rgba(248,81,73,0.15); color: #f85149; }
+        .km-alert-type.both { background: rgba(167,139,250,0.15); color: #a78bfa; }
+        .km-alert-detail {
+            font-size: 0.72rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-secondary);
+        }
+        .km-alert-detail span.val { color: var(--text-primary); font-weight: 600; }
+        .km-alert-detail span.green { color: var(--spread-sell); }
+        .km-alert-detail span.red   { color: var(--spread-buy); }
+        .km-alert-detail span.purple { color: #a78bfa; }
+        .km-alert-age {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+        .km-history-list {
+            max-height: 280px;
+            overflow-y: auto;
+        }
+        .km-history-item {
+            padding: 7px 14px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            font-size: 0.72rem;
+        }
+        .km-history-item:last-child { border-bottom: none; }
+        .km-history-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .km-history-dot.sell { background: var(--spread-sell); }
+        .km-history-dot.buy  { background: var(--spread-buy); }
+        .km-history-dot.both { background: #a78bfa; }
+        .km-history-sym  { font-weight: 700; color: var(--text-primary); min-width: 90px; }
+        .km-history-info { color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; flex: 1; }
+        .km-history-time { color: var(--text-muted); white-space: nowrap; font-family: 'JetBrains Mono', monospace; }
+        .km-no-alerts {
+            padding: 24px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.78rem;
+        }
+
+        /* ── Toast Notifications ───────────────────────────────── */
+        #km-toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .km-toast {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px 16px;
+            min-width: 280px;
+            max-width: 340px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            pointer-events: all;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            animation: toast-in 0.35s cubic-bezier(0.34,1.56,0.64,1);
+            transition: opacity 0.4s, transform 0.4s;
+        }
+        .km-toast.dismiss {
+            opacity: 0;
+            transform: translateX(30px);
+        }
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateX(30px) scale(0.9); }
+            to   { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        .km-toast.sell { border-left: 4px solid var(--spread-sell); }
+        .km-toast.buy  { border-left: 4px solid var(--spread-buy); }
+        .km-toast.both { border-left: 4px solid #a78bfa; }
+        .km-toast-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .km-toast-icon { font-size: 1.1rem; }
+        .km-toast-sym  { font-weight: 700; font-size: 0.95rem; color: var(--text-primary); flex: 1; }
+        .km-toast-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0 2px;
+            line-height: 1;
+        }
+        .km-toast-body { font-size: 0.78rem; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; }
+        .km-toast-body span.g { color: var(--spread-sell); font-weight: 700; }
+        .km-toast-body span.r { color: var(--spread-buy); font-weight: 700; }
+        .km-toast-body span.p { color: #a78bfa; font-weight: 700; }
+
+        /* ── Kraken header accent ──────────────────────────────── */
+        .kraken-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 10px;
+            background: var(--kraken-purple-dim);
+            border: 1px solid rgba(88,65,216,0.4);
+            border-radius: 20px;
+            color: #a78bfa;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+        }
+        .kraken-badge .dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #a78bfa;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header class="header">
+        <div class="header-content">
+            <h1 class="title">Kraken Live Monitor</h1>
+            <p class="subtitle">Pure Spread Detector — Live Orderbook vs DB Reference</p>
+        </div>
+        <div class="header-controls">
+            <a href="/" class="nav-link-btn" title="Kembali ke halaman utama">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Kembali
+            </a>
+            <a href="/arbitrage" class="nav-link-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/>
+                </svg>
+                Arbitrase
+            </a>
+            <a href="/scope" class="nav-link-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M11 8v6M8 11h6"/>
+                </svg>
+                Scope
+            </a>
+            <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()">
+                <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"/>
+                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                </svg>
+                <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- WS Status Bar -->
+    <div class="km-ws-bar">
+        <div class="ws-dot connecting" id="ws-dot"></div>
+        <span class="ws-status-text" id="ws-status-text">Menghubungkan ke Kraken WS…</span>
+        <span class="ws-sep">|</span>
+        <span class="ws-stat">Subscribed: <strong id="ws-sub-count">0</strong> pairs</span>
+        <span class="ws-sep">|</span>
+        <span class="ws-stat">Live data: <strong id="ws-live-count">0</strong> pairs</span>
+        <span class="ws-sep">|</span>
+        <span class="ws-stat">Pesan/dtk: <strong id="ws-msg-rate">0</strong></span>
+        <span class="ws-sep">|</span>
+        <span class="ws-stat">DB Ref: <strong id="db-ref-age">Belum dimuat</strong></span>
+        <button class="ws-refresh-btn" onclick="refreshReference()">↻ Refresh DB</button>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="km-stats-bar">
+        <div class="km-stat">
+            <span class="km-stat-label">Dipantau</span>
+            <span class="km-stat-value" id="stat-monitored">—</span>
+        </div>
+        <div class="km-stat">
+            <span class="km-stat-label">Active Alerts</span>
+            <span class="km-stat-value red" id="stat-alerts">0</span>
+        </div>
+        <div class="km-stat">
+            <span class="km-stat-label">Spread Terbesar</span>
+            <span class="km-stat-value green" id="stat-max-spread">—</span>
+        </div>
+        <div class="km-stat">
+            <span class="km-stat-label">Dengan DB Ref</span>
+            <span class="km-stat-value purple" id="stat-with-ref">—</span>
+        </div>
+        <div class="km-stat">
+            <span class="km-stat-label">Jual@Kraken</span>
+            <span class="km-stat-value green" id="stat-sell-alerts">0</span>
+        </div>
+        <div class="km-stat">
+            <span class="km-stat-label">Beli@Kraken</span>
+            <span class="km-stat-value red" id="stat-buy-alerts">0</span>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="km-controls">
+        <div class="km-ctrl-group">
+            <label class="km-ctrl-label">Min Spread %</label>
+            <input type="number" class="km-ctrl-input" id="min-spread-pct" value="0" min="0" step="0.01">
+        </div>
+        <div class="km-ctrl-group">
+            <label class="km-ctrl-label">Min Spread $</label>
+            <input type="number" class="km-ctrl-input" id="min-spread-usd" value="0" min="0" step="0.000001" style="width:90px">
+        </div>
+        <div class="km-ctrl-group">
+            <label class="km-ctrl-label">Tampilkan</label>
+            <select class="km-ctrl-select" id="filter-view" onchange="renderTable()">
+                <option value="ref-only">Hanya Ada DB Ref</option>
+                <option value="all">Semua Pair</option>
+                <option value="alerts-only">Hanya Active Alerts</option>
+            </select>
+        </div>
+        <div class="km-ctrl-group">
+            <label class="km-ctrl-label">Urutkan</label>
+            <select class="km-ctrl-select" id="sort-mode" onchange="renderTable()">
+                <option value="spread-desc">Spread Terbesar</option>
+                <option value="symbol-asc">Symbol A-Z</option>
+                <option value="bid-desc">Bid Tertinggi</option>
+                <option value="age-asc">Terbaru</option>
+            </select>
+        </div>
+        <div class="km-divider"></div>
+        <button id="sound-btn" class="km-toggle-btn active" onclick="toggleSound()">🔔 Suara ON</button>
+        <button id="push-btn" class="km-toggle-btn" onclick="togglePush()">📲 Push OFF</button>
+        <div class="km-divider"></div>
+        <button onclick="clearAlertHistory()" class="km-danger-btn">🗑 Hapus History</button>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="km-layout">
+
+        <!-- Table -->
+        <div class="km-table-wrap">
+            <div class="km-table-header-bar">
+                <span class="km-table-title">📡 Live Monitoring Table</span>
+                <span class="km-table-count" id="table-count">0 baris</span>
+                <span style="margin-left:auto">
+                    <input type="text" class="km-ctrl-input" id="table-search"
+                        placeholder="Cari symbol…" style="width:120px"
+                        oninput="renderTable()">
+                </span>
+            </div>
+            <div style="overflow-x:auto">
+                <table id="km-table">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Kraken Bid ↑</th>
+                            <th>Kraken Ask</th>
+                            <th>DB Min Ask</th>
+                            <th>DB Max Bid</th>
+                            <th title="Spread 1: Jual di Kraken (Bid &gt; DB MinAsk)">Spread 1 Jual</th>
+                            <th title="Spread 2: Beli di Kraken (DB MaxBid &gt; Ask)">Spread 2 Beli</th>
+                            <th>Ref Exchange</th>
+                            <th>Status</th>
+                            <th>Update</th>
+                        </tr>
+                    </thead>
+                    <tbody id="km-tbody">
+                        <tr class="km-empty-row">
+                            <td colspan="10">
+                                <div style="display:flex;align-items:center;gap:10px;justify-content:center">
+                                    <span class="ws-dot connecting" style="width:10px;height:10px"></span>
+                                    Menghubungkan ke Kraken WebSocket dan memuat data DB…
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Alert Panel -->
+        <div class="km-alert-panel">
+            <div class="km-panel-section">
+                <div class="km-panel-header">
+                    <span>⚡ Active Alerts</span>
+                    <span class="count zero" id="active-alert-count">0</span>
+                </div>
+                <div class="km-alerts-list" id="km-active-alerts">
+                    <div class="km-no-alerts">Tidak ada alert aktif</div>
+                </div>
+            </div>
+
+            <div class="km-panel-section">
+                <div class="km-panel-header">
+                    <span>📋 Alert History</span>
+                    <button class="km-panel-clear" onclick="clearAlertHistory()">Hapus</button>
+                </div>
+                <div class="km-history-list" id="km-alert-history">
+                    <div class="km-no-alerts">Belum ada history</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div><!-- end .container -->
+
+<!-- Toast container -->
+<div id="km-toast-container"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════════
+//  KRAKEN LIVE MONITOR — Core JS
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── State ────────────────────────────────────────────────────────────────────
+const WS_URL      = 'wss://ws.kraken.com/v2';
+const BASE_RENAME = {
+    XBT:'BTC', XDG:'DOGE', XET:'ETH', XXBT:'BTC', XETH:'ETH',
+    XXRP:'XRP', XLTC:'LTC', XXLM:'XLM', XZEC:'ZEC', XXMR:'XMR'
+};
+
+let ws               = null;
+let wsReconnDelay    = 2000;
+let wsReconnTimer    = null;
+let pairsMap         = {};  // wsSymbol → displaySymbol
+let liveData         = {};  // displaySymbol → {bid, ask, bidQty, askQty, ts}
+let referenceData    = {};  // displaySymbol → {min_ask, max_bid, min_ask_exchange, max_bid_exchange, exchange_count}
+let activeAlerts     = {};  // displaySymbol → alert obj
+let alertHistory     = [];  // newest first, max 200
+let soundEnabled     = true;
+let pushEnabled      = false;
+let dbRefreshedAt    = null;
+let msgCount         = 0;
+let msgRate          = 0;
+let lastMsgRateTs    = Date.now();
+let todayAlertCount  = 0;
+let renderScheduled  = false;
+let audioCtxUnlocked = false;
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+    applyTheme();
+    setupMinSpreadListeners();
+    await Promise.all([loadPairs(), refreshReference()]);
+    connectWS();
+    setInterval(renderTable, 1000);
+    setInterval(updateMsgRate, 2000);
+    setInterval(updateTimestamps, 5000);
+    setInterval(updateStats, 1000);
+});
+
+// ── Load Kraken pairs (WS symbol → display symbol) ───────────────────────────
+async function loadPairs() {
+    try {
+        const r = await fetch('/api/kraken-monitor/pairs');
+        const d = await r.json();
+        if (d.status === 'success') {
+            pairsMap = d.pairs;
+            document.getElementById('ws-sub-count').textContent = d.count;
+        }
+    } catch(e) { console.warn('loadPairs error', e); }
+}
+
+// ── Load DB reference prices ──────────────────────────────────────────────────
+async function refreshReference() {
+    document.getElementById('db-ref-age').textContent = 'Memuat…';
+    try {
+        const r = await fetch('/api/kraken-monitor/reference');
+        const d = await r.json();
+        if (d.status === 'success') {
+            referenceData = d.data;
+            dbRefreshedAt = Date.now();
+            document.getElementById('db-ref-age').textContent = 'Baru saja';
+            document.getElementById('stat-with-ref').textContent =
+                Object.keys(referenceData).length;
+            scheduleRender();
+        }
+    } catch(e) {
+        document.getElementById('db-ref-age').textContent = 'Gagal';
+    }
+}
+
+// ── WebSocket ─────────────────────────────────────────────────────────────────
+function connectWS() {
+    if (ws) { try { ws.close(); } catch(_) {} }
+    setWsStatus('connecting');
+    ws = new WebSocket(WS_URL);
+
+    ws.onopen = () => {
+        setWsStatus('connected');
+        wsReconnDelay = 2000;
+        subscribeAll();
+    };
+
+    ws.onmessage = (ev) => {
+        msgCount++;
+        try {
+            const msg = JSON.parse(ev.data);
+            handleMessage(msg);
+        } catch(_) {}
+    };
+
+    ws.onclose = () => {
+        setWsStatus('reconnecting');
+        scheduleReconnect();
+    };
+
+    ws.onerror = () => setWsStatus('error');
+}
+
+function subscribeAll() {
+    const symbols = Object.keys(pairsMap);
+    if (!symbols.length) { setTimeout(subscribeAll, 1500); return; }
+    const BATCH = 50;
+    for (let i = 0; i < symbols.length; i += BATCH) {
+        const batch = symbols.slice(i, i + BATCH);
+        ws.send(JSON.stringify({
+            method: 'subscribe',
+            params: { channel: 'ticker', symbol: batch }
+        }));
+    }
+}
+
+function scheduleReconnect() {
+    clearTimeout(wsReconnTimer);
+    wsReconnTimer = setTimeout(() => {
+        wsReconnDelay = Math.min(wsReconnDelay * 1.5, 30000);
+        connectWS();
+    }, wsReconnDelay);
+}
+
+function handleMessage(msg) {
+    // Heartbeat / status
+    if (msg.channel === 'heartbeat' || msg.channel === 'status') return;
+
+    if (msg.channel !== 'ticker') return;
+    if (!msg.data || !Array.isArray(msg.data)) return;
+
+    for (const tick of msg.data) {
+        const wsSymbol = tick.symbol;
+        // Look up display symbol
+        let displaySymbol = pairsMap[wsSymbol];
+        if (!displaySymbol) {
+            // Try normalizing on the fly (handle WS v2 BTC vs XBT)
+            const [base, quote] = wsSymbol.split('/');
+            const rBase = BASE_RENAME[base] || base;
+            displaySymbol = rBase + '/USDT';
+            if (!pairsMap[wsSymbol]) pairsMap[wsSymbol] = displaySymbol;
+        }
+
+        const bid = parseFloat(tick.bid);
+        const ask = parseFloat(tick.ask);
+        if (!bid || !ask || isNaN(bid) || isNaN(ask)) continue;
+
+        const prev = liveData[displaySymbol];
+        liveData[displaySymbol] = {
+            bid, ask,
+            bidQty: parseFloat(tick.bid_qty) || 0,
+            askQty: parseFloat(tick.ask_qty) || 0,
+            last:   parseFloat(tick.last) || 0,
+            wsSymbol,
+            ts: Date.now(),
+            changed: !prev || prev.bid !== bid || prev.ask !== ask
+        };
+
+        checkSpread(displaySymbol);
+    }
+    scheduleRender();
+}
+
+// ── Spread Detection ──────────────────────────────────────────────────────────
+function checkSpread(symbol) {
+    const live = liveData[symbol];
+    const ref  = referenceData[symbol];
+    if (!live || !ref) return;
+
+    const { bid, ask } = live;
+    const { min_ask, max_bid } = ref;
+
+    const minSpreadPct = parseFloat(document.getElementById('min-spread-pct').value) || 0;
+    const minSpreadUSD = parseFloat(document.getElementById('min-spread-usd').value) || 0;
+
+    let spread1 = 0, spread2 = 0;
+
+    // Scenario 1: Sell at Kraken (Kraken bid > DB min ask → buy cheap elsewhere, sell on Kraken)
+    if (min_ask && min_ask > 0 && bid > min_ask) {
+        spread1 = bid - min_ask;
+    }
+    // Scenario 2: Buy at Kraken (DB max bid > Kraken ask → buy on Kraken, sell elsewhere)
+    if (max_bid && max_bid > 0 && max_bid > ask) {
+        spread2 = max_bid - ask;
+    }
+
+    const refPrice = min_ask || ask;
+    const spread1Pct = refPrice > 0 ? (spread1 / refPrice) * 100 : 0;
+    const spread2Pct = refPrice > 0 ? (spread2 / refPrice) * 100 : 0;
+    const bestSpreadPct = Math.max(spread1Pct, spread2Pct);
+    const bestSpreadUSD = Math.max(spread1, spread2);
+
+    const hasAlert = (spread1 > 0 || spread2 > 0) &&
+                     bestSpreadPct >= minSpreadPct &&
+                     bestSpreadUSD >= minSpreadUSD;
+
+    if (hasAlert) {
+        const isNew = !activeAlerts[symbol];
+        const alertObj = {
+            symbol, spread1, spread2, spread1Pct, spread2Pct,
+            krakenBid: bid, krakenAsk: ask,
+            dbMinAsk: min_ask, dbMaxBid: max_bid,
+            dbMinAskEx: ref.min_ask_exchange,
+            dbMaxBidEx: ref.max_bid_exchange,
+            lastSeen: Date.now(),
+            firstSeen: isNew ? Date.now() : (activeAlerts[symbol].firstSeen || Date.now())
+        };
+        activeAlerts[symbol] = alertObj;
+
+        if (isNew) {
+            todayAlertCount++;
+            addToHistory(alertObj);
+            showToast(alertObj);
+            playChime(spread1 > spread2 ? 'sell' : 'buy');
+            sendPushNotification(alertObj);
+        }
+    } else {
+        delete activeAlerts[symbol];
+    }
+}
+
+// ── Audio ─────────────────────────────────────────────────────────────────────
+function unlockAudio() {
+    if (audioCtxUnlocked) return;
+    audioCtxUnlocked = true;
+}
+
+function playChime(type) {
+    if (!soundEnabled) return;
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const freqs = type === 'sell' ? [880, 1108, 1318] : [523, 659, 784];
+        let t = ctx.currentTime;
+        freqs.forEach(freq => {
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.connect(g); g.connect(ctx.destination);
+            o.type = 'sine';
+            o.frequency.value = freq;
+            g.gain.setValueAtTime(0.22, t);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+            o.start(t); o.stop(t + 0.35);
+            t += 0.14;
+        });
+    } catch(_) {}
+}
+
+// ── Push Notifications ────────────────────────────────────────────────────────
+async function togglePush() {
+    if (pushEnabled) {
+        pushEnabled = false;
+        document.getElementById('push-btn').classList.remove('active');
+        document.getElementById('push-btn').textContent = '📲 Push OFF';
+        return;
+    }
+    if (!('Notification' in window)) {
+        alert('Browser ini tidak mendukung notifikasi.');
+        return;
+    }
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+        pushEnabled = true;
+        document.getElementById('push-btn').classList.add('active');
+        document.getElementById('push-btn').textContent = '📲 Push ON';
+    } else {
+        alert('Izin notifikasi ditolak. Aktifkan di pengaturan browser.');
+    }
+}
+
+function sendPushNotification(alert) {
+    if (!pushEnabled || Notification.permission !== 'granted') return;
+    const type = alert.spread1 > alert.spread2 ? '🟢 JUAL@KRAKEN' : '🔴 BELI@KRAKEN';
+    const bestSpreadPct = Math.max(alert.spread1Pct, alert.spread2Pct);
+    const bestSpreadUSD = Math.max(alert.spread1, alert.spread2);
+    try {
+        new Notification(`${type}: ${alert.symbol}`, {
+            body: `Pure Spread: ${bestSpreadPct.toFixed(3)}% — $${fmt(bestSpreadUSD)}`,
+            icon: '/favicon.ico',
+            tag: `kraken-${alert.symbol}`,
+            renotify: true
+        });
+    } catch(_) {}
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+const MAX_TOASTS = 5;
+function showToast(alert) {
+    const container = document.getElementById('km-toast-container');
+    const toasts = container.querySelectorAll('.km-toast');
+    if (toasts.length >= MAX_TOASTS) {
+        toasts[toasts.length - 1].remove();
+    }
+
+    const hasBoth = alert.spread1 > 0 && alert.spread2 > 0;
+    const cls = hasBoth ? 'both' : (alert.spread1 > 0 ? 'sell' : 'buy');
+    const icon = hasBoth ? '⚡' : (alert.spread1 > 0 ? '🟢' : '🔴');
+    const typeLabel = hasBoth ? 'JUAL &amp; BELI' : (alert.spread1 > 0 ? 'JUAL @KRAKEN' : 'BELI @KRAKEN');
+
+    const div = document.createElement('div');
+    div.className = `km-toast ${cls}`;
+    div.innerHTML = `
+        <div class="km-toast-header">
+            <span class="km-toast-icon">${icon}</span>
+            <span class="km-toast-sym">${alert.symbol}</span>
+            <span style="font-size:0.62rem;font-weight:700;color:${cls==='sell'?'#3fb950':cls==='buy'?'#f85149':'#a78bfa'}">${typeLabel}</span>
+            <button class="km-toast-close" onclick="this.closest('.km-toast').remove()">×</button>
+        </div>
+        <div class="km-toast-body">
+            ${alert.spread1 > 0 ? `Bid <span class="g">${fmt(alert.krakenBid)}</span> › DB MinAsk <span class="g">${fmt(alert.dbMinAsk)}</span> [${alert.dbMinAskEx||'?'}]<br>Spread: <span class="g">+${fmt(alert.spread1)} (${alert.spread1Pct.toFixed(3)}%)</span><br>` : ''}
+            ${alert.spread2 > 0 ? `DB MaxBid <span class="r">${fmt(alert.dbMaxBid)}</span> [${alert.dbMaxBidEx||'?'}] › Ask <span class="r">${fmt(alert.krakenAsk)}</span><br>Spread: <span class="r">+${fmt(alert.spread2)} (${alert.spread2Pct.toFixed(3)}%)</span>` : ''}
+        </div>`;
+    container.insertBefore(div, container.firstChild);
+    setTimeout(() => {
+        div.classList.add('dismiss');
+        setTimeout(() => div.remove(), 400);
+    }, 12000);
+}
+
+// ── Alert History ─────────────────────────────────────────────────────────────
+function addToHistory(alert) {
+    alertHistory.unshift({ ...alert, historyTs: Date.now() });
+    if (alertHistory.length > 200) alertHistory.pop();
+    renderAlertHistory();
+}
+
+function clearAlertHistory() {
+    alertHistory = [];
+    todayAlertCount = 0;
+    renderAlertHistory();
+}
+
+function renderAlertHistory() {
+    const el = document.getElementById('km-alert-history');
+    if (!alertHistory.length) {
+        el.innerHTML = '<div class="km-no-alerts">Belum ada history</div>';
+        return;
+    }
+    el.innerHTML = alertHistory.slice(0, 60).map(a => {
+        const hasBoth = a.spread1 > 0 && a.spread2 > 0;
+        const cls = hasBoth ? 'both' : (a.spread1 > 0 ? 'sell' : 'buy');
+        const best = Math.max(a.spread1, a.spread2);
+        const bestPct = Math.max(a.spread1Pct, a.spread2Pct);
+        const timeStr = new Date(a.historyTs).toLocaleTimeString();
+        return `<div class="km-history-item">
+            <div class="km-history-dot ${cls}"></div>
+            <span class="km-history-sym">${a.symbol}</span>
+            <span class="km-history-info">+${fmt(best)} (${bestPct.toFixed(3)}%)</span>
+            <span class="km-history-time">${timeStr}</span>
+        </div>`;
+    }).join('');
+}
+
+// ── Active Alert Panel ────────────────────────────────────────────────────────
+function renderAlertPanel() {
+    const el    = document.getElementById('km-active-alerts');
+    const badge = document.getElementById('active-alert-count');
+    const keys  = Object.keys(activeAlerts);
+
+    badge.textContent = keys.length;
+    badge.className = 'count' + (keys.length ? '' : ' zero');
+
+    if (!keys.length) {
+        el.innerHTML = '<div class="km-no-alerts">Tidak ada alert aktif</div>';
+        return;
+    }
+
+    keys.sort((a, b) =>
+        Math.max(activeAlerts[b].spread1Pct, activeAlerts[b].spread2Pct) -
+        Math.max(activeAlerts[a].spread1Pct, activeAlerts[a].spread2Pct)
+    );
+
+    el.innerHTML = keys.map(sym => {
+        const a = activeAlerts[sym];
+        const hasBoth = a.spread1 > 0 && a.spread2 > 0;
+        const cls = hasBoth ? 'both-opp' : (a.spread1 > 0 ? 'sell-opp' : 'buy-opp');
+        const typeCls = hasBoth ? 'both' : (a.spread1 > 0 ? 'sell' : 'buy');
+        const typeLabel = hasBoth ? 'JUAL+BELI' : (a.spread1 > 0 ? 'JUAL@KRK' : 'BELI@KRK');
+        const age = Math.floor((Date.now() - a.firstSeen) / 1000);
+        return `<div class="km-alert-item ${cls}">
+            <div class="km-alert-sym">
+                ${sym}
+                <span class="km-alert-type ${typeCls}">${typeLabel}</span>
+            </div>
+            ${a.spread1 > 0 ? `<div class="km-alert-detail">Bid <span class="val green">${fmt(a.krakenBid)}</span> › MinAsk <span class="val">${fmt(a.dbMinAsk)}</span> <span style="color:var(--text-muted)">[${a.dbMinAskEx||'?'}]</span></div>
+            <div class="km-alert-detail">Spread1: <span class="green">+${fmt(a.spread1)} (${a.spread1Pct.toFixed(3)}%)</span></div>` : ''}
+            ${a.spread2 > 0 ? `<div class="km-alert-detail">MaxBid <span class="val red">${fmt(a.dbMaxBid)}</span> <span style="color:var(--text-muted)">[${a.dbMaxBidEx||'?'}]</span> › Ask <span class="val">${fmt(a.krakenAsk)}</span></div>
+            <div class="km-alert-detail">Spread2: <span class="red">+${fmt(a.spread2)} (${a.spread2Pct.toFixed(3)}%)</span></div>` : ''}
+            <div class="km-alert-age">Sejak ${age}d lalu • ${new Date(a.firstSeen).toLocaleTimeString()}</div>
+        </div>`;
+    }).join('');
+}
+
+// ── Main Table Render ─────────────────────────────────────────────────────────
+function scheduleRender() {
+    if (renderScheduled) return;
+    renderScheduled = true;
+    requestAnimationFrame(() => { renderScheduled = false; renderTable(); });
+}
+
+function renderTable() {
+    const filterView  = document.getElementById('filter-view').value;
+    const sortMode    = document.getElementById('sort-mode').value;
+    const searchQ     = (document.getElementById('table-search').value || '').toUpperCase().trim();
+
+    // Build rows array
+    let rows = [];
+    const allSymbols = new Set([
+        ...Object.keys(liveData),
+        ...(filterView === 'all' ? Object.keys(pairsMap).map(ws => pairsMap[ws]) : [])
+    ]);
+
+    for (const sym of allSymbols) {
+        const live = liveData[sym];
+        const ref  = referenceData[sym];
+
+        if (filterView === 'ref-only' && !ref) continue;
+        if (filterView === 'alerts-only' && !activeAlerts[sym]) continue;
+        if (searchQ && !sym.includes(searchQ)) continue;
+
+        let spread1 = 0, spread2 = 0, spread1Pct = 0, spread2Pct = 0;
+        if (live && ref) {
+            if (ref.min_ask && live.bid > ref.min_ask) {
+                spread1 = live.bid - ref.min_ask;
+                const r = ref.min_ask;
+                spread1Pct = r > 0 ? (spread1 / r) * 100 : 0;
+            }
+            if (ref.max_bid && ref.max_bid > live.ask) {
+                spread2 = ref.max_bid - live.ask;
+                const r = live.ask;
+                spread2Pct = r > 0 ? (spread2 / r) * 100 : 0;
+            }
+        }
+
+        rows.push({
+            sym, live, ref,
+            spread1, spread2, spread1Pct, spread2Pct,
+            bestSpread: Math.max(spread1Pct, spread2Pct),
+            hasAlert: !!(activeAlerts[sym])
+        });
+    }
+
+    // Sort
+    rows.sort((a, b) => {
+        if (sortMode === 'spread-desc') {
+            if (b.hasAlert !== a.hasAlert) return b.hasAlert ? 1 : -1;
+            return b.bestSpread - a.bestSpread;
+        }
+        if (sortMode === 'symbol-asc') return a.sym.localeCompare(b.sym);
+        if (sortMode === 'bid-desc') return ((b.live?.bid) || 0) - ((a.live?.bid) || 0);
+        if (sortMode === 'age-asc') return ((b.live?.ts) || 0) - ((a.live?.ts) || 0);
+        return 0;
+    });
+
+    // Render tbody
+    const tbody = document.getElementById('km-tbody');
+    if (!rows.length) {
+        const msg = filterView === 'alerts-only'
+            ? 'Tidak ada alert aktif saat ini'
+            : (Object.keys(liveData).length === 0
+                ? 'Menunggu data dari Kraken WebSocket…'
+                : 'Tidak ada data sesuai filter');
+        tbody.innerHTML = `<tr class="km-empty-row"><td colspan="10">${msg}</td></tr>`;
+        document.getElementById('table-count').textContent = '0 baris';
+        return;
+    }
+
+    document.getElementById('table-count').textContent = rows.length + ' baris';
+
+    const now = Date.now();
+    tbody.innerHTML = rows.map(r => buildRow(r, now)).join('');
+
+    // Update alert panel & stats
+    renderAlertPanel();
+    updateStats();
+}
+
+function buildRow(r, now) {
+    const { sym, live, ref, spread1, spread2, spread1Pct, spread2Pct } = r;
+    const hasBoth = spread1 > 0 && spread2 > 0;
+    let rowClass = '';
+    if (hasBoth) rowClass = 'has-both';
+    else if (spread1 > 0) rowClass = 'has-alert1';
+    else if (spread2 > 0) rowClass = 'has-alert2';
+
+    // Bid / Ask
+    const bidHtml = live
+        ? `<td class="td-bid">${fmt(live.bid)}</td>`
+        : `<td class="td-bid" style="color:var(--text-muted)">—</td>`;
+    const askHtml = live
+        ? `<td class="td-ask">${fmt(live.ask)}</td>`
+        : `<td class="td-ask" style="color:var(--text-muted)">—</td>`;
+
+    // DB ref
+    const dbMinAskHtml = ref?.min_ask
+        ? `<td class="td-db-ask"><span title="${ref.min_ask_exchange||''}">${fmt(ref.min_ask)}</span></td>`
+        : `<td class="td-db-ask" style="color:var(--text-muted)">—</td>`;
+    const dbMaxBidHtml = ref?.max_bid
+        ? `<td class="td-db-bid"><span title="${ref.max_bid_exchange||''}">${fmt(ref.max_bid)}</span></td>`
+        : `<td class="td-db-bid" style="color:var(--text-muted)">—</td>`;
+
+    // Spread cells
+    const sp1Html = spread1 > 0
+        ? `<td class="td-spread positive">+${fmt(spread1)}<span class="spread-pct">(${spread1Pct.toFixed(3)}%)</span></td>`
+        : `<td class="td-spread negative">—</td>`;
+    const sp2Html = spread2 > 0
+        ? `<td class="td-spread positive">+${fmt(spread2)}<span class="spread-pct">(${spread2Pct.toFixed(3)}%)</span></td>`
+        : `<td class="td-spread negative">—</td>`;
+
+    // Ref exchange
+    let refEx = '—';
+    if (spread1 > 0 && ref?.min_ask_exchange) refEx = ref.min_ask_exchange;
+    else if (spread2 > 0 && ref?.max_bid_exchange) refEx = ref.max_bid_exchange;
+    else if (ref) refEx = `${ref.exchange_count||0} ex`;
+
+    const refExHtml = `<td style="color:var(--text-muted);font-size:0.72rem;font-family:'Inter',sans-serif">${refEx}</td>`;
+
+    // Status
+    let statusHtml;
+    if (!live) {
+        statusHtml = `<td><span class="status-badge no-data">No Live</span></td>`;
+    } else if (!ref) {
+        statusHtml = `<td><span class="status-badge no-ref">No DB Ref</span></td>`;
+    } else if (hasBoth) {
+        statusHtml = `<td><span class="status-badge alert-both">⚡ JUAL+BELI</span></td>`;
+    } else if (spread1 > 0) {
+        statusHtml = `<td><span class="status-badge alert-sell">🟢 JUAL</span></td>`;
+    } else if (spread2 > 0) {
+        statusHtml = `<td><span class="status-badge alert-buy">🔴 BELI</span></td>`;
+    } else {
+        statusHtml = `<td><span class="status-badge" style="background:transparent;border:none;color:var(--text-muted)">—</span></td>`;
+    }
+
+    // Age
+    let ageCls = '';
+    let ageStr = '—';
+    if (live?.ts) {
+        const ageMs = now - live.ts;
+        if (ageMs < 5000) { ageCls = 'fresh'; ageStr = '<1s'; }
+        else if (ageMs < 30000) { ageStr = Math.floor(ageMs/1000) + 's'; }
+        else { ageStr = Math.floor(ageMs/60000) + 'm'; }
+    }
+    const ageHtml = `<td class="td-age ${ageCls}">${ageStr}</td>`;
+
+    // Kraken link
+    const krakenLink = `https://pro.kraken.com/app/trade/${sym.replace('/', '-')}`;
+    const symHtml = `<td class="td-symbol"><a href="${krakenLink}" target="_blank" rel="noopener">${sym}</a></td>`;
+
+    return `<tr class="${rowClass}">${symHtml}${bidHtml}${askHtml}${dbMinAskHtml}${dbMaxBidHtml}${sp1Html}${sp2Html}${refExHtml}${statusHtml}${ageHtml}</tr>`;
+}
+
+// ── Stats Update ──────────────────────────────────────────────────────────────
+function updateStats() {
+    const liveCount = Object.keys(liveData).length;
+    const refCount  = Object.keys(referenceData).length;
+    const alerts    = Object.values(activeAlerts);
+    const sellCount = alerts.filter(a => a.spread1 > 0 && a.spread2 <= 0).length;
+    const buyCount  = alerts.filter(a => a.spread2 > 0 && a.spread1 <= 0).length;
+    const bothCount = alerts.filter(a => a.spread1 > 0 && a.spread2 > 0).length;
+
+    document.getElementById('stat-monitored').textContent = liveCount;
+    document.getElementById('stat-alerts').textContent = alerts.length;
+    document.getElementById('stat-with-ref').textContent = refCount;
+    document.getElementById('stat-sell-alerts').textContent = sellCount + bothCount;
+    document.getElementById('stat-buy-alerts').textContent  = buyCount + bothCount;
+    document.getElementById('ws-live-count').textContent = liveCount;
+
+    const maxSpreadAlert = alerts.sort((a,b) =>
+        Math.max(b.spread1Pct,b.spread2Pct) - Math.max(a.spread1Pct,a.spread2Pct)
+    )[0];
+    if (maxSpreadAlert) {
+        const best = Math.max(maxSpreadAlert.spread1Pct, maxSpreadAlert.spread2Pct);
+        document.getElementById('stat-max-spread').textContent =
+            maxSpreadAlert.symbol + ' ' + best.toFixed(3) + '%';
+    } else {
+        document.getElementById('stat-max-spread').textContent = '—';
+    }
+}
+
+function updateMsgRate() {
+    const now = Date.now();
+    const elapsed = (now - lastMsgRateTs) / 1000;
+    msgRate = elapsed > 0 ? (msgCount / elapsed).toFixed(1) : 0;
+    document.getElementById('ws-msg-rate').textContent = msgRate;
+    msgCount = 0;
+    lastMsgRateTs = now;
+}
+
+function updateTimestamps() {
+    if (dbRefreshedAt) {
+        const ageMin = Math.floor((Date.now() - dbRefreshedAt) / 60000);
+        document.getElementById('db-ref-age').textContent =
+            ageMin < 1 ? 'Baru saja' : ageMin + 'm lalu';
+    }
+}
+
+// ── UI Helpers ────────────────────────────────────────────────────────────────
+function setWsStatus(state) {
+    const dot  = document.getElementById('ws-dot');
+    const text = document.getElementById('ws-status-text');
+    dot.className = 'ws-dot ' + state;
+    const labels = {
+        connecting:   'Menghubungkan ke Kraken WS…',
+        connected:    '✓ Terhubung ke Kraken WS v2',
+        reconnecting: 'Menghubungkan ulang…',
+        error:        '✗ Kesalahan koneksi'
+    };
+    text.textContent = labels[state] || state;
+}
+
+function toggleSound() {
+    soundEnabled = !soundEnabled;
+    const btn = document.getElementById('sound-btn');
+    btn.textContent = soundEnabled ? '🔔 Suara ON' : '🔕 Suara OFF';
+    btn.classList.toggle('active', soundEnabled);
+    if (soundEnabled) unlockAudio();
+}
+
+function setupMinSpreadListeners() {
+    document.getElementById('min-spread-pct').addEventListener('change', () => {
+        Object.keys(activeAlerts).forEach(sym => checkSpread(sym));
+        renderTable();
+    });
+    document.getElementById('min-spread-usd').addEventListener('change', () => {
+        Object.keys(activeAlerts).forEach(sym => checkSpread(sym));
+        renderTable();
+    });
+}
+
+// ── Number Formatter ──────────────────────────────────────────────────────────
+function fmt(n) {
+    if (n === null || n === undefined || isNaN(n)) return '—';
+    const v = parseFloat(n);
+    if (v === 0) return '0';
+    if (v >= 10000)     return v.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    if (v >= 1000)      return v.toFixed(2);
+    if (v >= 100)       return v.toFixed(3);
+    if (v >= 1)         return v.toFixed(4);
+    if (v >= 0.01)      return v.toFixed(6);
+    if (v >= 0.0001)    return v.toFixed(8);
+    return v.toExponential(4);
+}
+
+// ── Theme ─────────────────────────────────────────────────────────────────────
+function applyTheme() {
+    const t = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+}
+function toggleTheme() {
+    const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+    const nxt = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', nxt);
+    localStorage.setItem('theme', nxt);
+}
+
+// Unlock audio on first user interaction
+document.addEventListener('click', unlockAudio, { once: true });
+</script>
+</body>
+</html>
