@@ -601,6 +601,16 @@
             <input type="number" class="km-ctrl-input" id="min-spread-usd" value="0" min="0" step="0.000001" style="width:90px">
         </div>
         <div class="km-ctrl-group">
+            <label class="km-ctrl-label">Tipe Spread</label>
+            <select class="km-ctrl-select" id="filter-spread-type" onchange="renderTable()">
+                <option value="all">Semua</option>
+                <option value="any-spread">Ada Spread</option>
+                <option value="sell-only">Hanya Jual@Kraken</option>
+                <option value="buy-only">Hanya Beli@Kraken</option>
+                <option value="both">Kedua Arah</option>
+            </select>
+        </div>
+        <div class="km-ctrl-group">
             <label class="km-ctrl-label">Tampilkan</label>
             <select class="km-ctrl-select" id="filter-view" onchange="renderTable()">
                 <option value="ref-only">Hanya Ada DB Ref</option>
@@ -609,15 +619,21 @@
             </select>
         </div>
         <div class="km-ctrl-group">
+            <label class="km-ctrl-label">Min Ref Exchange</label>
+            <input type="number" class="km-ctrl-input" id="filter-min-ref" value="0" min="0" step="1" style="width:65px" oninput="renderTable()">
+        </div>
+        <div class="km-ctrl-group">
             <label class="km-ctrl-label">Urutkan</label>
             <select class="km-ctrl-select" id="sort-mode" onchange="renderTable()">
                 <option value="spread-desc">Spread Terbesar</option>
                 <option value="symbol-asc">Symbol A-Z</option>
                 <option value="bid-desc">Bid Tertinggi</option>
                 <option value="age-asc">Terbaru</option>
+                <option value="refcount-desc">Ref Exchange ↓</option>
             </select>
         </div>
         <div class="km-divider"></div>
+        <button id="live-only-btn" class="km-toggle-btn" onclick="toggleLiveOnly()">📡 Live Saja: OFF</button>
         <button id="sound-btn" class="km-toggle-btn active" onclick="toggleSound()">🔔 Suara ON</button>
         <button id="push-btn" class="km-toggle-btn" onclick="togglePush()">📲 Push OFF</button>
         <div class="km-divider"></div>
@@ -1095,9 +1111,12 @@ function scheduleRender() {
 }
 
 function renderTable() {
-    const filterView  = document.getElementById('filter-view').value;
-    const sortMode    = document.getElementById('sort-mode').value;
-    const searchQ     = (document.getElementById('table-search').value || '').toUpperCase().trim();
+    const filterView       = document.getElementById('filter-view').value;
+    const filterSpreadType = document.getElementById('filter-spread-type').value;
+    const filterMinRef     = parseInt(document.getElementById('filter-min-ref').value) || 0;
+    const liveOnly         = document.getElementById('live-only-btn').classList.contains('active');
+    const sortMode         = document.getElementById('sort-mode').value;
+    const searchQ          = (document.getElementById('table-search').value || '').toUpperCase().trim();
 
     // Build rows array
     let rows = [];
@@ -1112,7 +1131,9 @@ function renderTable() {
 
         if (filterView === 'ref-only' && !ref) continue;
         if (filterView === 'alerts-only' && !activeAlerts[sym]) continue;
+        if (liveOnly && !live) continue;
         if (searchQ && !sym.includes(searchQ)) continue;
+        if (filterMinRef > 0 && (!ref || (ref.exchange_count || 0) < filterMinRef)) continue;
 
         let spread1 = 0, spread2 = 0, spread1Pct = 0, spread2Pct = 0;
         if (live && ref) {
@@ -1127,6 +1148,12 @@ function renderTable() {
                 spread2Pct = r > 0 ? (spread2 / r) * 100 : 0;
             }
         }
+
+        // Spread-type filter (applied after computing spreads)
+        if (filterSpreadType === 'any-spread'  && spread1 <= 0 && spread2 <= 0) continue;
+        if (filterSpreadType === 'sell-only'   && spread1 <= 0) continue;
+        if (filterSpreadType === 'buy-only'    && spread2 <= 0) continue;
+        if (filterSpreadType === 'both'        && (spread1 <= 0 || spread2 <= 0)) continue;
 
         rows.push({
             sym, live, ref,
@@ -1145,6 +1172,7 @@ function renderTable() {
         if (sortMode === 'symbol-asc') return a.sym.localeCompare(b.sym);
         if (sortMode === 'bid-desc') return ((b.live?.bid) || 0) - ((a.live?.bid) || 0);
         if (sortMode === 'age-asc') return ((b.live?.ts) || 0) - ((a.live?.ts) || 0);
+        if (sortMode === 'refcount-desc') return ((b.ref?.exchange_count) || 0) - ((a.ref?.exchange_count) || 0);
         return 0;
     });
 
@@ -1171,6 +1199,69 @@ function renderTable() {
     updateStats();
 }
 
+// ── Exchange URL helpers ───────────────────────────────────────────────────────
+const EX_COLORS = {
+    LBANK:'#2962ff', HASHKEY:'#7c3aed', BICONOMY:'#00b894', MEXC:'#1873e8',
+    BITRUE:'#00c853', ASCENDEX:'#ff6b35', BITMART:'#00b8d4', DEXTRADE:'#9b59b6',
+    POLONIEX:'#0c9c4e', GATEIO:'#c23b33', NIZA:'#6366f1', XT:'#2563eb',
+    COINSTORE:'#f59e0b', VINDAX:'#10b981', FAMEEX:'#e11d48', BIGONE:'#0ea5e9',
+    P2PB2B:'#8b5cf6', DIGIFINEX:'#00d4aa', AZBIT:'#f97316', LATOKEN:'#3b82f6',
+    KRAKEN:'#5841d8', BINGX:'#f0a500', BTSE:'#1a56db', WHITEBIT:'#0095ff',
+    HTX:'#02a4d3', BINANCEALPHA:'#f3a925', UZX:'#16a34a'
+};
+
+function getExchangeUrl(exchange, symbol) {
+    const ex   = (exchange || '').toUpperCase();
+    const base = symbol.replace('/USDT','').replace('/USD','');
+    const pairU = symbol.replace('/','-');
+    switch(ex) {
+        case 'LBANK':    return `https://www.lbank.com/trade/${symbol.replace('/','-').toLowerCase()}`;
+        case 'HASHKEY':  return `https://global.hashkey.com/en-US/spot/${symbol.replace('/','-')}`;
+        case 'BICONOMY': return `https://www.biconomy.com/exchange/${symbol.replace('/','-')}`;
+        case 'MEXC':     return `https://www.mexc.com/exchange/${symbol.replace('/','_')}`;
+        case 'BITRUE':   return `https://www.bitrue.com/trade/${symbol.replace('/','_').toLowerCase()}`;
+        case 'ASCENDEX': return `https://ascendex.com/en/cashtrade-spottrading/usdt/${base.toLowerCase()}`;
+        case 'BITMART':  return `https://www.bitmart.com/trade/en-US?symbol=${symbol.replace('/','_')}`;
+        case 'DEXTRADE': return `https://dex-trade.com/spot/trading/${base}USDT`;
+        case 'POLONIEX': return `https://poloniex.com/trade/${base}_USDT`;
+        case 'GATEIO':   return `https://www.gate.io/trade/${symbol.replace('/','_')}`;
+        case 'NIZA':     return `https://niza.io/trade/${symbol.replace('/','_')}`;
+        case 'XT':       return `https://www.xt.com/en/trade/${symbol.replace('/','_').toLowerCase()}`;
+        case 'COINSTORE': return `https://www.coinstore.com/spot/${base}USDT`;
+        case 'VINDAX':   return `https://vindax.com/exchange-base.html?symbol=${base}_USDT`;
+        case 'FAMEEX':   return `https://www.fameex.com/en-US/trade/${base.toLowerCase()}-usdt`;
+        case 'BIGONE':   return `https://big.one/en/trade/${base.toUpperCase()}-USDT`;
+        case 'P2PB2B':   return `https://p2pb2b.com/trade/${base}_USDT`;
+        case 'DIGIFINEX': return `https://www.digifinex.com/en-ww/trade/USDT/${base}`;
+        case 'AZBIT':    return `https://azbit.com/exchange/${base}_USDT`;
+        case 'LATOKEN':  return `https://latoken.com/exchange/${base}_USDT`;
+        case 'BINGX':    return `https://bingx.com/en/trade/${base}-USDT/`;
+        case 'BTSE':     return `https://www.btse.com/en/trading/${base}-USDT`;
+        case 'WHITEBIT': return `https://whitebit.com/trade/${base}_USDT`;
+        case 'HTX':      return `https://www.htx.com/trade/${base.toLowerCase()}_usdt/`;
+        case 'BINANCEALPHA': return `https://www.binance.com/en/trade/${base}_USDT`;
+        case 'UZX':      return `https://uzx.com/spot/${base}USDT`;
+        case 'KRAKEN':   return `https://pro.kraken.com/app/trade/${pairU}`;
+        default:         return null;
+    }
+}
+
+function exchLink(exchange, symbol) {
+    if (!exchange) return '';
+    const url   = getExchangeUrl(exchange, symbol);
+    const color = EX_COLORS[(exchange).toUpperCase()] || '#8b949e';
+    const style = `display:inline-flex;align-items:center;padding:1px 6px;border-radius:3px;`
+                + `background:${color}22;border:1px solid ${color}55;color:${color};`
+                + `font-size:0.63rem;font-weight:700;text-decoration:none;`
+                + `font-family:'Inter',sans-serif;letter-spacing:0.02em;transition:opacity 0.15s`;
+    if (url) {
+        return `<a href="${url}" target="_blank" rel="noopener" style="${style}" `
+             + `onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">`
+             + `${exchange}</a>`;
+    }
+    return `<span style="${style}">${exchange}</span>`;
+}
+
 function buildRow(r, now) {
     const { sym, live, ref, spread1, spread2, spread1Pct, spread2Pct } = r;
     const hasBoth = spread1 > 0 && spread2 > 0;
@@ -1189,10 +1280,10 @@ function buildRow(r, now) {
 
     // DB ref
     const dbMinAskHtml = ref?.min_ask
-        ? `<td class="td-db-ask"><span title="${ref.min_ask_exchange||''}">${fmt(ref.min_ask)}</span></td>`
+        ? `<td class="td-db-ask" style="vertical-align:middle">${fmt(ref.min_ask)}${ref.min_ask_exchange ? '<br>'+exchLink(ref.min_ask_exchange, sym) : ''}</td>`
         : `<td class="td-db-ask" style="color:var(--text-muted)">—</td>`;
     const dbMaxBidHtml = ref?.max_bid
-        ? `<td class="td-db-bid"><span title="${ref.max_bid_exchange||''}">${fmt(ref.max_bid)}</span></td>`
+        ? `<td class="td-db-bid" style="vertical-align:middle">${fmt(ref.max_bid)}${ref.max_bid_exchange ? '<br>'+exchLink(ref.max_bid_exchange, sym) : ''}</td>`
         : `<td class="td-db-bid" style="color:var(--text-muted)">—</td>`;
 
     // Spread cells
@@ -1203,13 +1294,25 @@ function buildRow(r, now) {
         ? `<td class="td-spread positive">+${fmt(spread2)}<span class="spread-pct">(${spread2Pct.toFixed(3)}%)</span></td>`
         : `<td class="td-spread negative">—</td>`;
 
-    // Ref exchange
-    let refEx = '—';
-    if (spread1 > 0 && ref?.min_ask_exchange) refEx = ref.min_ask_exchange;
-    else if (spread2 > 0 && ref?.max_bid_exchange) refEx = ref.max_bid_exchange;
-    else if (ref) refEx = `${ref.exchange_count||0} ex`;
-
-    const refExHtml = `<td style="color:var(--text-muted);font-size:0.72rem;font-family:'Inter',sans-serif">${refEx}</td>`;
+    // Ref exchange — clickable chip links
+    let refExParts = [];
+    if (ref?.min_ask_exchange) {
+        const label = spread1 > 0
+            ? `${exchLink(ref.min_ask_exchange, sym)}&nbsp;<span style="font-size:0.6rem;color:var(--spread-sell)">↓ask</span>`
+            : exchLink(ref.min_ask_exchange, sym);
+        refExParts.push(label);
+    }
+    if (ref?.max_bid_exchange && ref.max_bid_exchange !== ref.min_ask_exchange) {
+        const label = spread2 > 0
+            ? `${exchLink(ref.max_bid_exchange, sym)}&nbsp;<span style="font-size:0.6rem;color:var(--spread-buy)">↑bid</span>`
+            : exchLink(ref.max_bid_exchange, sym);
+        refExParts.push(label);
+    }
+    if (!refExParts.length && ref) {
+        refExParts.push(`<span style="color:var(--text-muted);font-size:0.7rem">${ref.exchange_count||0} ex</span>`);
+    }
+    if (!refExParts.length) refExParts.push(`<span style="color:var(--text-muted)">—</span>`);
+    const refExHtml = `<td style="vertical-align:middle;white-space:nowrap;line-height:1.6">${refExParts.join('<br>')}</td>`;
 
     // Status
     let statusHtml;
@@ -1302,6 +1405,13 @@ function setWsStatus(state) {
         error:        '✗ Kesalahan koneksi'
     };
     text.textContent = labels[state] || state;
+}
+
+function toggleLiveOnly() {
+    const btn = document.getElementById('live-only-btn');
+    const on = btn.classList.toggle('active');
+    btn.textContent = `📡 Live Saja: ${on ? 'ON' : 'OFF'}`;
+    renderTable();
 }
 
 function toggleSound() {
